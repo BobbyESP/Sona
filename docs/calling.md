@@ -96,10 +96,14 @@ that changes a call, and the only thing screens talk to about calls.
 
 - **It merges two state machines.** The engine knows SIP; Telecom knows what the system, the
   Bluetooth headset and the watch think. A call is active for the user only when both agree.
-- **The decisions are a pure function.** `CallMachine.reduce(state, event) -> (state, commands)`:
-  events come from the engine, Telecom and the user; commands go to the engine, Telecom, history and
-  the services. The coordinator only executes commands. Every rule below is a row of a table test
-  on the JVM, against `FakeSipEngine` and `FakeSystemCalls`, with no device.
+- **Everything goes through one lock, in order.** An engine update, the user's answer and a
+  headset's hang-up never interleave. The pure parts (addresses, why a call ended, which call the
+  screen shows) are functions with table tests; the choreography between engine and Telecom is
+  covered by scenario tests against `FakeSipEngine` and `FakeSystemCalls`, on the JVM.
+- **An ended call stays until the coordinator lets it go.** The engine keeps it as `Ended` until
+  `forget`; the coordinator shows it for three seconds (the call screen says how it ended), then
+  forgets it. A call that fails before it is first seen (busy, no such extension) is still shown
+  with its reason: found by a test, it was being dropped unexplained.
 - **It publishes `calls: StateFlow<List<Call>>`** and `foregroundNeed: StateFlow<ForegroundNeed>`
   (`None`, `KeepAlive`, `Call(needsMicrophone)`), which `:calling:platform` turns into
   services. The domain never starts a service itself.
@@ -194,7 +198,11 @@ status chip and in its diagnostics.
 
 ## Audio
 
-**Telecom owns the route.** With Core-Telecom, the app must not call
+**Telecom owns the route.** (Built in phase 2: the call screen offers Telecom's endpoints and
+requests changes; Linphone's voice streams follow the device Telecom picks. On the emulator Telecom
+offers only the speaker; earpiece and Bluetooth are still to be checked on a phone.)
+
+ With Core-Telecom, the app must not call
 `AudioManager.setCommunicationDevice` or `startBluetoothSco`. The call screen offers
 `availableEndpoints` (earpiece, speaker, wired headset, each Bluetooth device by name), and choosing
 one calls `requestEndpointChange`. When `currentCallEndpoint` changes, the coordinator tells the
@@ -251,8 +259,8 @@ onboarding and in *Settings › Call readiness*, with a button that fixes it:
 
 ## Notifications
 
-- **One channel per account for incoming calls** ("Calls on Lab Asterisk"), high importance, with
-  the ringtone as the channel's sound and the insistent flag. The system then applies Do not
+- **One channel for incoming calls** (per account later), high importance, with the ringtone as
+  the channel's sound and the insistent flag. The system then applies Do not
   disturb, the ringer volume and vibration on its own, and the user can give each account its own
   ringtone in the system's settings.
 - Channels for ongoing calls (silent), missed calls (with *Call back*), and the keep-alive service.

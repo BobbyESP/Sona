@@ -4,10 +4,17 @@
 package com.bobbyesp.sona.sip.fake
 
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.CallId
+import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.AccountSpec
+import com.bobbyesp.sona.sip.api.CallDirection
 import com.bobbyesp.sona.sip.api.Capability
+import com.bobbyesp.sona.sip.api.DialResult
+import com.bobbyesp.sona.sip.api.EngineCall
+import com.bobbyesp.sona.sip.api.EngineCallState
 import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.EngineState
+import com.bobbyesp.sona.sip.api.MediaInfo
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
 import com.bobbyesp.sona.sip.api.SipStatus
@@ -30,13 +37,18 @@ import kotlinx.coroutines.launch
  * fake.goOffline()
  * ```
  *
- * Calls are added to it with the calling phase, so a UI test reads as the scenario it checks.
+ * Calls are scripted the same way (`fake.incomingCall(from)`, `fake.remoteAnswers(call)`,
+ * `fake.remoteEnds(call, SipStatus(486, "Busy Here"))`), so a test reads as the scenario it checks.
  *
- * @param scope Where registrations take their time; a test's scope, or the app's.
+ * @param scope Where registrations and scripted calls take their time; a test's scope, or the
+ *   app's.
+ * @param demoCalls Whether a dialed call plays out by itself, for the demo flavor: it rings, then
+ *   is answered, except `486` (busy), `603` (declined) and `404` (no such extension).
  */
 class FakeSipEngine(
     private val scope: CoroutineScope,
     private val registrationDelay: Duration = 600.milliseconds,
+    private val demoCalls: Boolean = false,
 ) : SipEngine {
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Stopped)
@@ -56,6 +68,14 @@ class FakeSipEngine(
     /** The configuration as last applied. */
     var config: EngineConfig? = null
         private set
+
+    private val _calls = MutableStateFlow<List<EngineCall>>(emptyList())
+    override val calls: StateFlow<List<EngineCall>> = _calls.asStateFlow()
+
+    /** Every DTMF digit sent, in order, for asserting. */
+    val dtmfSent: MutableList<Pair<CallId, Char>> = mutableListOf()
+
+    private var nextCall = 0
 
     private val failures = mutableMapOf<AccountId, SipStatus?>()
     private val pending = mutableMapOf<AccountId, Job>()
@@ -119,6 +139,104 @@ class FakeSipEngine(
         registerAll()
     }
 
+    override suspend fun dial(account: AccountId, to: SipAddress): DialResult {
+        if (_registrations.value[account] != RegistrationState.Registered) {
+            return DialResult.AccountUnavailable
+        }
+        val id = newCallId()
+        put(EngineCall(id, account, CallDirection.Outgoing, to, state = EngineCallState.Dialing))
+        if (demoCalls) scope.launch { playDemoCall(id, to) }
+        return DialResult.Started(id)
+    }
+
+    override suspend fun answer(call: CallId) =
+        update(call) {
+            if (state == EngineCallState.Incoming) copy(state = EngineCallState.Active) else this
+        }
+
+    override suspend fun decline(call: CallId, busy: Boolean) =
+        update(call) {
+            copy(state = EngineCallState.Ended(status = null, byRemote = false))
+        }
+
+    override suspend fun hangUp(call: CallId) =
+        update(call) {
+            if (state is EngineCallState.Ended) this
+            else copy(state = EngineCallState.Ended(status = null, byRemote = false))
+        }
+
+    override suspend fun hold(call: CallId, onHold: Boolean) =
+        update(call) {
+            when {
+                onHold && state == EngineCallState.Active -> copy(state = EngineCallState.LocalHold)
+                !onHold && state == EngineCallState.LocalHold ->
+                    copy(state = EngineCallState.Active)
+                else -> this
+            }
+        }
+
+    override suspend fun setMuted(call: CallId, muted: Boolean) =
+        update(call) {
+            copy(muted = muted)
+        }
+
+    override suspend fun sendDtmf(call: CallId, digit: Char) {
+        dtmfSent += call to digit
+    }
+
+    override suspend fun forget(call: CallId) {
+        _calls.update { all -> all.filterNot { it.id == call } }
+    }
+
+    /** An INVITE arrives for [account] from [from]. */
+    fun incomingCall(
+        from: SipAddress,
+        account: AccountId? = accounts.firstOrNull()?.id,
+        name: String? = null,
+    ): CallId {
+        val id = newCallId()
+        put(EngineCall(id, account, CallDirection.Incoming, from, name, EngineCallState.Incoming))
+        return id
+    }
+
+    fun remoteRings(call: CallId) = update(call) { copy(state = EngineCallState.Ringing) }
+
+    fun remoteAnswers(call: CallId) =
+        update(call) {
+            copy(state = EngineCallState.Active, media = MediaInfo("opus", 48_000))
+        }
+
+    fun remoteHolds(call: CallId, onHold: Boolean) =
+        update(call) {
+            copy(state = if (onHold) EngineCallState.RemoteHold else EngineCallState.Active)
+        }
+
+    /** The other side ends the call: hangs up ([status] `null`), or fails it with [status]. */
+    fun remoteEnds(call: CallId, status: SipStatus? = null, detail: String? = null) =
+        update(call) {
+            copy(state = EngineCallState.Ended(status, byRemote = true, detail = detail))
+        }
+
+    private suspend fun playDemoCall(id: CallId, to: SipAddress) {
+        delay(DemoStep)
+        remoteRings(id)
+        delay(DemoStep * 3)
+        when (to.user) {
+            "486" -> remoteEnds(id, SipStatus(486, "Busy Here"))
+            "603" -> remoteEnds(id, SipStatus(603, "Decline"))
+            "404" -> remoteEnds(id, SipStatus(404, "Not Found"))
+            else -> remoteAnswers(id)
+        }
+    }
+
+    private fun newCallId() = CallId("fake-call-${++nextCall}")
+
+    private fun put(call: EngineCall) = _calls.update { it + call }
+
+    private fun update(call: CallId, change: EngineCall.() -> EngineCall) = _calls.update { all ->
+        all.map { if (it.id == call) it.change() else it }
+    }
+
     private fun registerAll() {
         if (_state.value != EngineState.Running) return
         accounts.forEach { register(it.id) }
@@ -158,5 +276,9 @@ class FakeSipEngine(
 
     private fun set(id: AccountId, state: RegistrationState) {
         _registrations.update { it + (id to state) }
+    }
+
+    private companion object {
+        val DemoStep = 500.milliseconds
     }
 }

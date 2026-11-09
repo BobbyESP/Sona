@@ -15,8 +15,15 @@ matrix in [docs/roadmap.md](../docs/roadmap.md#the-call-matrix).
 docker compose -f lab/compose.yaml up -d --build
 ```
 
-Asterisk 20.6 from Ubuntu 24.04's own package, with these files. Phones on the same network register
-to this computer's address; the Android emulator to `10.0.2.2`. Phase 1 was checked this way.
+Asterisk 20.6 from Ubuntu 24.04's own package, with these files. The emulator registers to
+`10.0.2.2`. For a real phone on the same network, start it with this computer's LAN address, which
+Asterisk then advertises for audio (inside Docker it cannot know it):
+
+```bash
+EXTERNAL_ADDRESS=192.168.1.20 docker compose -f lab/compose.yaml up -d --build
+```
+
+Phases 1 and 2 were checked this way.
 
 ## Setting it up on a server
 

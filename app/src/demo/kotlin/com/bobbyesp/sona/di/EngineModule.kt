@@ -9,6 +9,9 @@ import org.koin.dsl.module
 
 /**
  * The demo flavor: the fake engine, which accepts any account after a moment as a real server
- * would. Accounts, onboarding and every screen work as in the full app, with no server at all.
+ * would, and plays out calls by themselves (486 is busy, 603 declines, 404 does not exist). Every
+ * screen works as in the full app, with no server at all.
  */
-val engineModule = module { single<SipEngine> { FakeSipEngine(get<ApplicationScope>()) } }
+val engineModule = module {
+    single<SipEngine> { FakeSipEngine(get<ApplicationScope>(), demoCalls = true) }
+}

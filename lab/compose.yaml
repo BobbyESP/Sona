@@ -1,5 +1,6 @@
 # docker compose -f lab/compose.yaml up --build
 # Phones on the same network register to this computer's address; the Android emulator to 10.0.2.2.
+# For a real phone: EXTERNAL_ADDRESS=<this computer's LAN address> docker compose ... up
 services:
   asterisk:
     build: .
@@ -8,4 +9,6 @@ services:
       - "5060:5060/udp"
       - "5060:5060/tcp"
       - "10000-10100:10000-10100/udp"
+    environment:
+      EXTERNAL_ADDRESS: ${EXTERNAL_ADDRESS:-10.0.2.2}
     restart: unless-stopped

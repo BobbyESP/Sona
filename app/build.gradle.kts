@@ -54,6 +54,11 @@ dependencies {
     implementation(project(":feature:dialer"))
     implementation(project(":feature:accounts"))
     implementation(project(":feature:onboarding"))
+    implementation(project(":feature:call"))
+
+    implementation(project(":calling:domain"))
+    implementation(project(":calling:platform"))
+    implementation(project(":telecom:jetpack"))
 
     implementation(project(":accounts:domain"))
     implementation(project(":accounts:data"))

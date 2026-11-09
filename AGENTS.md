@@ -7,7 +7,7 @@ servers the user configured.
 
 This file is the map and the rules. How each part works, and why, is in [`docs/`](docs/README.md).
 
-**Status:** phases 0 and 1 are built (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
+**Status:** phases 0, 1 and 2 are built (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
 exist yet arrive with the phase that needs them, and are added to `settings.gradle.kts` then.
 
 ---
@@ -41,8 +41,10 @@ compileSdk 37, targetSdk 37, Java 17). Versions are in `gradle/libs.versions.tom
 
 - **Only `CallCoordinator` changes a call.** Screens send it intents; no ViewModel, service or
   receiver calls the engine's `CallControls` or Telecom directly.
-- **Call decisions are `CallMachine` rows.** A new rule is a new row and a new test row, never an
-  `if` in the coordinator or a service.
+- **Call decisions live in the coordinator, each with a scenario test** (`CallCoordinatorTest`:
+  the fake engine and the recording system play it out). Never an `if` in a service or a screen.
+- **Every request to Telecom is guarded.** Android refuses some (a self-managed call may only end
+  as local, remote, missed or rejected); a refusal is logged and the call goes on.
 - **The Linphone `Core` is touched only on its own thread**, inside `:sip:linphone`.
 - **Telecom owns audio routing.** Never call `AudioManager.setCommunicationDevice` or
   `startBluetoothSco`.

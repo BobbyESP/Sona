@@ -44,3 +44,12 @@ object AppSettings {
     /** Whether the first start's welcome was seen, or an account exists. */
     val OnboardingDone = Setting.Toggle("app.onboarding_done", default = false)
 }
+
+/** How calls behave. */
+object CallSettings {
+    /** A second call rings during one; off, it is declined as busy (486). */
+    val CallWaiting = Setting.Toggle("calls.call_waiting", default = true)
+
+    /** Stay registered while the app is closed, with a quiet notification, so calls can ring. */
+    val AlwaysReachable = Setting.Toggle("calls.always_reachable", default = true)
+}

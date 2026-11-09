@@ -9,15 +9,25 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.bobbyesp.sona.calling.domain.CallCoordinator
+import com.bobbyesp.sona.calling.domain.CallState
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.shell.ShellViewModel
 import com.bobbyesp.sona.shell.SonaApp
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
 
     private val shell: ShellViewModel by viewModel()
+    private val coordinator: CallCoordinator by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
@@ -25,6 +35,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // The user's theme from the first frame: never the default one swapped for it.
         splash.setKeepOnScreenCondition { shell.startup.value == null }
+
+        // A call that rings while the app is in use opens its screen at once, rather than only a
+        // heads-up notification.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                coordinator.calls
+                    .map { calls -> calls.any { it.state == CallState.Incoming } }
+                    .distinctUntilChanged()
+                    .collect { ringing ->
+                        if (ringing) startActivity(CallActivity.intent(this@MainActivity))
+                    }
+            }
+        }
 
         setContent {
             val startup by shell.startup.collectAsStateWithLifecycle()

@@ -46,3 +46,9 @@ interface TopLevelDestination {
  * registered). The shell provides it; a screen only places it, so no feature knows accounts.
  */
 val LocalAccountChip = staticCompositionLocalOf<@Composable () -> Unit> { {} }
+
+/**
+ * Opens the call screen, which lives in an activity of its own (over the lock screen). The shell
+ * provides it; a screen that starts a call (the keypad, a contact) only calls it.
+ */
+val LocalCallScreen = staticCompositionLocalOf<() -> Unit> { {} }

@@ -8,6 +8,7 @@ import com.bobbyesp.sona.di.EngineBootstrap
 import com.bobbyesp.sona.di.appModule
 import com.bobbyesp.sona.di.engineModule
 import com.bobbyesp.sona.feature.accounts.accountsModule
+import com.bobbyesp.sona.feature.call.callModule
 import com.bobbyesp.sona.feature.contacts.contactsModule
 import com.bobbyesp.sona.feature.dialer.dialerModule
 import com.bobbyesp.sona.feature.history.historyModule
@@ -31,6 +32,7 @@ class App : Application() {
                 dialerModule,
                 accountsModule,
                 onboardingModule,
+                callModule,
             )
         }
         get<EngineBootstrap>().start()

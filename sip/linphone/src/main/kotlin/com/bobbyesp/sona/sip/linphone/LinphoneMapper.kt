@@ -3,10 +3,12 @@
  */
 package com.bobbyesp.sona.sip.linphone
 
+import com.bobbyesp.sona.sip.api.EngineCallState
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.ServerEndpoint
 import com.bobbyesp.sona.sip.api.SipStatus
 import com.bobbyesp.sona.sip.api.Transport
+import org.linphone.core.Call.State as CallState
 import org.linphone.core.RegistrationState as LinphoneRegistration
 import org.linphone.core.TransportType
 
@@ -69,4 +71,47 @@ internal fun ServerEndpoint.toSipUri(): String = buildString {
     append(host)
     if (port != null) append(':').append(port)
     append(";transport=").append(transport.name.lowercase())
+}
+
+/**
+ * Sona's state of a call for Linphone's, or `null` for states that change nothing Sona shows
+ * (`Idle`, `Referred`, the re-INVITE states while media keeps flowing): the call keeps its state.
+ *
+ * @param code, [phrase] The SIP status a failed call ended with; `0` when none.
+ * @param endedHere Whether this side ended it (hung up, declined), as the engine knows.
+ */
+internal fun callStateOf(
+    state: CallState,
+    code: Int,
+    phrase: String?,
+    sendFailed: Boolean,
+    endedHere: Boolean,
+    remote: String,
+): EngineCallState? {
+    return when (state) {
+        CallState.OutgoingInit,
+        CallState.OutgoingProgress -> EngineCallState.Dialing
+        CallState.OutgoingRinging,
+        CallState.OutgoingEarlyMedia -> EngineCallState.Ringing
+        CallState.IncomingReceived,
+        CallState.PushIncomingReceived,
+        CallState.IncomingEarlyMedia -> EngineCallState.Incoming
+        CallState.Connected,
+        CallState.StreamsRunning -> EngineCallState.Active
+        CallState.Pausing,
+        CallState.Paused -> EngineCallState.LocalHold
+        CallState.PausedByRemote -> EngineCallState.RemoteHold
+        CallState.Error,
+        CallState.End,
+        CallState.Released ->
+            EngineCallState.Ended(
+                status =
+                    if (!sendFailed && code >= 300 && code != 487)
+                        SipStatus(code, phrase?.takeIf { it.isNotBlank() } ?: "Error")
+                    else null,
+                byRemote = !endedHere,
+                detail = if (sendFailed) "Could not send to $remote" else null,
+            )
+        else -> null
+    }
 }

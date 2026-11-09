@@ -63,6 +63,11 @@ include(":accounts:data")
 
 include(":accounts:ui")
 
+// Calling: the coordinator several features share
+include(":calling:domain")
+
+include(":calling:platform")
+
 // Engines: a contract (api) and its implementations
 include(":sip:api")
 
@@ -74,6 +79,10 @@ include(":credentials:api")
 
 include(":credentials:keystore")
 
+include(":telecom:api")
+
+include(":telecom:jetpack")
+
 // Features: what the user sees
 include(":feature:history")
 
@@ -84,3 +93,5 @@ include(":feature:dialer")
 include(":feature:accounts")
 
 include(":feature:onboarding")
+
+include(":feature:call")

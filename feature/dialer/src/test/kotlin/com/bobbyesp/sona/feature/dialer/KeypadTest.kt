@@ -4,7 +4,13 @@
 package com.bobbyesp.sona.feature.dialer
 
 import androidx.lifecycle.SavedStateHandle
+import com.bobbyesp.sona.accounts.domain.InMemoryAccountsRepository
+import com.bobbyesp.sona.calling.domain.CallCoordinator
+import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.core.testing.MainDispatcherRule
+import com.bobbyesp.sona.sip.fake.FakeSipEngine
+import com.bobbyesp.sona.telecom.api.FakeSystemCalls
+import kotlinx.coroutines.CoroutineScope
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -12,6 +18,16 @@ import org.junit.Test
 class KeypadTest {
 
     @get:Rule val mainDispatcher = MainDispatcherRule()
+
+    private val accounts = InMemoryAccountsRepository()
+
+    private fun keypad(saved: SavedStateHandle): KeypadViewModel {
+        val scope = CoroutineScope(mainDispatcher.dispatcher)
+        val engine = FakeSipEngine(scope)
+        val coordinator =
+            CallCoordinator(engine, FakeSystemCalls(), accounts, InMemorySettingsStore(), scope)
+        return KeypadViewModel(saved, coordinator, accounts)
+    }
 
     @Test
     fun `digits, star and hash are typed`() {
@@ -44,18 +60,17 @@ class KeypadTest {
     @Test
     fun `what was typed survives process death`() {
         val saved = SavedStateHandle()
-        val viewModel = KeypadViewModel(saved)
+        val viewModel = keypad(saved)
         "102".forEach { viewModel.onSendIntent(KeypadIntent.Type(it)) }
 
-        val restored =
-            KeypadViewModel(SavedStateHandle(mapOf("input" to saved.get<String>("input"))))
+        val restored = keypad(SavedStateHandle(mapOf("input" to saved.get<String>("input"))))
 
         assertEquals("102", restored.state.value.input)
     }
 
     @Test
     fun `clear empties the field`() {
-        val viewModel = KeypadViewModel(SavedStateHandle(mapOf("input" to "600")))
+        val viewModel = keypad(SavedStateHandle(mapOf("input" to "600")))
 
         viewModel.onSendIntent(KeypadIntent.Clear)
 

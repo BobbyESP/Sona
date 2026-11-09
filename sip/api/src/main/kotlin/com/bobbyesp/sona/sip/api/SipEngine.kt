@@ -4,12 +4,14 @@
 package com.bobbyesp.sona.sip.api
 
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.CallId
+import com.bobbyesp.sona.core.model.SipAddress
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The SIP engine: registrations today, calls from phase 2 (`dial`, `calls`, `controls` in
- * docs/calling.md). Plain Kotlin, no Linphone type, no Android type: the app binds an
- * implementation (Linphone, or the fake one in the demo flavor) and nothing else knows which.
+ * The SIP engine: registrations and calls. Plain Kotlin, no Linphone type, no Android type: the app
+ * binds an implementation (Linphone, or the fake one in the demo flavor) and nothing else knows
+ * which.
  *
  * Every function may be called from any thread; the implementation confines its engine to its own.
  */
@@ -38,6 +40,31 @@ interface SipEngine {
 
     /** Registers again every enabled account, after the network changed. */
     suspend fun refreshRegistrations()
+
+    /** Every call, the ended ones included until [forget]. */
+    val calls: StateFlow<List<EngineCall>>
+
+    /**
+     * Calls [to] from [account]. Only the calling coordinator calls this, and the functions below.
+     */
+    suspend fun dial(account: AccountId, to: SipAddress): DialResult
+
+    suspend fun answer(call: CallId)
+
+    /** Declines an incoming call: `486 Busy Here` when [busy], `603 Decline` otherwise. */
+    suspend fun decline(call: CallId, busy: Boolean = false)
+
+    suspend fun hangUp(call: CallId)
+
+    suspend fun hold(call: CallId, onHold: Boolean)
+
+    suspend fun setMuted(call: CallId, muted: Boolean)
+
+    /** Sends a DTMF digit (`0`–`9`, `*`, `#`) on an active call. */
+    suspend fun sendDtmf(call: CallId, digit: Char)
+
+    /** Drops an ended call from [calls], once its ending was taken into account. */
+    suspend fun forget(call: CallId)
 }
 
 /** Whether the engine is running. */

@@ -10,5 +10,8 @@ COPY asterisk/ /etc/asterisk/
 # RTP within the range the compose file publishes.
 RUN printf '[general]\nrtpstart=10000\nrtpend=10100\n' > /etc/asterisk/rtp.conf
 
+COPY docker-entrypoint.sh /usr/local/bin/sona-lab
+RUN chmod +x /usr/local/bin/sona-lab
+
 EXPOSE 5060/udp 5060/tcp 10000-10100/udp
-CMD ["asterisk", "-f", "-vvv"]
+CMD ["sona-lab"]

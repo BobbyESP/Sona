@@ -3,6 +3,9 @@
  */
 package com.bobbyesp.sona.shell
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -16,12 +19,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import com.bobbyesp.sona.CallActivity
 import com.bobbyesp.sona.accounts.ui.AddAccountChip
 import com.bobbyesp.sona.core.designsystem.components.RegistrationChip
 import com.bobbyesp.sona.core.navigation.SonaNavDisplay
@@ -34,8 +41,10 @@ import com.bobbyesp.sona.core.navigation.overlay.rememberOverlaySceneStrategy
 import com.bobbyesp.sona.core.navigation.pane.sharingTheWindow
 import com.bobbyesp.sona.core.navigation.rememberNavigator
 import com.bobbyesp.sona.core.ui.contribution.LocalAccountChip
+import com.bobbyesp.sona.core.ui.contribution.LocalCallScreen
 import com.bobbyesp.sona.core.ui.contribution.NavSection
 import com.bobbyesp.sona.core.ui.contribution.TopLevelDestination
+import com.bobbyesp.sona.feature.call.OngoingCallBanner
 import org.koin.compose.getKoin
 
 /**
@@ -136,13 +145,26 @@ fun SonaApp(
             }
         },
     ) {
-        CompositionLocalProvider(LocalAccountChip provides chip) {
-            SonaNavDisplay(
-                backStack = backStack,
-                navigator = navigator,
-                sceneStrategies = sceneStrategies,
-                entryProvider = entries,
-            )
+        val context = LocalContext.current
+        val openCall: () -> Unit =
+            remember(context) { { context.startActivity(CallActivity.intent(context)) } }
+        CompositionLocalProvider(
+            LocalAccountChip provides chip,
+            LocalCallScreen provides openCall,
+        ) {
+            Box(Modifier.fillMaxSize()) {
+                SonaNavDisplay(
+                    backStack = backStack,
+                    navigator = navigator,
+                    sceneStrategies = sceneStrategies,
+                    entryProvider = entries,
+                )
+                // The way back to a call in progress, over whatever is shown.
+                OngoingCallBanner(
+                    onOpen = openCall,
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+                )
+            }
         }
     }
 }

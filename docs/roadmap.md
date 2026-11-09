@@ -54,6 +54,23 @@ servers stay registered together.
 
 ### Phase 2 · Calls (2–3 weeks). The heart of the MVP
 
+**Done (2026-11-09).** Built: calls in `:sip:api`, `:sip:linphone` and `:sip:fake` (scriptable, and
+self-playing in the demo flavor), `:calling:domain` (`CallCoordinator`, `AddressResolver`,
+`EndReason`), `:telecom:api` and `:telecom:jetpack` (Core-Telecom), `:calling:platform` (call and
+keep-alive services, CallStyle notifications, boot receiver), `:feature:call` and `CallActivity`
+over the lock screen, the keypad's call button. Checked on the emulator against the Docker lab:
+600 (echo, audio both ways, about 600 packets each way, no loss), 486 ("486 is busy"), 199
+("There is no extension 199"), hold and resume (sendonly / sendrecv), mute, DTMF, hang-up, an
+incoming call answered from the screen, an incoming call declined (603) with the phone asleep and
+the app in the background, the keep-alive service. 109 JVM tests.
+
+Found on the way: Telecom refuses disconnect causes other than local, remote, missed and rejected
+(it crashed on a busy call; mapped and guarded); the Docker lab advertised its container address,
+so audio went nowhere (now `EXTERNAL_ADDRESS`); a call that failed at once was dropped unexplained
+(fixed, tested). Not yet checked: a real phone, earpiece and Bluetooth routes, two phones calling
+each other, call waiting with two real calls, Android 10 to 13, a call screen readiness checklist
+(the permissions are asked in context instead).
+
 - **First, a three-day spike** on the two risky seams, on Android 10, 13, 14 and 16 (emulators and
   at least one real phone with Bluetooth): audio routes owned by Telecom and followed by Linphone;
   starting `CallService` with `phoneCall` and adding `microphone` on answer, from the background and
