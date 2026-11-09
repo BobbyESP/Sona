@@ -8,6 +8,12 @@ import com.bobbyesp.sona.accounts.domain.InMemoryAccountsRepository
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.core.testing.MainDispatcherRule
+import com.bobbyesp.sona.directory.domain.Contact
+import com.bobbyesp.sona.directory.domain.ContactNumber
+import com.bobbyesp.sona.directory.domain.Directory
+import com.bobbyesp.sona.directory.domain.FakeDeviceContacts
+import com.bobbyesp.sona.directory.domain.InMemoryCallHistory
+import com.bobbyesp.sona.directory.domain.InMemoryLocalContacts
 import com.bobbyesp.sona.sip.fake.FakeSipEngine
 import com.bobbyesp.sona.telecom.api.FakeSystemCalls
 import kotlinx.coroutines.CoroutineScope
@@ -21,12 +27,22 @@ class KeypadTest {
 
     private val accounts = InMemoryAccountsRepository()
 
-    private fun keypad(saved: SavedStateHandle): KeypadViewModel {
+    private fun keypad(
+        saved: SavedStateHandle,
+        contacts: List<Contact> = emptyList(),
+    ): KeypadViewModel {
         val scope = CoroutineScope(mainDispatcher.dispatcher)
         val engine = FakeSipEngine(scope)
         val coordinator =
             CallCoordinator(engine, FakeSystemCalls(), accounts, InMemorySettingsStore(), scope)
-        return KeypadViewModel(saved, coordinator, accounts)
+        val directory =
+            Directory(
+                InMemoryLocalContacts(contacts),
+                FakeDeviceContacts(),
+                InMemoryCallHistory(),
+                InMemorySettingsStore(),
+            )
+        return KeypadViewModel(saved, coordinator, directory, accounts)
     }
 
     @Test
@@ -75,5 +91,19 @@ class KeypadTest {
         viewModel.onSendIntent(KeypadIntent.Clear)
 
         assertEquals("", viewModel.state.value.input)
+    }
+
+    @Test
+    fun `letters typed on the keys suggest the contact, and picking one fills the field`() {
+        val luna = Contact("local:1", "Luna", listOf(ContactNumber("Lab", "103")))
+        val viewModel = keypad(SavedStateHandle(), contacts = listOf(luna))
+
+        "5862".forEach { viewModel.onSendIntent(KeypadIntent.Type(it)) }
+        mainDispatcher.dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf("103"), viewModel.state.value.suggestions.map { it.number })
+
+        viewModel.onSendIntent(KeypadIntent.Pick("103"))
+        assertEquals("103", viewModel.state.value.input)
     }
 }

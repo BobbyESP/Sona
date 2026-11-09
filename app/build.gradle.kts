@@ -55,6 +55,8 @@ dependencies {
     implementation(project(":feature:accounts"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:call"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:diagnostics"))
 
     implementation(project(":calling:domain"))
     implementation(project(":calling:platform"))
@@ -63,6 +65,8 @@ dependencies {
     implementation(project(":accounts:domain"))
     implementation(project(":accounts:data"))
     implementation(project(":accounts:ui"))
+    implementation(project(":directory:domain"))
+    implementation(project(":directory:data"))
     implementation(project(":credentials:keystore"))
     implementation(project(":core:database"))
 

@@ -2,5 +2,50 @@
 <resources>
     <string name="contacts_title">Contacts</string>
     <string name="contacts_empty_title">No contacts yet</string>
-    <string name="contacts_empty_description">Contacts from your phone with a SIP address, and the extensions you save, appear here.</string>
+    <string name="contacts_empty_description">Save the extensions and numbers you call, and the ones from your phone show up here too.</string>
+    <string name="contacts_search">Search contacts</string>
+    <string name="contacts_search_close">Close search</string>
+    <string name="contacts_search_clear">Clear</string>
+    <string name="contacts_more">More actions</string>
+    <string name="contacts_no_results">No one matches that</string>
+    <string name="contacts_favorites">Favorites</string>
+    <string name="contacts_favorite">Favorite</string>
+    <string name="contacts_new">New contact</string>
+    <string name="contacts_call">Call</string>
+    <string name="contacts_call_name">Call %1$s</string>
+    <string name="contacts_favorite_add">Add to favorites</string>
+    <string name="contacts_favorite_remove">Remove from favorites</string>
+    <string name="contacts_edit">Edit</string>
+    <string name="contacts_delete">Delete</string>
+    <string name="contacts_delete_title">Delete %1$s?</string>
+    <string name="contacts_delete_text">The contact goes; the calls with them stay in Recents.</string>
+    <string name="contacts_cancel">Cancel</string>
+    <string name="contacts_phone_title">Show your phone contacts</string>
+    <string name="contacts_phone_text">Sona only reads them, to put names to the numbers you call. They never leave this phone.</string>
+    <string name="contacts_phone_allow">Allow</string>
+    <string name="contacts_from_phone">From your phone</string>
+
+    <string name="contact_editor_new">New contact</string>
+    <string name="contact_editor_edit">Edit contact</string>
+    <string name="contact_editor_back">Back</string>
+    <string name="contact_editor_name">Name</string>
+    <string name="contact_editor_label">Label</string>
+    <string name="contact_editor_label_hint">Extension, Mobile…</string>
+    <string name="contact_editor_number">Number or address</string>
+    <string name="contact_editor_numbers">Numbers</string>
+    <string name="contact_editor_favorite_hint">Favorites are one touch away in Contacts</string>
+    <string name="contact_label_extension">Extension</string>
+    <string name="contact_label_mobile">Mobile</string>
+    <string name="contact_label_home">Home</string>
+    <string name="contact_label_work">Work</string>
+    <string name="contact_editor_add_number">Add a number</string>
+    <string name="contact_editor_remove_number">Remove this number</string>
+    <string name="contact_editor_favorite">Favorite</string>
+    <string name="contact_editor_save">Save</string>
+    <string name="contact_editor_need_name">A name is needed</string>
+    <string name="contact_editor_need_number">At least one number is needed</string>
+
+    <string name="settings_device_contacts">Use phone contacts</string>
+    <string name="settings_device_contacts_summary">Show the contacts of this phone next to your own. They are only read</string>
+    <string name="settings_device_contacts_keywords">address book permission</string>
 </resources>

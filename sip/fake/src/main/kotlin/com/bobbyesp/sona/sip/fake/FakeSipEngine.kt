@@ -154,7 +154,15 @@ class FakeSipEngine(
             if (state == EngineCallState.Incoming) copy(state = EngineCallState.Active) else this
         }
 
-    override suspend fun decline(call: CallId, busy: Boolean) =
+    /** Every call refused, with whether it was told busy (`486`) rather than declined (`603`). */
+    val declined = mutableListOf<Pair<CallId, Boolean>>()
+
+    override suspend fun decline(call: CallId, busy: Boolean) {
+        declined += call to busy
+        declineCall(call)
+    }
+
+    private suspend fun declineCall(call: CallId) =
         update(call) {
             copy(state = EngineCallState.Ended(status = null, byRemote = false))
         }

@@ -11,6 +11,11 @@ import com.bobbyesp.sona.calling.domain.AddressResolver
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.DialOutcome
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
+import com.bobbyesp.sona.directory.domain.Directory
+import com.bobbyesp.sona.directory.domain.Suggestion
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 
 internal data class KeypadState(
     val input: String = "",
@@ -18,6 +23,8 @@ internal data class KeypadState(
     val domain: String? = null,
     /** Why the last call could not be made, until the input changes. */
     val problem: DialOutcome? = null,
+    /** People and numbers the input could be, from contacts and recent calls. */
+    val suggestions: List<Suggestion> = emptyList(),
 ) {
     /** The address [input] would call, shown under it as it is typed. */
     val preview: String?
@@ -37,6 +44,9 @@ internal sealed interface KeypadIntent {
 
     data object Clear : KeypadIntent
 
+    /** A suggestion was chosen: its number replaces what was typed. */
+    data class Pick(val number: String) : KeypadIntent
+
     /** Calls what was typed, from the default account. */
     data object Call : KeypadIntent
 }
@@ -50,16 +60,25 @@ internal sealed interface KeypadEffect {
  * [SavedStateHandle]. Calling goes through [CallCoordinator]: when nothing could be dialed, the
  * reason stays under the field until the input changes.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class KeypadViewModel(
     private val savedState: SavedStateHandle,
     private val coordinator: CallCoordinator,
+    directory: Directory,
     accounts: AccountsRepository,
 ) :
     BaseViewModel<KeypadIntent, KeypadState, KeypadEffect>(
         KeypadState(input = savedState[INPUT_KEY] ?: ""),
     ) {
 
+    private val typed = MutableStateFlow(savedState.get<String>(INPUT_KEY) ?: "")
+
     init {
+        launch {
+            typed
+                .flatMapLatest { directory.suggest(it) }
+                .collect { setState { copy(suggestions = it) } }
+        }
         launch { accounts.defaultAccount().collect { setState { copy(domain = it?.domain) } } }
     }
 
@@ -70,6 +89,7 @@ internal class KeypadViewModel(
                 is KeypadIntent.Type -> DialInput.type(input, intent.key)
                 KeypadIntent.Delete -> DialInput.delete(input)
                 KeypadIntent.Clear -> ""
+                is KeypadIntent.Pick -> intent.number
                 KeypadIntent.Call -> {
                     call(input)
                     return
@@ -78,6 +98,7 @@ internal class KeypadViewModel(
         if (next == input) return
         setState { copy(input = next, problem = null) }
         savedState[INPUT_KEY] = next
+        typed.value = next
     }
 
     private fun call(input: String) {

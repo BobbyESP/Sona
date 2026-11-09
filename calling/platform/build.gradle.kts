@@ -7,6 +7,7 @@ android { namespace = "com.bobbyesp.sona.calling.platform" }
 
 dependencies {
     api(project(":calling:domain"))
+    api(project(":directory:domain"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.bundles.coroutines)

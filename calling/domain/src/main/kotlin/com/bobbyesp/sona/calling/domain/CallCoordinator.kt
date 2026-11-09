@@ -8,6 +8,7 @@ import com.bobbyesp.sona.accounts.domain.defaultAccount
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.DeclineMode
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.sip.api.CallDirection
 import com.bobbyesp.sona.sip.api.DialResult
@@ -82,6 +83,7 @@ class CallCoordinator(
     private val scope: CoroutineScope,
     private val clock: () -> Long = System::currentTimeMillis,
     private val endedLinger: Duration = 3.seconds,
+    private val names: CallerNames = CallerNames.None,
 ) {
     private class Tracked(
         val engine: EngineCall,
@@ -90,6 +92,8 @@ class CallCoordinator(
         val connectedAt: Long? = null,
         val endReason: EndReason? = null,
         val routeJob: Job? = null,
+        /** Who the contacts say the other side is; preferred to what the server says. */
+        val name: String? = null,
     ) {
         fun with(
             engine: EngineCall = this.engine,
@@ -98,7 +102,8 @@ class CallCoordinator(
             connectedAt: Long? = this.connectedAt,
             endReason: EndReason? = this.endReason,
             routeJob: Job? = this.routeJob,
-        ) = Tracked(engine, system, answered, connectedAt, endReason, routeJob)
+            name: String? = this.name,
+        ) = Tracked(engine, system, answered, connectedAt, endReason, routeJob, name)
 
         fun toCall(audio: Audio?): Call =
             Call(
@@ -106,7 +111,7 @@ class CallCoordinator(
                 account = engine.account,
                 direction = engine.direction,
                 remote = engine.remote,
-                remoteName = engine.remoteName,
+                remoteName = name ?: engine.remoteName,
                 state = engine.state.toCallState { endReason ?: EndReason.HungUp(byMe = true) },
                 muted = engine.muted,
                 media = engine.media,
@@ -215,19 +220,33 @@ class CallCoordinator(
             // why nothing happened; an incoming one rang too briefly to show.
             if (call.direction == CallDirection.Outgoing) {
                 val reason = EndReason.of(state, call.direction, answered = false)
-                tracked.update { it + (call.id to Tracked(call, endReason = reason)) }
+                tracked.update {
+                    it +
+                        (call.id to
+                            Tracked(call, endReason = reason, name = names.nameFor(call.remote)))
+                }
                 forgetLater(call.id)
             } else {
                 engine.forget(call.id)
             }
             return
         }
+        if (
+            call.direction == CallDirection.Incoming &&
+                settings.observe(CallSettings.DoNotDisturb).first()
+        ) {
+            // Do not disturb: refused before it rings, and told as the user chose.
+            val busy = settings.observe(CallSettings.DeclineWith).first() == DeclineMode.Busy
+            engine.decline(call.id, busy = busy)
+            return
+        }
         if (call.direction == CallDirection.Incoming && shouldRejectAsBusy()) {
             engine.decline(call.id, busy = true)
             return
         }
-        tracked.update { it + (call.id to Tracked(call)) }
-        scope.launch { addToSystem(call) }
+        val name = names.nameFor(call.remote)
+        tracked.update { it + (call.id to Tracked(call, name = name)) }
+        scope.launch { addToSystem(call, name) }
     }
 
     /** Busy when a call is in progress and call waiting is off. */
@@ -272,12 +291,12 @@ class CallCoordinator(
         }
     }
 
-    private suspend fun addToSystem(call: EngineCall) {
+    private suspend fun addToSystem(call: EngineCall, name: String?) {
         val handle =
             system.add(
                 SystemCallRequest(
                     id = call.id,
-                    displayName = call.remoteName ?: call.remote.user ?: call.remote.host,
+                    displayName = name ?: call.remoteName ?: call.remote.user ?: call.remote.host,
                     address = call.remote.uri,
                     incoming = call.direction == CallDirection.Incoming,
                 ),

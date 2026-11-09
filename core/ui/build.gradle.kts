@@ -9,6 +9,7 @@ plugins {
 android { namespace = "com.bobbyesp.sona.core.ui" }
 
 dependencies {
+    api(project(":core:model"))
     api(project(":core:common"))
     api(project(":core:designsystem"))
     api(project(":core:navigation"))

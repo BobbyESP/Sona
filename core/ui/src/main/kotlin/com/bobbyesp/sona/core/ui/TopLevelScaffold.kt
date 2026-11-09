@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -21,9 +25,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.bobbyesp.sona.core.designsystem.components.FrostedLargeTopAppBar
 import com.bobbyesp.sona.core.ui.contribution.LocalAccountChip
+import com.bobbyesp.sona.core.ui.contribution.LocalOpenSettings
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
@@ -35,6 +41,8 @@ import dev.chrisbanes.haze.rememberHazeState
  * Where height is short (a phone in landscape), the bar is Material's small one: a large title
  * would take half of what there is. Decided from the room this screen was given, not the window.
  *
+ * @param snackbarHost Where short messages with an action (*Call deleted · Undo*) appear.
+ * @param floatingActionButton The screen's main action, if it has one.
  * @param content Given the padding to lay out with, and the modifier its scrolling container takes
  *   (it records what passes under the bar, and collapses the bar as it scrolls).
  */
@@ -43,6 +51,8 @@ import dev.chrisbanes.haze.rememberHazeState
 fun TopLevelScaffold(
     title: String,
     modifier: Modifier = Modifier,
+    snackbarHost: @Composable () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (padding: PaddingValues, contentModifier: Modifier) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -51,8 +61,17 @@ fun TopLevelScaffold(
         derivedStateOf { scrollBehavior.state.overlappedFraction > 0f }
     }
     val accountChip = LocalAccountChip.current
+    val openSettings = LocalOpenSettings.current
     val actions: @Composable RowScope.() -> Unit = {
         accountChip()
+        if (openSettings != null) {
+            IconButton(onClick = openSettings) {
+                Icon(
+                    Icons.Rounded.Settings,
+                    contentDescription = stringResource(R.string.settings_open),
+                )
+            }
+        }
         Spacer(Modifier.width(8.dp))
     }
 
@@ -61,6 +80,8 @@ fun TopLevelScaffold(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.surface,
+            snackbarHost = snackbarHost,
+            floatingActionButton = floatingActionButton,
             topBar = {
                 if (shortHeight) {
                     TopAppBar(

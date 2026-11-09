@@ -3,12 +3,6 @@
  */
 package com.bobbyesp.sona.feature.dialer
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,11 +23,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Backspace
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -56,13 +54,16 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bobbyesp.sona.calling.domain.DialOutcome
+import com.bobbyesp.sona.calling.ui.problemText
 import com.bobbyesp.sona.core.designsystem.components.CallButton
 import com.bobbyesp.sona.core.designsystem.components.Dialpad
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.ui.TopLevelScaffold
 import com.bobbyesp.sona.core.ui.contribution.LocalCallScreen
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
+import com.bobbyesp.sona.core.ui.rememberCallStarter
+import com.bobbyesp.sona.directory.domain.Suggestion
+import com.bobbyesp.sona.directory.ui.Avatar
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -75,28 +76,15 @@ internal fun KeypadRoute(viewModel: KeypadViewModel = koinViewModel()) {
         }
     }
     // A call needs the microphone, and notifications to show it: asked for at the first call.
-    val permissions =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            viewModel.onSendIntent(KeypadIntent.Call)
-        }
-    val context = LocalContext.current
+    val callStarter = rememberCallStarter()
     KeypadScreen(
         state = state,
         onIntent = { intent ->
-            if (intent == KeypadIntent.Call && !context.canRecord())
-                permissions.launch(callPermissions())
+            if (intent == KeypadIntent.Call) callStarter.start { viewModel.onSendIntent(intent) }
             else viewModel.onSendIntent(intent)
         },
     )
 }
-
-private fun Context.canRecord() =
-    checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-
-private fun callPermissions(): Array<String> =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-        arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS)
-    else arrayOf(Manifest.permission.RECORD_AUDIO)
 
 /**
  * The keypad tab: what was typed with the address it calls under it, the dialpad, and the call
@@ -117,6 +105,7 @@ internal fun KeypadScreen(
             state = state,
             onDelete = { onIntent(KeypadIntent.Delete) },
             onClear = { onIntent(KeypadIntent.Clear) },
+            onPick = { onIntent(KeypadIntent.Pick(it)) },
         )
     }
     val callButton: @Composable () -> Unit = {
@@ -177,6 +166,7 @@ private fun DialField(
     state: KeypadState,
     onDelete: () -> Unit,
     onClear: () -> Unit,
+    onPick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val input = state.input
@@ -256,7 +246,7 @@ private fun DialField(
                 }
             }
         }
-        val problem = state.problem?.let { dialProblemText(it) }
+        val problem = state.problem?.problemText()
         val line = problem ?: state.preview
         Text(
             text = line.orEmpty(),
@@ -266,6 +256,7 @@ private fun DialField(
             textAlign = TextAlign.Center,
             modifier = Modifier.heightIn(min = 24.dp),
         )
+        SuggestionRow(state.suggestions, onPick = onPick)
     }
 }
 
@@ -277,13 +268,38 @@ private fun KeypadScreenPreview() {
     }
 }
 
+/** Who the typed digits could be: chips to tap, so a contact is dialed without typing it all. */
 @Composable
-private fun dialProblemText(outcome: DialOutcome): String? =
-    when (outcome) {
-        DialOutcome.NoAccount -> stringResource(R.string.dial_no_account)
-        is DialOutcome.AccountOff -> stringResource(R.string.dial_account_off, outcome.label)
-        is DialOutcome.NotRegistered -> stringResource(R.string.dial_not_registered, outcome.label)
-        is DialOutcome.InvalidAddress -> stringResource(R.string.dial_invalid)
-        is DialOutcome.Failed -> stringResource(R.string.dial_failed, outcome.detail)
-        is DialOutcome.Started -> null
+private fun SuggestionRow(suggestions: List<Suggestion>, onPick: (String) -> Unit) {
+    if (suggestions.isEmpty()) return
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+    ) {
+        items(suggestions, key = { it.number }) { suggestion ->
+            AssistChip(
+                onClick = { onPick(suggestion.number) },
+                label = {
+                    Text(
+                        text =
+                            suggestion.name?.let { "$it · ${suggestion.number}" }
+                                ?: suggestion.number,
+                        maxLines = 1,
+                    )
+                },
+                leadingIcon = {
+                    if (suggestion.fromContact && suggestion.name != null) {
+                        Avatar(suggestion.name!!, size = 28.dp)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Rounded.History,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                },
+            )
+        }
     }
+}

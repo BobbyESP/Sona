@@ -7,6 +7,8 @@ android { namespace = "com.bobbyesp.sona.feature.dialer" }
 
 dependencies {
     implementation(project(":calling:domain"))
-    implementation(libs.androidx.activity.compose)
+    implementation(project(":calling:ui"))
+    implementation(project(":directory:domain"))
+    implementation(project(":directory:ui"))
     testImplementation(project(":sip:fake"))
 }

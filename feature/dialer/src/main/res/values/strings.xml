@@ -5,9 +5,4 @@
     <string name="dialer_delete">Delete</string>
     <string name="dialer_clear">Clear</string>
     <string name="dialer_call">Call</string>
-    <string name="dial_no_account">Add an account to call from</string>
-    <string name="dial_account_off">%1$s is turned off</string>
-    <string name="dial_not_registered">%1$s is not registered, so it cannot call yet</string>
-    <string name="dial_invalid">Not a number, an extension or a SIP address</string>
-    <string name="dial_failed">Could not call (%1$s)</string>
 </resources>

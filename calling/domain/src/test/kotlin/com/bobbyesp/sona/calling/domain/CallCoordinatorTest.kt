@@ -12,6 +12,7 @@ import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.Secret
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.DeclineMode
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.credentials.api.InMemoryCredentialVault
 import com.bobbyesp.sona.sip.api.EngineConfig
@@ -43,7 +44,7 @@ class CallCoordinatorTest {
     private class World(val engine: FakeSipEngine, val calls: CallCoordinator)
 
     /** A registered account, its engine, and a started coordinator. */
-    private suspend fun TestScope.world(): World {
+    private suspend fun TestScope.world(names: CallerNames = CallerNames.None): World {
         val engine = FakeSipEngine(backgroundScope)
         engine.start(EngineConfig())
         SaveAccount(accounts, vault) { AccountId("lab") }(
@@ -53,7 +54,15 @@ class CallCoordinatorTest {
         backgroundScope.launch { AccountEngineSync(accounts, vault, engine).run() }
         advanceTimeBy(1.seconds)
         val coordinator =
-            CallCoordinator(engine, system, accounts, settings, backgroundScope, clock = { 1_000 })
+            CallCoordinator(
+                engine,
+                system,
+                accounts,
+                settings,
+                backgroundScope,
+                clock = { 1_000 },
+                names = names,
+            )
         coordinator.start()
         runCurrent()
         return World(engine, coordinator)
@@ -75,6 +84,16 @@ class CallCoordinatorTest {
         assertEquals(SipAddress("600", "lab.local"), world.call(id).remote)
         assertEquals(CallState.Dialing, world.call(id).state)
         assertEquals("sip:600@lab.local", systemCall(id).request.address)
+    }
+
+    @Test
+    fun `a call to a contact shows the contact name, here and in the system`() = runTest {
+        val world = world(names = CallerNames { if (it.user == "600") "Echo test" else null })
+        val id = world.dial("600")
+        runCurrent()
+
+        assertEquals("Echo test", world.call(id).title)
+        assertEquals("Echo test", systemCall(id).request.displayName)
     }
 
     @Test
@@ -205,6 +224,30 @@ class CallCoordinatorTest {
         runCurrent()
 
         assertEquals(listOf(first), world.calls.calls.value.map { it.id })
+    }
+
+    @Test
+    fun `do not disturb refuses an incoming call before it rings, as the user chose`() = runTest {
+        settings.set(CallSettings.DoNotDisturb, true)
+        settings.set(CallSettings.DeclineWith, DeclineMode.Declined)
+        val world = world()
+
+        val id = world.engine.incomingCall(alice)
+        runCurrent()
+
+        assertTrue(world.calls.calls.value.isEmpty())
+        assertEquals(listOf(id to false), world.engine.declined)
+    }
+
+    @Test
+    fun `do not disturb refuses as busy by default`() = runTest {
+        settings.set(CallSettings.DoNotDisturb, true)
+        val world = world()
+
+        val id = world.engine.incomingCall(alice)
+        runCurrent()
+
+        assertEquals(listOf(id to true), world.engine.declined)
     }
 
     @Test

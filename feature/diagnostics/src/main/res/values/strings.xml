@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_back">Back</string>
+    <string name="diagnostics_engine">Engine</string>
+    <string name="diagnostics_engine_running">Running</string>
+    <string name="diagnostics_engine_starting">Starting…</string>
+    <string name="diagnostics_engine_stopped">Stopped</string>
+    <string name="diagnostics_engine_failed">Could not start</string>
+    <string name="diagnostics_accounts">Accounts</string>
+    <string name="diagnostics_no_accounts">No accounts yet. Add one from the account chip.</string>
+    <string name="diagnostics_server">Server</string>
+    <string name="diagnostics_identity">Identity</string>
+    <string name="diagnostics_expiry">Registration expiry</string>
+    <string name="diagnostics_expiry_value">%1$d s</string>
+    <string name="diagnostics_registration">Registration</string>
+    <string name="diagnostics_copied">Copied</string>
+    <string name="diagnostics_copy">Copy %1$s</string>
+    <string name="diagnostics_registration_sip">Last response</string>
+    <string name="diagnostics_proxy">Outbound proxy</string>
+    <string name="diagnostics_capabilities">The engine can</string>
+
+    <string name="settings_diagnostics_open">Overview</string>
+    <string name="settings_diagnostics_open_summary">The engine and every account\'s registration, with the SIP behind it</string>
+    <string name="settings_diagnostics_keywords">sip registration server status debug trace asterisk</string>
+</resources>

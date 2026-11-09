@@ -45,6 +45,15 @@ object AppSettings {
     val OnboardingDone = Setting.Toggle("app.onboarding_done", default = false)
 }
 
+/** What an incoming call is told when it is refused without ringing. */
+enum class DeclineMode {
+    /** `486 Busy Here`: the caller hears it is busy. */
+    Busy,
+
+    /** `603 Decline`: the caller is told the call was refused. */
+    Declined,
+}
+
 /** How calls behave. */
 object CallSettings {
     /** A second call rings during one; off, it is declined as busy (486). */
@@ -52,4 +61,45 @@ object CallSettings {
 
     /** Stay registered while the app is closed, with a quiet notification, so calls can ring. */
     val AlwaysReachable = Setting.Toggle("calls.always_reachable", default = true)
+
+    /** Incoming calls do not ring: they are refused at once, and the caller is told how. */
+    val DoNotDisturb = Setting.Toggle("calls.do_not_disturb", default = false)
+
+    val DeclineWith = Setting.choice("calls.decline_with", DeclineMode.Busy)
+}
+
+/** How long the call history is kept. */
+enum class HistoryRetention(val days: Int?) {
+    Forever(null),
+    Year(365),
+    Days90(90),
+    Days30(30),
+}
+
+/** What tapping an entry in Recents does. */
+enum class RecentTapAction {
+    /** Opens its details, from where it can be called. */
+    Details,
+
+    /** Calls the person back at once. */
+    CallBack,
+}
+
+/** The call history and how Recents behaves. */
+object HistorySettings {
+    /** Calls in a row with the same person are one entry. */
+    val GroupCalls = Setting.Toggle("history.group_calls", default = true)
+
+    val Retention = Setting.choice("history.retention", HistoryRetention.Forever)
+
+    val TapAction = Setting.choice("history.tap_action", RecentTapAction.Details)
+
+    /** Ask before calling back from Recents. */
+    val ConfirmCallBack = Setting.Toggle("history.confirm_call_back", default = false)
+}
+
+/** The people Sona knows. */
+object ContactsSettings {
+    /** Show the phone's contacts next to Sona's own (they are read, never changed). */
+    val UseDeviceContacts = Setting.Toggle("contacts.use_device", default = true)
 }

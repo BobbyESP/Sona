@@ -7,7 +7,7 @@ servers the user configured.
 
 This file is the map and the rules. How each part works, and why, is in [`docs/`](docs/README.md).
 
-**Status:** phases 0, 1 and 2 are built (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
+**Status:** phases 0, 1 and 2 are built, and phase 3 is built except the parts its section lists (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
 exist yet arrive with the phase that needs them, and are added to `settings.gradle.kts` then.
 
 ---
@@ -24,7 +24,7 @@ exist yet arrive with the phase that needs them, and are added to `settings.grad
 | `:core:navigation` | Keys, `Navigator`, scenes, `NavigationMotion` | Cross-feature keys live here, uuids and ids at most |
 | `:accounts:domain` / `:data` / `:ui` | SIP accounts on the user's own server: model, validation, use cases, the engine sync; Room storage; rows, state words, failure sentences | `:domain` plain Kotlin; `:data` only seen by `:app` |
 | `:calling:domain` | `CallCoordinator`, `CallMachine`, call use cases, `AddressResolver`, `EndReason` | Plain Kotlin |
-| `:calling:ui` | Ongoing-call banner, quality badge, state labels | |
+| `:calling:ui` | What the calling domain says in words: why nothing was dialed (more arrives with the quality badge) | |
 | `:calling:platform` | `CallService`, `KeepAliveService`, notifications, boot receiver, `NetworkMonitor` | Only `:app` depends on it |
 | `:directory:domain` / `:data` / `:ui` | History, contacts, favorites, T9 matching | `:data` only seen by `:app` |
 | `:sip:api` / `:sip:linphone` / `:sip:fake` | The SIP engine contract and its implementations | No `org.linphone` type leaves `:sip:linphone` |

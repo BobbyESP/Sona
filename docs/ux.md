@@ -176,7 +176,13 @@ New for Sona:
 | `CallButton` | The round call button, morphing to a pill under the finger; `SplitCallButton` with the account picker |
 | `EndCallButton` | Wide, error container, the largest target on the call screen |
 | `CallControl` | A toggle button with icon and label for the call screen's button group |
-| `Avatar` | Photo, or initials on a shape and color derived from the party, with an optional account ring |
+| `Avatar` | Initials on one of Material's expressive shapes (cookie, clover, flower…) and a container color, both derived from the name, so the same person is always the same mark |
+| `segmentedItems`, `segmentedListColors` | Lists as segmented groups (`SegmentedListItem`): outer corners round, inner ones square, a gap between, corners morphing under the finger. Recents, Contacts, Settings and Diagnostics are made of them |
+| `SectionHeader` | A group's heading, read as a heading by TalkBack; sticky in Recents and Contacts |
+| `ConnectedChoice` | One choice among two to four, as a connected group of toggle buttons (Recents' All / Missed, a setting's values) |
+| `ExpressiveSearch` | Material's search: a pill that grows into a full-screen view with the results (Contacts, Settings) |
+| `SwipeToDeleteRow` | Swipe to delete, with a custom TalkBack action; Recents pairs it with a message to undo |
+| `readableWidth()` | At most 840 dp wide and centered, so a tablet gets margins, not long lines |
 | `RegistrationChip` | The account chip: color, name, animated state dot and word |
 | `CallQualityBadge` | Three bars with Good / Fair / Poor, details on long press |
 | `StatusText` | A failure's sentence with its technical line under it when *Show SIP details* is on |

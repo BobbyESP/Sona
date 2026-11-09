@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.navigation.Navigator
+import com.bobbyesp.sona.core.navigation.keys.ContactEditor
 import com.bobbyesp.sona.core.navigation.motion.TopLevelMotion
 import com.bobbyesp.sona.core.ui.contribution.NavSection
 import com.bobbyesp.sona.core.ui.contribution.TopLevelDestination
@@ -20,7 +21,18 @@ import kotlinx.serialization.Serializable
 
 internal object RecentsSection : NavSection {
     override fun EntryProviderScope<NavKey>.register(navigator: Navigator) {
-        entry<Recents>(metadata = TopLevelMotion.metadata()) { RecentsScreen() }
+        entry<Recents>(metadata = TopLevelMotion.metadata()) {
+            RecentsRoute(
+                onAddContact = { record ->
+                    navigator.goTo(
+                        ContactEditor(
+                            number = record.address.user ?: record.address.uri,
+                            name = record.name,
+                        ),
+                    )
+                },
+            )
+        }
     }
 }
 

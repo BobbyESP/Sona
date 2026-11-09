@@ -28,6 +28,12 @@ interface CallScreenIntents {
 
     /** The call screen, answering [call] as it opens: the notification's *Answer*. */
     fun answer(context: Context, call: CallId): Intent
+
+    /**
+     * The call screen, calling [address] back as it opens: a missed call notification's *Call
+     * back*.
+     */
+    fun callBack(context: Context, address: String, account: String?): Intent
 }
 
 /**

@@ -10,9 +10,11 @@ import com.bobbyesp.sona.di.engineModule
 import com.bobbyesp.sona.feature.accounts.accountsModule
 import com.bobbyesp.sona.feature.call.callModule
 import com.bobbyesp.sona.feature.contacts.contactsModule
+import com.bobbyesp.sona.feature.diagnostics.diagnosticsModule
 import com.bobbyesp.sona.feature.dialer.dialerModule
 import com.bobbyesp.sona.feature.history.historyModule
 import com.bobbyesp.sona.feature.onboarding.onboardingModule
+import com.bobbyesp.sona.feature.settings.settingsModule
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -33,6 +35,8 @@ class App : Application() {
                 accountsModule,
                 onboardingModule,
                 callModule,
+                settingsModule,
+                diagnosticsModule,
             )
         }
         get<EngineBootstrap>().start()

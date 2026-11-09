@@ -36,4 +36,19 @@
     <string name="end_server_unavailable">The server did not answer</string>
     <string name="end_media_lost">The call lost its audio connection</string>
     <string name="end_failed">Call failed</string>
+
+    <string name="settings_call_waiting">Call waiting</string>
+    <string name="settings_call_waiting_summary">A second call rings during one, instead of being refused as busy</string>
+    <string name="settings_call_waiting_keywords">second call hold busy 486</string>
+    <string name="settings_always_reachable">Always reachable</string>
+    <string name="settings_always_reachable_summary">Stay registered with a quiet notification, so calls ring when the app is closed</string>
+    <string name="settings_always_reachable_keywords">keep alive background service notification battery</string>
+    <string name="settings_dnd">Do not disturb</string>
+    <string name="settings_dnd_summary">Incoming calls do not ring: they are refused at once</string>
+    <string name="settings_dnd_keywords">silence quiet refuse reject</string>
+    <string name="settings_decline_with">Refused calls say</string>
+    <string name="settings_decline_with_summary">What the caller is told when a call is refused without ringing</string>
+    <string name="settings_decline_busy">Busy (486)</string>
+    <string name="settings_decline_declined">Declined (603)</string>
+    <string name="settings_decline_keywords">busy declined 486 603 sip</string>
 </resources>

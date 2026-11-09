@@ -89,6 +89,28 @@ and hangs up.
 
 ### Phase 3 · Directory: recents, contacts, keypad (1–2 weeks). MVP complete
 
+**Built (2026-11-09), with parts left for the next round.** Built: `:directory:{domain,data,ui}`
+(Room schema 2 with an automatic migration; the phone's contacts through `ContactsContract`, read
+only and asked for in context), `CallRecorder` (writes the history from the calls the coordinator
+publishes, so no screen can forget one), `:calling:ui`, Recents (All and Missed, grouped by day and
+by consecutive calls, details sheet with the SIP status, delete, call back, add to contacts),
+Contacts (Sona's own and the phone's, favorites, search, editor), T9 suggestions on the keypad,
+contact names on the call screen and in Telecom (`CallerNames`), the missed-call notification with
+*Call back*, do not disturb (refuse as `486` or `603`), `:feature:settings` (contributions, search,
+Calls, Contacts and history, Appearance) and `:feature:diagnostics` (overview). Checked on the
+emulator with the `demo` flavor: a call recorded as *Busy*, a contact created and found from the
+keypad by its letters, settings and its search, diagnostics. 134 JVM tests.
+
+Not done yet: the split call button; Sona's calls in the phone app's history and `ACTION_CALL_BACK`;
+a badge on the Recents tab; diagnostics' SIP trace, logs and sharing (they need an engine
+capability for the trace); the MVP options of [ux.md](ux.md#the-options-catalogue) that are still
+missing (auto-answer, answer by swipe, vibrate, proximity sensor, DTMF method, codec order, echo
+cancellation, speaker by default, dialpad tones, mobile data, start on boot, hide caller on the lock
+screen, name and sort order, *Show SIP details*, trace capture, log level, language, reset
+everything). Not checked: the Linphone flavor against the lab (Docker was not running), the
+missed-call notification on a device, a real phone. A call still in progress when the process dies
+is not recorded.
+
 - `:directory:*`: history written by the coordinator, local contacts, device contacts, favorites,
   the T9 matcher.
 - `:feature:history`, `:feature:contacts`, `:feature:dialer` with suggestions and the split call

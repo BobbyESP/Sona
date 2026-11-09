@@ -4,3 +4,10 @@
 plugins { id("sona.android.feature") }
 
 android { namespace = "com.bobbyesp.sona.feature.history" }
+
+dependencies {
+    implementation(project(":calling:domain"))
+    implementation(project(":calling:ui"))
+    implementation(project(":directory:ui"))
+    testImplementation(project(":sip:fake"))
+}

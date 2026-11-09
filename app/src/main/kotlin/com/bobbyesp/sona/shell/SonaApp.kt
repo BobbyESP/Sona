@@ -36,12 +36,14 @@ import com.bobbyesp.sona.core.navigation.currentTopLevel
 import com.bobbyesp.sona.core.navigation.keys.AccountEditor
 import com.bobbyesp.sona.core.navigation.keys.AccountSwitcher
 import com.bobbyesp.sona.core.navigation.keys.Onboarding
+import com.bobbyesp.sona.core.navigation.keys.Settings
 import com.bobbyesp.sona.core.navigation.overlay.OverlaySceneStrategy
 import com.bobbyesp.sona.core.navigation.overlay.rememberOverlaySceneStrategy
 import com.bobbyesp.sona.core.navigation.pane.sharingTheWindow
 import com.bobbyesp.sona.core.navigation.rememberNavigator
 import com.bobbyesp.sona.core.ui.contribution.LocalAccountChip
 import com.bobbyesp.sona.core.ui.contribution.LocalCallScreen
+import com.bobbyesp.sona.core.ui.contribution.LocalOpenSettings
 import com.bobbyesp.sona.core.ui.contribution.NavSection
 import com.bobbyesp.sona.core.ui.contribution.TopLevelDestination
 import com.bobbyesp.sona.feature.call.OngoingCallBanner
@@ -107,6 +109,7 @@ fun SonaApp(
         if (showsBar)
             NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
         else NavigationSuiteType.None
+    val openSettings: () -> Unit = remember(navigator) { { navigator.goTo(Settings) } }
     val chip: @Composable () -> Unit =
         remember(accountChip, navigator) {
             {
@@ -151,6 +154,7 @@ fun SonaApp(
         CompositionLocalProvider(
             LocalAccountChip provides chip,
             LocalCallScreen provides openCall,
+            LocalOpenSettings provides openSettings,
         ) {
             Box(Modifier.fillMaxSize()) {
                 SonaNavDisplay(

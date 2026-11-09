@@ -16,4 +16,10 @@
     <string name="notification_reachable">Reachable on %1$s</string>
     <string name="notification_reachable_many">Reachable on %1$d accounts</string>
     <string name="notification_reachable_text">Calls to your extension ring here</string>
+
+    <string name="channel_missed">Missed calls</string>
+    <string name="channel_missed_description">Calls that rang here and nobody answered</string>
+    <string name="notification_missed">Missed call</string>
+    <string name="notification_missed_many">%1$d missed calls</string>
+    <string name="notification_missed_call_back">Call back</string>
 </resources>

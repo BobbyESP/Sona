@@ -66,7 +66,16 @@ include(":accounts:ui")
 // Calling: the coordinator several features share
 include(":calling:domain")
 
+include(":calling:ui")
+
 include(":calling:platform")
+
+// Directory: history and contacts, which the dialer, Recents and Contacts share
+include(":directory:domain")
+
+include(":directory:data")
+
+include(":directory:ui")
 
 // Engines: a contract (api) and its implementations
 include(":sip:api")
@@ -84,6 +93,10 @@ include(":telecom:api")
 include(":telecom:jetpack")
 
 // Features: what the user sees
+include(":feature:settings")
+
+include(":feature:diagnostics")
+
 include(":feature:history")
 
 include(":feature:contacts")

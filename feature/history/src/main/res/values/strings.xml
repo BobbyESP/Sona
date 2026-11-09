@@ -3,4 +3,51 @@
     <string name="history_title">Recents</string>
     <string name="history_empty_title">No calls yet</string>
     <string name="history_empty_description">Calls you make and receive appear here, with how each one ended.</string>
+    <string name="history_empty_missed_title">No missed calls</string>
+    <string name="history_empty_missed_description">Calls that rang here and nobody answered appear here.</string>
+    <string name="history_filter_all">All</string>
+    <string name="history_filter_missed">Missed</string>
+    <string name="history_call">Call</string>
+    <string name="history_call_name">Call %1$s</string>
+    <string name="history_more">More actions</string>
+    <string name="history_undo">Undo</string>
+    <string name="history_title_count">%1$s (%2$d)</string>
+    <string name="history_call_confirm_title">Call %1$s?</string>
+    <string name="history_call_confirm">Call</string>
+    <string name="history_cancel">Cancel</string>
+    <string name="history_details_calls">Calls</string>
+    <string name="history_details_sip">SIP</string>
+    <string name="history_details_account">Account</string>
+    <string name="history_add_contact">Add to contacts</string>
+    <string name="history_delete">Delete from history</string>
+    <string name="history_delete_one">Delete this call</string>
+    <string name="history_close">Close</string>
+
+    <string name="settings_group">Group calls in a row</string>
+    <string name="settings_group_summary">Several calls with the same person in a row are one entry</string>
+    <string name="settings_group_keywords">recents consecutive</string>
+    <string name="settings_tap">Tap a recent to</string>
+    <string name="settings_tap_summary">What happens when you tap an entry in Recents</string>
+    <string name="settings_tap_details">Open its details</string>
+    <string name="settings_tap_call_back">Call back</string>
+    <string name="settings_tap_keywords">recents call back details</string>
+    <string name="settings_confirm_calls">Confirm before calling back</string>
+    <string name="settings_confirm_summary">Ask first when you call from Recents</string>
+    <string name="settings_confirm_keywords">recents accidental</string>
+    <string name="settings_retention">Keep history for</string>
+    <string name="settings_retention_summary">Older calls are deleted when Sona starts</string>
+    <string name="settings_retention_forever">Forever</string>
+    <string name="settings_retention_year">A year</string>
+    <string name="settings_retention_90">90 days</string>
+    <string name="settings_retention_30">30 days</string>
+    <string name="settings_retention_keywords">delete old privacy</string>
+    <string name="settings_clear">Clear history</string>
+    <string name="settings_clear_summary">Delete every call from Recents</string>
+    <string name="settings_clear_keywords">delete remove erase calls recents</string>
+    <string name="settings_clear_confirm">Every call is deleted from this phone. This cannot be undone.</string>
+
+    <plurals name="history_deleted">
+        <item quantity="one">Call deleted</item>
+        <item quantity="other">%1$d calls deleted</item>
+    </plurals>
 </resources>

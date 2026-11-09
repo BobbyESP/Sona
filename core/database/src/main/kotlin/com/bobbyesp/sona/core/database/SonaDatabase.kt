@@ -4,18 +4,35 @@
 package com.bobbyesp.sona.core.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
 /**
- * Sona's one database. Version 1 holds the accounts; history, contacts and per-account overrides
- * arrive as new tables with migrations, never by changing a released schema in place (the schemas
- * are exported to `schemas/` and committed).
+ * Sona's one database. Version 1 held the accounts; version 2 adds the call history and the local
+ * contacts. A released schema is never changed in place: each change is a new version with a
+ * migration, and the schemas are exported to `schemas/` and committed. Per-account overrides arrive
+ * the same way.
  */
-@Database(entities = [AccountEntity::class], version = 1, exportSchema = true)
+@Database(
+    entities =
+        [
+            AccountEntity::class,
+            CallRecordEntity::class,
+            ContactEntity::class,
+            ContactNumberEntity::class,
+        ],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    exportSchema = true,
+)
 abstract class SonaDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
+
+    abstract fun callRecordDao(): CallRecordDao
+
+    abstract fun contactDao(): ContactDao
 }
 
 fun Context.createSonaDatabase(): SonaDatabase =
