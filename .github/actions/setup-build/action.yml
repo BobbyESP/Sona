@@ -1,0 +1,25 @@
+name: Set up the build
+description: JDK and Gradle, with the Gradle cache. Run after actions/checkout.
+
+inputs:
+  cache-read-only:
+    description: Whether this run may only read the Gradle cache.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    # No Android SDK step: the runner image ships the SDK with its licenses accepted, and the
+    # Android Gradle Plugin downloads the platform and build tools the build asks for.
+    - name: Set up JDK 21
+      uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
+
+    # Also checks that the Gradle wrapper jar is a genuine one.
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-read-only: ${{ inputs.cache-read-only }}

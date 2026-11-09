@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_title">Recents</string>
+    <string name="history_empty_title">No calls yet</string>
+    <string name="history_empty_description">Calls you make and receive appear here, with how each one ended.</string>
+</resources>

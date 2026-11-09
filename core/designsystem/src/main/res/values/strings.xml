@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cancel">Cancel</string>
+
+    <!-- The account chip: "Lab Asterisk · 102, registered" -->
+    <string name="account_chip_description">Account %1$s, %2$s</string>
+    <string name="registration_registered">Registered</string>
+    <string name="registration_registering">Registering…</string>
+    <string name="registration_offline">Offline</string>
+    <string name="registration_failed">Failed</string>
+</resources>

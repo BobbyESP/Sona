@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contacts_title">Contacts</string>
+    <string name="contacts_empty_title">No contacts yet</string>
+    <string name="contacts_empty_description">Contacts from your phone with a SIP address, and the extensions you save, appear here.</string>
+</resources>

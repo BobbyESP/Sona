@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Only main writes the Gradle cache; a pull request reads its base branch's.
+  GRADLE_CACHE_READ_ONLY: ${{ github.event_name != 'push' }}
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-build
+        with:
+          cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
+      - name: Check formatting
+        run: ./gradlew spotlessCheck
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-build
+        with:
+          cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
+      # --continue: one module's failure does not hide another's.
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest testDemoDebugUnitTest --continue
+      - name: Upload the test reports
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          retention-days: 7
+
+  build:
+    name: Debug build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-build
+        with:
+          cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
+      - name: Build the demo APK
+        run: ./gradlew :app:assembleDemoDebug
+      - name: Upload the demo APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: sona-demo-debug
+          path: app/build/outputs/apk/demo/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  # The one check to require in branch protection.
+  ci:
+    name: CI
+    if: ${{ always() }}
+    needs: [format, test, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check that every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then exit 1; fi
+          done

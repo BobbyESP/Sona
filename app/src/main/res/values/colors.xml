@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The seed of the default theme (SONA_SEED_COLOR), for what the system draws before the app. -->
+    <color name="sona_brand">#00696B</color>
+</resources>

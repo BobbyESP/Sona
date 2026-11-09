@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dialer_title">Keypad</string>
+    <string name="dialer_hint">Extension, number or SIP address</string>
+    <string name="dialer_delete">Delete</string>
+    <string name="dialer_clear">Clear</string>
+    <string name="dialer_call">Call</string>
+    <string name="dialer_call_unavailable">Call. Calling arrives with accounts</string>
+</resources>
