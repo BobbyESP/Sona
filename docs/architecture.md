@@ -35,6 +35,7 @@ The calling engine is in [calling.md](calling.md); screens and settings are in [
 | `:core:ui` | `BaseViewModel`, messages, `PermissionHost`, the contribution point contracts | |
 | `:core:navigation` | Keys, `Navigator`, scenes, `NavigationMotion` | Every cross-feature `NavKey` lives here |
 | `:core:testing` | Test dispatchers, fixtures | Test-only |
+| `:accounts:domain` / `:accounts:data` / `:accounts:ui` | The user's SIP accounts: model, validation, use cases, `AccountEngineSync`; Room storage; rows, state words, failure sentences | `:domain` plain Kotlin; `:data` only seen by `:app` |
 | `:calling:domain` | `CallCoordinator`, the call state machine, call use cases, `AddressResolver`, `EndReason` mapping | Plain Kotlin |
 | `:calling:ui` | The ongoing-call banner, quality badge, call-state labels | Shared by dialer, history, contacts, call |
 | `:calling:platform` | `CallService`, `KeepAliveService`, `CallNotifications`, boot receiver, network monitor | Android components; only `:app` depends on it |
@@ -46,7 +47,7 @@ The calling engine is in [calling.md](calling.md); screens and settings are in [
 | `:sip:fake` | A scripted, in-memory engine | Previews, UI tests, screenshots, the `demo` flavor |
 | `:telecom:api` / `:telecom:jetpack` | Registering calls with Android, audio endpoints, remote surfaces | Core-Telecom is `implementation` |
 | `:credentials:api` / `:credentials:keystore` | SIP passwords, sealed with an Android Keystore key | Passwords never enter Room or DataStore in clear |
-| `:feature:*` | What the user sees | `:core:*` (not `:data`/`:database`), `:calling:*` and `:directory:*` (not `:data`/`:platform`), `*:api` |
+| `:feature:*` | What the user sees | `:core:*` (not `:data`/`:database`), `:accounts:*`, `:calling:*` and `:directory:*` (not `:data`/`:platform`), `*:api`; tests may also use `*:fake` |
 
 **What the graph enforces, and why:**
 

@@ -24,13 +24,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // The user's theme from the first frame: never the default one swapped for it.
-        splash.setKeepOnScreenCondition { shell.themeConfig.value == null }
+        splash.setKeepOnScreenCondition { shell.startup.value == null }
 
         setContent {
-            val themeConfig by shell.themeConfig.collectAsStateWithLifecycle()
+            val startup by shell.startup.collectAsStateWithLifecycle()
             val accountChip by shell.accountChip.collectAsStateWithLifecycle()
-            val config = themeConfig ?: return@setContent
-            SonaTheme(config = config) { SonaApp(accountChip = accountChip) }
+            val ready = startup ?: return@setContent
+            SonaTheme(config = ready.theme) {
+                SonaApp(accountChip = accountChip, needsOnboarding = ready.needsOnboarding)
+            }
         }
     }
 }

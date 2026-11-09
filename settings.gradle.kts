@@ -46,6 +46,8 @@ include(":core:common")
 
 include(":core:data")
 
+include(":core:database")
+
 include(":core:designsystem")
 
 include(":core:ui")
@@ -54,10 +56,23 @@ include(":core:navigation")
 
 include(":core:testing")
 
+// Accounts: the SIP accounts several features share
+include(":accounts:domain")
+
+include(":accounts:data")
+
+include(":accounts:ui")
+
 // Engines: a contract (api) and its implementations
 include(":sip:api")
 
+include(":sip:linphone")
+
 include(":sip:fake")
+
+include(":credentials:api")
+
+include(":credentials:keystore")
 
 // Features: what the user sees
 include(":feature:history")
@@ -65,3 +80,7 @@ include(":feature:history")
 include(":feature:contacts")
 
 include(":feature:dialer")
+
+include(":feature:accounts")
+
+include(":feature:onboarding")

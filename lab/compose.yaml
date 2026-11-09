@@ -1,0 +1,11 @@
+# docker compose -f lab/compose.yaml up --build
+# Phones on the same network register to this computer's address; the Android emulator to 10.0.2.2.
+services:
+  asterisk:
+    build: .
+    container_name: sona-lab-asterisk
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "10000-10100:10000-10100/udp"
+    restart: unless-stopped

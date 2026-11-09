@@ -13,13 +13,19 @@ android {
     defaultConfig {
         applicationId = "com.bobbyesp.sona"
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
+        // Phones and the emulator. Linphone ships native code for four ABIs; the two 32-bit ones
+        // only add size for devices no lab has.
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
 
-    // Which SIP engine the app runs on. `demo` is the fake engine, with a demo account that
-    // registers: no server needed. `full` (Linphone) arrives with phase 1.
+    buildFeatures { buildConfig = true }
+
+    // Which SIP engine the app runs on. `full` is Linphone, for real servers. `demo` is the fake
+    // engine, which accepts any account after a moment: the app runs with no server at all.
     flavorDimensions += "engine"
     productFlavors {
+        create("full") { dimension = "engine" }
         create("demo") {
             dimension = "engine"
             applicationIdSuffix = ".demo"
@@ -46,6 +52,14 @@ dependencies {
     implementation(project(":feature:history"))
     implementation(project(":feature:contacts"))
     implementation(project(":feature:dialer"))
+    implementation(project(":feature:accounts"))
+    implementation(project(":feature:onboarding"))
+
+    implementation(project(":accounts:domain"))
+    implementation(project(":accounts:data"))
+    implementation(project(":accounts:ui"))
+    implementation(project(":credentials:keystore"))
+    implementation(project(":core:database"))
 
     implementation(project(":core:model"))
     implementation(project(":core:common"))
@@ -55,6 +69,7 @@ dependencies {
     implementation(project(":core:ui"))
 
     implementation(project(":sip:api"))
+    "fullImplementation"(project(":sip:linphone"))
     "demoImplementation"(project(":sip:fake"))
 
     implementation(libs.androidx.core.ktx)

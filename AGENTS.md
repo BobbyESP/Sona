@@ -7,7 +7,7 @@ servers the user configured.
 
 This file is the map and the rules. How each part works, and why, is in [`docs/`](docs/README.md).
 
-**Status:** phase 0 is built (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
+**Status:** phases 0 and 1 are built (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
 exist yet arrive with the phase that needs them, and are added to `settings.gradle.kts` then.
 
 ---
@@ -22,6 +22,7 @@ exist yet arrive with the phase that needs them, and are added to `settings.grad
 | `:core:designsystem` | `SonaTheme`, tokens, blur, shared components | No feature knowledge |
 | `:core:ui` | `BaseViewModel`, messages, `PermissionHost`, contribution point contracts | |
 | `:core:navigation` | Keys, `Navigator`, scenes, `NavigationMotion` | Cross-feature keys live here, uuids and ids at most |
+| `:accounts:domain` / `:data` / `:ui` | SIP accounts on the user's own server: model, validation, use cases, the engine sync; Room storage; rows, state words, failure sentences | `:domain` plain Kotlin; `:data` only seen by `:app` |
 | `:calling:domain` | `CallCoordinator`, `CallMachine`, call use cases, `AddressResolver`, `EndReason` | Plain Kotlin |
 | `:calling:ui` | Ongoing-call banner, quality badge, state labels | |
 | `:calling:platform` | `CallService`, `KeepAliveService`, notifications, boot receiver, `NetworkMonitor` | Only `:app` depends on it |
@@ -50,7 +51,12 @@ compileSdk 37, targetSdk 37, Java 17). Versions are in `gradle/libs.versions.tom
 - **Never start `CallService` from `BOOT_COMPLETED`** (Android 15 forbids `phoneCall` there); boot
   starts `KeepAliveService` only.
 - **Accounts are declared to the engine as a whole** (`setAccounts`). Linphone keeps no state the
-  app depends on.
+  app depends on, and its auth infos are rebuilt whole on every change: removing one by object can
+  miss Linphone's copy and keep an old password.
+- **No Linphone cloud.** No sip.linphone.org accounts, no push, no remote provisioning: accounts
+  are the user's own extensions, on the phone only.
+- **Local network access is asked for in context** (Android 17, `ACCESS_LOCAL_NETWORK`), when an
+  account is checked; a refusal is explained, never a silent failure.
 - **Passwords live only in the vault.** Not in Room, DataStore, logs, traces, exports (unless the
   user confirms) or crash reports. Traces redact `Authorization` headers.
 
@@ -108,11 +114,12 @@ No existing feature should change. If one has to, a contribution point is missin
 ## 4. Build and test
 
 ```bash
-./gradlew assembleDemoDebug                    # the app on the fake engine, no server needed
-./gradlew testDebugUnitTest testDemoDebugUnitTest   # every JVM test
-./gradlew spotlessApply                        # format and license headers
-# From phase 1: assembleFullDebug (the app on Linphone).
-# From phase 2: connectedFullDebugAndroidTest -Plab.host=<server> (the lab suite, on demand).
+./gradlew assembleFullDebug                      # the app on Linphone
+./gradlew assembleDemoDebug                      # the app on the fake engine, no server needed
+./gradlew testDebugUnitTest testDemoDebugUnitTest testFullDebugUnitTest   # every JVM test
+./gradlew connectedDebugAndroidTest              # device tests (the Keystore vault)
+./gradlew spotlessApply                          # format and license headers
+docker compose -f lab/compose.yaml up -d --build # the lab Asterisk; the emulator reaches it at 10.0.2.2
 ```
 
 ## 5. Docs

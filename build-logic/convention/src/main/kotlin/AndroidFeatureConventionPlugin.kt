@@ -53,17 +53,25 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
     private fun Project.checkDependencyRules() {
         val forbidden =
             configurations
-                .flatMap { it.dependencies.withType(ProjectDependency::class.java) }
-                .map { it.path }
+                .flatMap { configuration ->
+                    configuration.dependencies.withType(ProjectDependency::class.java).map {
+                        configuration.name to it.path
+                    }
+                }
                 // AGP makes a module's test configurations depend on the module itself.
-                .filter { it != path }
+                .filter { (_, dependency) -> dependency != path }
+                // Tests use fakes, never implementations: a fake engine is what tests are for.
+                .filterNot { (configuration, dependency) ->
+                    configuration.isTestConfiguration() && dependency.endsWith(":fake")
+                }
+                .map { (_, dependency) -> dependency }
                 .filterNot { it.isAllowedInFeature() }
                 .distinct()
                 .sorted()
         if (forbidden.isNotEmpty()) {
             throw GradleException(
                 "$path depends on $forbidden. A feature sees :core:* (never :core:data or " +
-                    ":core:database), :calling:* and :directory:* (never their :data or " +
+                    ":core:database), :accounts:*, :calling:* and :directory:* (never their :data or " +
                     ":platform) and the engines' contracts (*:api). It opens another feature by " +
                     "a key of :core:navigation, adds to its screens through a contribution, and " +
                     "implementations are bound in :app."
@@ -71,12 +79,15 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
         }
     }
 
+    private fun String.isTestConfiguration(): Boolean =
+        startsWith("test") || startsWith("androidTest") || contains("UnitTest")
+
     private fun String.isAllowedInFeature(): Boolean =
         when {
             this == ":core:data" || this == ":core:database" -> false
             endsWith(":data") || endsWith(":platform") -> false
             startsWith(":core:") -> true
-            startsWith(":calling:") || startsWith(":directory:") -> true
+            startsWith(":accounts:") || startsWith(":calling:") || startsWith(":directory:") -> true
             endsWith(":api") -> true
             else -> false
         }

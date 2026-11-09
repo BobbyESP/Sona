@@ -31,6 +31,16 @@ process death, and a feature that depends on `:sip:linphone` fails the build.
 
 ### Phase 1 · Accounts and registration (1–2 weeks)
 
+**Done (2026-11-09).** Built: `:core:database` (Room, schema 1 exported), `:credentials:*`
+(AES-GCM under an Android Keystore key), `:accounts:{domain,data,ui}`, `:sip:linphone`
+(registration), `:feature:accounts` (switcher sheet, editor with *Check and save*, delete),
+`:feature:onboarding`, the `full` flavor. No Linphone cloud: accounts are the user's own
+extensions, on the phone only. Checked on the emulator against the Docker lab (`lab/compose.yaml`,
+Asterisk 20.6): register 102, a wrong password explained as `401`, back to registered. 80 JVM
+tests, 3 device tests. Found on the way: Android 17 blocks local-network traffic without
+`ACCESS_LOCAL_NETWORK` (now asked in context), and Linphone kept a replaced account's old password
+(fixed, tested). Not yet checked: TCP and TLS, two accounts at once, network changes, a real phone.
+
 - `:core:database` (accounts, overrides), `:credentials:keystore`, `:feature:accounts`,
   `:feature:onboarding` (welcome, add account, check and save).
 - `:sip:linphone`: Core on its own thread, `setAccounts`, registration states, `EngineConfig` for

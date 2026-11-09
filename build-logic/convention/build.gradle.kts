@@ -32,6 +32,10 @@ gradlePlugin {
             id = "sona.android.feature"
             implementationClass = "AndroidFeatureConventionPlugin"
         }
+        register("androidRoom") {
+            id = "sona.android.room"
+            implementationClass = "AndroidRoomConventionPlugin"
+        }
         register("jvmLibrary") {
             id = "sona.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"

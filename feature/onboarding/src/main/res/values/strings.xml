@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_title">Calls on your own server</string>
+    <string name="onboarding_body">Sona is a phone for your Asterisk, or any SIP server: add the extension you were given and call any other.</string>
+    <string name="onboarding_point_extension">Your extension and its password are all it needs</string>
+    <string name="onboarding_point_local">Everything stays on this phone: no account with us, no cloud</string>
+    <string name="onboarding_point_why">When something fails, Sona says why, and shows the SIP behind it</string>
+    <string name="onboarding_add">Add my extension</string>
+    <string name="onboarding_skip">Not now</string>
+</resources>

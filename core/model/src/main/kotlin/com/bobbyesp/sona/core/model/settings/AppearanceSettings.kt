@@ -38,3 +38,9 @@ object AppearanceSettings {
     /** Pure black surfaces in the dark theme. */
     val PureBlack = Setting.Toggle("appearance.pure_black", default = false)
 }
+
+/** What the app remembers about itself. */
+object AppSettings {
+    /** Whether the first start's welcome was seen, or an account exists. */
+    val OnboardingDone = Setting.Toggle("app.onboarding_done", default = false)
+}

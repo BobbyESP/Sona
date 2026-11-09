@@ -75,6 +75,14 @@ one line in this module.
   `LinphoneTrace` parses those log lines into `SipTraceEvent`s (direction, method or status,
   Call-ID, CSeq, raw text) while tracing is on, for the diagnostics screen's ladder.
 - **Audio routing is not Linphone's job.** See [Audio](#audio).
+- **Auth infos are rebuilt whole.** On every change of the accounts, the Core's auth infos are
+  cleared and added again. Linphone keeps its own copy of each one, so removing ours by object can
+  miss it, and a replaced account would quietly register with its old password (found on a device
+  in phase 1, and now a test).
+- **Its own `503 io error` is not the server's.** When Linphone cannot send at all it reports a
+  local 503; the mapper reads the reason (`IOError`) and says the server was not reached.
+- **Verbose logs in debug builds.** `EngineConfig.verboseLogs` mirrors Linphone's log, every SIP
+  message included, to logcat under `SonaSip`.
 - **Config is pushed, never read.** `EngineConfig` (codec order and enablement, Opus bitrate, echo
   cancellation, adaptive rate, jitter buffer, RTP port range, STUN/ICE/TURN, keep-alive, DSCP,
   media encryption, TLS verification, user agent, log level) is applied in `LinphoneConfigurer`.
@@ -233,6 +241,7 @@ onboarding and in *Settings › Call readiness*, with a button that fixes it:
 
 | Check | Why | Fix |
 |---|---|---|
+| Local network access (Android 17+) | a server on the local network (the lab's Asterisk) cannot be reached: Linphone fails to send with *Operation not permitted* | `ACCESS_LOCAL_NETWORK`, asked when an account is checked (built in phase 1) |
 | Microphone permission | no audio | runtime request |
 | Notifications (Android 13+) | no incoming call notification | runtime request |
 | Full-screen notifications (Android 14+) | calls ring as a banner over the lock screen instead of a screen | `NotificationManager.canUseFullScreenIntent()`, opens `ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT` |

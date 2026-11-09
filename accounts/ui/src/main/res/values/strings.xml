@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- An account's state, in a word -->
+    <string name="account_state_registered">Registered</string>
+    <string name="account_state_registering">Registering…</string>
+    <string name="account_state_offline">Offline</string>
+    <string name="account_state_failed">Not registered</string>
+    <string name="account_state_off">Turned off</string>
+
+    <!-- Why a registration failed: a sentence for anyone -->
+    <string name="problem_wrong_credentials">The server didn\'t accept this extension and password.</string>
+    <string name="problem_refused">The server refuses this account, whatever the password.</string>
+    <string name="problem_unknown_extension">There is no extension %1$s on this server.</string>
+    <string name="problem_no_answer">%1$s didn\'t answer. Check the address, the port and the transport, and that the server is running.</string>
+    <string name="problem_server_error">The server had a problem and couldn\'t register the account.</string>
+    <string name="problem_other">The server refused the registration.</string>
+    <string name="problem_offline">There is no network connection.</string>
+
+    <string name="add_account">Add account</string>
+</resources>

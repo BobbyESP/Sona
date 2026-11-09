@@ -13,6 +13,8 @@ dependencies {
     api(project(":core:designsystem"))
     api(project(":core:navigation"))
     implementation(libs.bundles.lifecycle)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.bundles.compose)
     implementation(libs.bundles.coroutines)
     implementation(libs.bundles.navigation3)

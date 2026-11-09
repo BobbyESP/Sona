@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accounts_title">Accounts</string>
+    <string name="accounts_description">Your extensions. They stay on this phone.</string>
+    <string name="accounts_add">Add account</string>
+    <string name="accounts_default">Default for calls</string>
+    <string name="accounts_enabled_description">%1$s turned on</string>
+
+    <string name="editor_title_new">Add account</string>
+    <string name="editor_title_edit">Edit account</string>
+    <string name="editor_back">Back</string>
+    <string name="editor_delete">Delete account</string>
+    <string name="editor_intro">The server and the extension your administrator gave you. Everything else has a default.</string>
+
+    <string name="field_server">Server</string>
+    <string name="field_server_hint">192.168.1.10 or lab.example.org</string>
+    <string name="field_username">Extension</string>
+    <string name="field_password">Password</string>
+    <string name="field_password_keep">Password (leave empty to keep it)</string>
+    <string name="field_password_show">Show password</string>
+    <string name="field_password_hide">Hide password</string>
+    <string name="field_label">Name in Sona</string>
+    <string name="field_transport">Transport</string>
+    <string name="field_port">Port</string>
+    <string name="field_domain">SIP domain</string>
+    <string name="field_domain_hint">The server, when empty</string>
+    <string name="field_display_name">Your name, as others see it</string>
+    <string name="field_auth_username">Authentication username</string>
+    <string name="field_auth_username_hint">The extension, when empty</string>
+    <string name="field_outbound_proxy">Outbound proxy</string>
+    <string name="field_expiry">Registration interval (seconds)</string>
+    <string name="field_voicemail">Voicemail number</string>
+    <string name="field_enabled">Use this account</string>
+    <string name="field_enabled_description">Off, it does not register and cannot call, but keeps everything.</string>
+    <string name="field_default">Default for calls</string>
+
+    <string name="more_options">More options</string>
+    <string name="fewer_options">Fewer options</string>
+
+    <string name="problem_required">Required</string>
+    <string name="problem_not_a_host">Not a server address</string>
+    <string name="problem_not_a_username">No spaces, @, : or ;</string>
+    <string name="problem_out_of_range">Out of range</string>
+    <string name="problem_password_required">A new account needs its password</string>
+
+    <string name="check_and_save">Check and save</string>
+    <string name="save">Save</string>
+    <string name="checking">Registering as %1$s on %2$s…</string>
+    <string name="checked_ok">Registered as %1$s on %2$s</string>
+    <string name="checked_ok_description">This account can make and receive calls.</string>
+    <string name="checked_slow">Still trying to register. Sona keeps trying in the background.</string>
+    <string name="checked_off">Saved. The account is turned off.</string>
+    <string name="checked_failed">Saved, but not registered</string>
+    <string name="done">Done</string>
+    <string name="local_network_needed">Android does not let Sona reach servers on your local network, like the lab Asterisk, until you allow it.</string>
+    <string name="local_network_allow">Allow local network access</string>
+    <string name="edit_again">Edit</string>
+
+    <string name="delete_title">Delete %1$s?</string>
+    <string name="delete_description">Its password is deleted too. Calls already in the history stay.</string>
+    <string name="delete_confirm">Delete</string>
+</resources>

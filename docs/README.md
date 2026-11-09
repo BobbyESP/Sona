@@ -18,4 +18,5 @@ The rules and the "how to add" checklists are in [AGENTS.md](../AGENTS.md).
 | Reachability | a keep-alive foreground service | push | Asterisk does not push |
 | Architecture | Docucraft/Metadator's modules, plus contribution points | a single module | Features added later plug into screens they do not own |
 | Settings | declared `Setting<T>`s with per-account overrides | a repository method per option | Many options, each a line; search and export for free |
+| Local network | `ACCESS_LOCAL_NETWORK`, asked when an account is checked | asking at start | Android 17 blocks a lab's Asterisk without it; asked where the reason is obvious |
 | First release | accounts, registration, audio calls, recents, contacts, keypad, MVP options | everything at once | The course's deadline; the rest has its place already |

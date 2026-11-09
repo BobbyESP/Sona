@@ -5,29 +5,22 @@ package com.bobbyesp.sona.shell
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bobbyesp.sona.accounts.domain.Account
+import com.bobbyesp.sona.accounts.domain.AccountsRepository
+import com.bobbyesp.sona.accounts.domain.defaultAccount
+import com.bobbyesp.sona.accounts.ui.toIndicator
 import com.bobbyesp.sona.core.designsystem.components.RegistrationIndicator
 import com.bobbyesp.sona.core.designsystem.theme.SonaThemeConfig
-import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.settings.AppSettings
 import com.bobbyesp.sona.core.model.settings.AppearanceSettings
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-
-/** An account as the shell shows it: in the account chip, and later the switcher. */
-data class AccountSummary(val id: AccountId, val label: String, val color: Int? = null)
-
-/**
- * Where the shell learns which account is the default. Phase 0 has no account storage: the demo
- * flavor provides one. Phase 1 binds the accounts repository here instead.
- */
-interface DefaultAccountSource {
-    val defaultAccount: Flow<AccountSummary?>
-}
+import kotlinx.coroutines.launch
 
 /** The account chip: which account, and in a word whether it can call. */
 data class AccountChipState(
@@ -36,49 +29,61 @@ data class AccountChipState(
     val color: Int? = null,
 )
 
+/** What the shell needs at start: the theme, and whether to welcome the user first. */
+data class ShellStartup(val theme: SonaThemeConfig, val needsOnboarding: Boolean)
+
 /**
- * What the shell needs before and while drawing anything: the theme and the account chip. Not a
- * screen's ViewModel, so it takes no intents; it lives as long as the activity.
+ * What the shell needs before and while drawing anything: the theme, whether this is a first start,
+ * and the account chip. Not a screen's ViewModel, so it takes no intents.
  */
 class ShellViewModel(
-    settings: SettingsStore,
+    private val settings: SettingsStore,
     engine: SipEngine,
-    accounts: DefaultAccountSource,
+    accounts: AccountsRepository,
 ) : ViewModel() {
 
-    /** `null` until the settings are read, which the splash screen waits for. */
-    val themeConfig: StateFlow<SonaThemeConfig?> =
+    private val theme =
         combine(
-                settings.observe(AppearanceSettings.Theme),
-                settings.observe(AppearanceSettings.DynamicColor),
-                settings.observe(AppearanceSettings.SeedColor),
-                settings.observe(AppearanceSettings.Palette),
-                settings.observe(AppearanceSettings.PureBlack),
-            ) { mode, dynamic, seed, palette, black ->
-                SonaThemeConfig(mode, dynamic, seed, palette, black)
+            settings.observe(AppearanceSettings.Theme),
+            settings.observe(AppearanceSettings.DynamicColor),
+            settings.observe(AppearanceSettings.SeedColor),
+            settings.observe(AppearanceSettings.Palette),
+            settings.observe(AppearanceSettings.PureBlack),
+        ) { mode, dynamic, seed, palette, black ->
+            SonaThemeConfig(mode, dynamic, seed, palette, black)
+        }
+
+    /** `null` until settings and accounts are read, which the splash screen waits for. */
+    val startup: StateFlow<ShellStartup?> =
+        combine(theme, accounts.accounts, settings.observe(AppSettings.OnboardingDone)) {
+                theme,
+                all,
+                onboarded ->
+                ShellStartup(theme = theme, needsOnboarding = all.isEmpty() && !onboarded)
             }
             .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** `null` while there is no account: the chip then offers to add one. */
     val accountChip: StateFlow<AccountChipState?> =
-        combine(accounts.defaultAccount, engine.registrations) { account, registrations ->
-                account?.let {
-                    AccountChipState(
-                        label = it.label,
-                        indicator = registrations[it.id].toIndicator(),
-                        color = it.color,
-                    )
-                }
+        combine(accounts.defaultAccount(), engine.registrations) { account, registrations ->
+                account?.let { chipFor(it, registrations[it.id]) }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    init {
+        // Once an account exists, the welcome has done its work, however the account was added.
+        viewModelScope.launch {
+            accounts.accounts.collect { all ->
+                if (all.isNotEmpty()) settings.set(AppSettings.OnboardingDone, true)
+            }
+        }
+    }
 }
 
-/** What the chip says for an engine's state; an account the engine does not have is offline. */
-internal fun RegistrationState?.toIndicator(): RegistrationIndicator =
-    when (this) {
-        RegistrationState.Registered -> RegistrationIndicator.Registered
-        RegistrationState.Registering -> RegistrationIndicator.Registering
-        is RegistrationState.Failed -> RegistrationIndicator.Failed
-        RegistrationState.Offline,
-        RegistrationState.Unregistered,
-        null -> RegistrationIndicator.Offline
-    }
+internal fun chipFor(account: Account, registration: RegistrationState?) =
+    AccountChipState(
+        label = account.label,
+        indicator =
+            if (account.enabled) registration.toIndicator() else RegistrationIndicator.Offline,
+        color = account.color,
+    )

@@ -9,7 +9,16 @@ matrix in [docs/roadmap.md](../docs/roadmap.md#the-call-matrix).
 | [`asterisk/extensions.conf`](asterisk/extensions.conf) | The dial plan: extensions, echo test (600), always busy (486), voicemail (`*97`) |
 | [`asterisk/voicemail.conf`](asterisk/voicemail.conf) | A voicemail box per extension |
 
-## Setting it up
+## Running it in Docker
+
+```bash
+docker compose -f lab/compose.yaml up -d --build
+```
+
+Asterisk 20.6 from Ubuntu 24.04's own package, with these files. Phones on the same network register
+to this computer's address; the Android emulator to `10.0.2.2`. Phase 1 was checked this way.
+
+## Setting it up on a server
 
 1. Install Asterisk 20 or later with the PJSIP channel driver (the default).
 2. Copy the three files to `/etc/asterisk/`, keeping a copy of the originals.
@@ -32,5 +41,4 @@ and its password. Until then the `demo` flavor shows a fake *Lab Asterisk · 102
 | `rtp set debug on` | Whether audio flows, and to where |
 | `core show channels` | Calls in progress |
 
-These files have not yet been run against a live Asterisk; the first registration in phase 1 is
-their test.
+Registration of 102 from the emulator was checked against them in phase 1.

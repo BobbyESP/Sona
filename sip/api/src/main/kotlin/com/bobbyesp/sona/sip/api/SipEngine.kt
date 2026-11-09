@@ -69,4 +69,8 @@ enum class Capability {
 }
 
 /** What applies to every account. Grows with the settings that reach the engine. */
-data class EngineConfig(val userAgent: String = "Sona")
+data class EngineConfig(
+    val userAgent: String = "Sona",
+    /** The engine's own log, every SIP message included, mirrored to the platform's log. */
+    val verboseLogs: Boolean = false,
+)
