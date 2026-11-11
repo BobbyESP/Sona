@@ -318,7 +318,13 @@ class CallCoordinator(
                 }
                 EngineCallState.LocalHold -> known.system?.setInactive()
                 is EngineCallState.Ended -> {
-                    val reason = EndReason.of(after, call.direction, known.answered)
+                    val reason =
+                        EndReason.of(
+                            after,
+                            call.direction,
+                            known.answered,
+                            connectedForMs = known.connectedAt?.let { clock() - it },
+                        )
                     next = next.with(endReason = reason)
                     known.system?.disconnect(reason.toDisconnectCause())
                     forgetLater(call.id)
@@ -417,6 +423,7 @@ private fun EndReason.toDisconnectCause(): DisconnectCause =
     when (this) {
         is EndReason.HungUp -> if (byMe) DisconnectCause.Local else DisconnectCause.Remote
         EndReason.Missed -> DisconnectCause.Missed
+        EndReason.EndedAtOnce -> DisconnectCause.Remote
         EndReason.Cancelled -> DisconnectCause.Local
         is EndReason.Busy -> DisconnectCause.Busy
         is EndReason.Declined -> DisconnectCause.Rejected

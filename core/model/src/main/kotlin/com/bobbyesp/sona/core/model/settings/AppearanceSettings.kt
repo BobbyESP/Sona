@@ -120,6 +120,9 @@ object AudioSettings {
      * Remove from the microphone what the speaker plays, so the other side does not hear itself.
      */
     val EchoCancellation = Setting.Toggle("audio.echo_cancellation", default = true)
+
+    /** The keypad sounds a tone under the finger, in the dialer and during a call. */
+    val DialpadTones = Setting.Toggle("audio.dialpad_tones", default = true)
 }
 
 /** Which networks Sona uses. */

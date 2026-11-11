@@ -405,7 +405,11 @@ private fun InCallActions(state: CallUiState, onIntent: (CallIntent) -> Unit) {
                 fontFamily = SonaTheme.typography.monospace,
                 modifier = Modifier.heightIn(min = 40.dp),
             )
-            Dialpad(onKey = { onIntent(CallIntent.Dtmf(it)) }, keyAspectRatio = 1.9f)
+            Dialpad(
+                onKey = { onIntent(CallIntent.Dtmf(it)) },
+                tones = state.dialpadTones,
+                keyAspectRatio = 1.9f,
+            )
             Spacer(Modifier.size(16.dp))
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -597,6 +601,7 @@ private fun EndReason.sentence(who: String): String =
         is EndReason.HungUp -> stringResource(R.string.end_hung_up)
         EndReason.Missed -> stringResource(R.string.end_missed)
         EndReason.Cancelled -> stringResource(R.string.end_cancelled)
+        EndReason.EndedAtOnce -> stringResource(R.string.end_at_once, who)
         is EndReason.Busy -> stringResource(R.string.end_busy, who)
         is EndReason.Declined -> stringResource(R.string.end_declined, who)
         is EndReason.Unavailable -> stringResource(R.string.end_unavailable, who)

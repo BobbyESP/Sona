@@ -81,6 +81,13 @@ sealed interface EndReason {
 
     data class NoCommonMedia(override val status: SipStatus) : EndReason
 
+    /**
+     * The other side answered and hung up within a moment, with no SIP status: a server that picks
+     * up and then fails to run the number (an Asterisk dial plan naming an app that is not loaded,
+     * a voicemail box that does not exist).
+     */
+    data object EndedAtOnce : EndReason
+
     /** An answered call whose audio stopped arriving: the network between the two sides broke. */
     data class MediaLost(val detail: String?) : EndReason
 
@@ -90,17 +97,26 @@ sealed interface EndReason {
     data class Failed(override val status: SipStatus) : EndReason
 
     companion object {
+        /** A remote hang-up sooner than this after answering is [EndedAtOnce]. */
+        const val AT_ONCE_MS = 3_000L
+
         /** The reason for an engine's ending, given whether the call was ever answered. */
         fun of(
             ended: EngineCallState.Ended,
             direction: CallDirection,
             answered: Boolean,
+            connectedForMs: Long? = null,
         ): EndReason {
             val status = ended.status
             if (status == null) {
                 return when {
                     ended.detail != null && answered -> MediaLost(ended.detail)
                     ended.detail != null -> ServerUnavailable(null, ended.detail)
+                    answered &&
+                        ended.byRemote &&
+                        direction == CallDirection.Outgoing &&
+                        connectedForMs != null &&
+                        connectedForMs < AT_ONCE_MS -> EndedAtOnce
                     answered -> HungUp(byMe = !ended.byRemote)
                     direction == CallDirection.Incoming ->
                         if (ended.byRemote) Missed else HungUp(byMe = true)

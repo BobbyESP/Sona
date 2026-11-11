@@ -57,8 +57,9 @@ val StandardDialpad: List<List<DialpadKey>> =
 
 /**
  * The dialpad. Each key is a shape that squares a little under the finger, on the theme's spring,
- * and takes the primary container while pressed; it ticks under the finger when [haptics] is on.
- * The width is bounded so the keys stay a thumb's reach apart on a tablet.
+ * and takes the primary container while pressed; it ticks under the finger when [haptics] is on,
+ * and sounds the key's tone when [tones] is on. The width is bounded so the keys stay a thumb's
+ * reach apart on a tablet.
  *
  * @param onKey A key was tapped, or long pressed and it types something else
  *   ([DialpadKey.longPress]).
@@ -75,9 +76,11 @@ fun Dialpad(
     keys: List<List<DialpadKey>> = StandardDialpad,
     showLetters: Boolean = true,
     haptics: Boolean = true,
+    tones: Boolean = false,
     keyAspectRatio: Float? = 1.6f,
     onLongPress: (DialpadKey) -> Boolean = { false },
 ) {
+    val dialTones = rememberDialpadTones(tones)
     Column(
         modifier = modifier.widthIn(max = 420.dp).fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -92,10 +95,14 @@ fun Dialpad(
                         key = key,
                         showLetters = showLetters,
                         haptics = haptics,
-                        onClick = { onKey(key.symbol) },
+                        onClick = {
+                            dialTones?.play(key.symbol)
+                            onKey(key.symbol)
+                        },
                         onLongClick = {
                             val other = key.longPress
                             if (other != null) {
+                                dialTones?.play(other)
                                 onKey(other)
                                 true
                             } else {

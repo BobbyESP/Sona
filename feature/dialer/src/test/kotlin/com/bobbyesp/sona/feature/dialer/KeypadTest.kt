@@ -80,7 +80,7 @@ class KeypadTest {
                 InMemoryCallHistory(),
                 InMemorySettingsStore(),
             )
-        return KeypadViewModel(saved, coordinator, directory, accounts)
+        return KeypadViewModel(saved, coordinator, directory, accounts, InMemorySettingsStore())
     }
 
     @Test

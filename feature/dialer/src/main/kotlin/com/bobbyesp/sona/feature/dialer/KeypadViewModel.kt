@@ -10,6 +10,8 @@ import com.bobbyesp.sona.calling.domain.AddressResolution
 import com.bobbyesp.sona.calling.domain.AddressResolver
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.DialOutcome
+import com.bobbyesp.sona.core.model.settings.AudioSettings
+import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
 import com.bobbyesp.sona.directory.domain.Directory
 import com.bobbyesp.sona.directory.domain.Suggestion
@@ -27,6 +29,8 @@ internal data class KeypadState(
     val suggestions: List<Suggestion> = emptyList(),
     /** The number a long press on 1 calls: the default account's voicemail. */
     val voicemail: String? = null,
+    /** Whether a key sounds its tone under the finger. */
+    val dialpadTones: Boolean = true,
 ) {
     /** The address [input] would call, shown under it as it is typed. */
     val preview: String?
@@ -87,6 +91,7 @@ internal class KeypadViewModel(
     private val coordinator: CallCoordinator,
     directory: Directory,
     accounts: AccountsRepository,
+    settings: SettingsStore,
 ) :
     BaseViewModel<KeypadIntent, KeypadState, KeypadEffect>(
         KeypadState(input = savedState[INPUT_KEY] ?: ""),
@@ -95,6 +100,11 @@ internal class KeypadViewModel(
     private val typed = MutableStateFlow(savedState.get<String>(INPUT_KEY) ?: "")
 
     init {
+        launch {
+            settings.observe(AudioSettings.DialpadTones).collect {
+                setState { copy(dialpadTones = it) }
+            }
+        }
         launch {
             typed
                 .flatMapLatest { directory.suggest(it) }

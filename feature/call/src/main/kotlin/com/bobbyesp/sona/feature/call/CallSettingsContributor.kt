@@ -84,6 +84,12 @@ internal object AudioSettingsContributor : SettingsContributor {
                 summary = R.string.settings_echo_summary,
                 keywords = R.string.settings_echo_keywords,
             ),
+            SettingItem.Switch(
+                setting = AudioSettings.DialpadTones,
+                title = R.string.settings_dialpad_tones,
+                summary = R.string.settings_dialpad_tones_summary,
+                keywords = R.string.settings_dialpad_tones_keywords,
+            ),
         )
 }
 

@@ -44,7 +44,7 @@ Each needs its declaration, its item with keywords, and whatever reads it.
 
 - [ ] Calls: account for calls (default or ask), auto-answer (delay, speaker), full screen or
       banner when unlocked, answer by swipe, vibrate when ringing, the proximity sensor's switch.
-- [ ] Audio: start calls on speaker, dialpad tones, the dialpad haptics' switch.
+- [ ] Audio: start calls on speaker, the dialpad haptics' switch. (Dialpad tones: built 2026-11-12, not yet heard on a phone.)
 - [ ] Network: start on boot (it always does).
 - [ ] Privacy: hide caller on the lock screen.
 - [ ] Contacts and history: only contacts with an address or number, name and sort order.

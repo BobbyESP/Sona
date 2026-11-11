@@ -48,7 +48,10 @@ class CallCoordinatorTest {
     private class World(val engine: FakeSipEngine, val calls: CallCoordinator)
 
     /** A registered account, its engine, and a started coordinator. */
-    private suspend fun TestScope.world(names: CallerNames = CallerNames.None): World {
+    private suspend fun TestScope.world(
+        names: CallerNames = CallerNames.None,
+        clock: () -> Long = { 1_000 },
+    ): World {
         val engine = FakeSipEngine(backgroundScope)
         engine.start(EngineConfig())
         SaveAccount(accounts, vault) { AccountId("lab") }(
@@ -64,7 +67,7 @@ class CallCoordinatorTest {
                 accounts,
                 settings,
                 backgroundScope,
-                clock = { 1_000 },
+                clock = clock,
                 names = names,
             )
         coordinator.start()
@@ -185,6 +188,32 @@ class CallCoordinatorTest {
         runCurrent()
         assertEquals(CallState.Ended(EndReason.HungUp(byMe = true)), world.call(id).state)
     }
+
+    @Test
+    fun `a server that answers and hangs up at once says so, a later hang-up is a normal end`() =
+        runTest {
+            var now = 1_000L
+            val world = world(clock = { now })
+            val quick = world.dial("*97")
+            runCurrent()
+            world.engine.remoteAnswers(quick)
+            runCurrent()
+            now += 300
+            world.engine.remoteEnds(quick)
+            runCurrent()
+            assertEquals(CallState.Ended(EndReason.EndedAtOnce), world.call(quick).state)
+            assertEquals("disconnect:Remote", systemCall(quick).log.last())
+
+            advanceTimeBy(4.seconds)
+            val long = world.dial("600")
+            runCurrent()
+            world.engine.remoteAnswers(long)
+            runCurrent()
+            now += 30_000
+            world.engine.remoteEnds(long)
+            runCurrent()
+            assertEquals(CallState.Ended(EndReason.HungUp(byMe = false)), world.call(long).state)
+        }
 
     @Test
     fun `an unanswered incoming call the caller gives up on is missed`() = runTest {

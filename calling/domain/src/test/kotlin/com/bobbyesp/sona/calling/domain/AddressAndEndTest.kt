@@ -94,6 +94,18 @@ class EndReasonTest {
     }
 
     @Test
+    fun `a server that answers and hangs up at once is told apart from a normal hang-up`() {
+        fun after(ms: Long?, byRemote: Boolean = true) =
+            EndReason.of(end(null, byRemote), CallDirection.Outgoing, true, connectedForMs = ms)
+
+        assertEquals(EndReason.EndedAtOnce, after(400))
+        assertEquals(EndReason.HungUp(byMe = false), after(EndReason.AT_ONCE_MS))
+        assertEquals(EndReason.HungUp(byMe = false), after(null))
+        // I hung up quickly: that is not the server's doing.
+        assertEquals(EndReason.HungUp(byMe = true), after(400, byRemote = false))
+    }
+
+    @Test
     fun `an unanswered call is missed when it rang here, cancelled when it was dialed here`() {
         assertEquals(
             EndReason.Missed,

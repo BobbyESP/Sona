@@ -215,6 +215,7 @@ internal fun KeypadScreen(
                     if (!typing) {
                         Dialpad(
                             onKey = { onIntent(KeypadIntent.Type(it)) },
+                            tones = state.dialpadTones,
                             keyAspectRatio = null,
                             onLongPress = onLongPress,
                             modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -234,6 +235,7 @@ internal fun KeypadScreen(
                     if (!typing) {
                         Dialpad(
                             onKey = { onIntent(KeypadIntent.Type(it)) },
+                            tones = state.dialpadTones,
                             onLongPress = onLongPress,
                         )
                         Spacer(Modifier.size(24.dp))

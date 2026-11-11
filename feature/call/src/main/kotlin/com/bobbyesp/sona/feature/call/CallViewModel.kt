@@ -9,6 +9,8 @@ import com.bobbyesp.sona.calling.domain.Call
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.CallState
 import com.bobbyesp.sona.core.model.CallId
+import com.bobbyesp.sona.core.model.settings.AudioSettings
+import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
 import com.bobbyesp.sona.telecom.api.AudioRoute
 import kotlinx.coroutines.flow.combine
@@ -20,6 +22,8 @@ internal data class CallUiState(
     val other: Call? = null,
     val account: Account? = null,
     val keypadOpen: Boolean = false,
+    /** Whether the keypad sounds a tone under the finger. */
+    val dialpadTones: Boolean = true,
     /** The digits sent on this screen, shown above the keypad. */
     val dtmf: String = "",
     /**
@@ -58,9 +62,15 @@ internal sealed interface CallIntent {
 internal class CallViewModel(
     private val coordinator: CallCoordinator,
     accounts: AccountsRepository,
+    settings: SettingsStore,
 ) : BaseViewModel<CallIntent, CallUiState, Nothing>(CallUiState()) {
 
     init {
+        launch {
+            settings.observe(AudioSettings.DialpadTones).collect {
+                setState { copy(dialpadTones = it) }
+            }
+        }
         launch {
             combine(coordinator.calls, accounts.accounts) { calls, all -> calls to all }
                 .collect { (calls, all) ->

@@ -24,6 +24,7 @@
 
     <!-- How a call ended: a sentence for anyone -->
     <string name="end_hung_up">Call ended</string>
+    <string name="end_at_once">%1$s answered and hung up at once. The server may not be set up to handle this number</string>
     <string name="end_missed">Missed call</string>
     <string name="end_cancelled">Call cancelled</string>
     <string name="end_busy">%1$s is busy</string>
@@ -63,6 +64,9 @@
     <string name="settings_echo">Echo cancellation</string>
     <string name="settings_echo_summary">Keeps what the speaker plays out of the microphone, so the other side does not hear itself</string>
     <string name="settings_echo_keywords">echo aec feedback speaker</string>
+    <string name="settings_dialpad_tones">Dialpad tones</string>
+    <string name="settings_dialpad_tones_summary">Plays a tone as you press a key, in the dialer and during a call</string>
+    <string name="settings_dialpad_tones_keywords">keypad dtmf sound beep touch tones keys</string>
     <string name="settings_mobile_data">Use mobile data</string>
     <string name="settings_mobile_data_summary">Off, Sona registers and calls only over Wi-Fi</string>
     <string name="settings_mobile_data_keywords">wifi only cellular 4g 5g lte data network</string>
