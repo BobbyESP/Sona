@@ -52,6 +52,14 @@
 
     <string name="more_options">More options</string>
     <string name="fewer_options">Fewer options</string>
+    <string name="more_options_summary">Transport, port, domain, your name and how calls work</string>
+
+    <string name="editor_section_sign_in">Sign in</string>
+    <string name="editor_section_account">This account</string>
+    <string name="editor_section_connection">Connection</string>
+    <string name="editor_section_identity">Identity</string>
+    <string name="field_port_supporting">The transport\'s own, when empty</string>
+    <string name="field_expiry_supporting">How often Sona tells the server it is still here</string>
 
     <string name="problem_required">Required</string>
     <string name="problem_not_a_host">Not a server address</string>

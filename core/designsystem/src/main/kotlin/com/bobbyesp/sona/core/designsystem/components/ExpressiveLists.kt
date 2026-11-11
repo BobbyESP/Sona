@@ -6,6 +6,7 @@ package com.bobbyesp.sona.core.designsystem.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -86,20 +87,29 @@ fun <T> LazyListScope.segmentedItems(
     }
 }
 
-/** A heading for a group of items: read as a heading by TalkBack, in the primary color. */
+/**
+ * A heading for a group of items: read as a heading by TalkBack, in the primary color.
+ *
+ * @param contentPadding Its room around it. The default lines it up with the text of items laid out
+ *   by [segmentedItems]; a column that pads its content already passes less.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SectionHeader(text: String, modifier: Modifier = Modifier) {
+fun SectionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = SectionHeaderPadding,
+) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmallEmphasized,
         color = MaterialTheme.colorScheme.primary,
-        modifier =
-            modifier.padding(start = 32.dp, end = 16.dp, top = 20.dp, bottom = 8.dp).semantics {
-                heading()
-            },
+        modifier = modifier.padding(contentPadding).semantics { heading() },
     )
 }
+
+private val SectionHeaderPadding =
+    PaddingValues(start = 32.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)
 
 /**
  * One choice among a few, as a connected group of toggle buttons: the chosen one is filled and

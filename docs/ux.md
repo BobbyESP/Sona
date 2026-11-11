@@ -194,6 +194,7 @@ New for Sona:
 
 | Component | What it is |
 |---|---|
+| `SonaTextField` | The text field: filled and borderless, tonal at rest, the primary container and squarer corners when focused, the error container with the problem under it (read by TalkBack); a floating label, leading icon, trailing slot or clear button, supporting line. Every form uses it |
 | `Dialpad`, `DialpadKey` | The keypad; each key morphs on press, sends DTMF tone and haptics through callbacks |
 | `CallButton` | The round call button, morphing to a pill under the finger; `SplitCallButton` with the account picker |
 | `EndCallButton` | Wide, error container, the largest target on the call screen |
@@ -232,6 +233,13 @@ Material 3 Expressive, friendly but never toy-like. The keypad shows all of it; 
 - **Color comes in container pairs**: surface containers for most things, the secondary container
   for what is different in kind (`*`, `#`, side actions), primary for the one action that matters,
   the error container for failures. A disabled main action stays itself, faded, not grey.
+- **Fields are `SonaTextField`**, never Material's outlined or filled fields: a tonal shape with no
+  border, which takes the primary container and squares up when focused, as a key does when held.
+  Each has a leading icon for what it holds; an explanation of a default goes in its supporting
+  line (always visible), an example in its placeholder (shown only while typing).
+- **Forms are grouped** under `SectionHeader`s, switches and options are segmented list items, a
+  choice of two to four is a `ConnectedChoice`, what has a default waits behind a disclosure row
+  that says what is inside, and the one action is a medium button at the foot (the account editor).
 - **One loud thing per screen**: the number, then the call button; everything else a size down.
 
 ## Motion and haptics
