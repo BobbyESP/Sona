@@ -25,3 +25,10 @@ object DefaultDispatchers : DispatcherProvider {
 interface StringProvider {
     fun get(id: Int, vararg args: Any): String
 }
+
+/**
+ * What this build of the app is, for *About*: only the app module knows its own version.
+ *
+ * @property sourceUrl Where the source of this app is published, which the GPLv3 owes its users.
+ */
+data class AppInfo(val version: String, val sourceUrl: String)

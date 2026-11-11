@@ -104,6 +104,48 @@ sealed class Setting<T : Any>(val key: String, val default: T, val overridable: 
         override fun accepts(value: E) = value in options
     }
 
+    /**
+     * Named things in the order the user wants them, each on or off (the codecs). Stored as text,
+     * `opus,g722,-gsm`: a `-` marks what is off. What is read always holds every one of [default]'s
+     * names once: a name no longer known is dropped, one added since takes its default place at the
+     * end.
+     */
+    class Ranked(key: String, default: Ranking, overridable: Boolean = false) :
+        Setting<Ranking>(key, default, overridable) {
+        private val names = default.entries.map { it.id }
+
+        init {
+            require(names.distinct().size == names.size) { "$key: a name is there twice" }
+            require(names.none { ',' in it || it.startsWith('-') || it.isBlank() }) {
+                "$key: a name cannot be stored"
+            }
+        }
+
+        override fun encode(value: Ranking) =
+            StoredValue.Str(
+                value.entries.joinToString(",") { if (it.enabled) it.id else "-${it.id}" },
+            )
+
+        override fun decode(stored: StoredValue): Ranking? {
+            val text = (stored as? StoredValue.Str)?.value ?: return null
+            val read =
+                text
+                    .split(',')
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                    .map { Ranking.Entry(it.removePrefix("-"), enabled = !it.startsWith('-')) }
+                    .filter { it.id in names }
+                    .distinctBy { it.id }
+            val missing = default.entries.filter { known -> read.none { it.id == known.id } }
+            return Ranking(read + missing)
+        }
+
+        override fun accepts(value: Ranking): Boolean {
+            val given = value.entries.map { it.id }
+            return given.size == names.size && given.toSet() == names.toSet()
+        }
+    }
+
     override fun toString(): String = "Setting($key)"
 
     companion object {
@@ -125,6 +167,29 @@ sealed interface StoredValue {
     data class Int64(val value: Long) : StoredValue
 
     data class Str(val value: String) : StoredValue
+}
+
+/** Named things in an order, each on or off. The value of a [Setting.Ranked]. */
+data class Ranking(val entries: List<Entry>) {
+    data class Entry(val id: String, val enabled: Boolean = true)
+
+    /** What is on, first choice first. */
+    val enabled: List<String>
+        get() = entries.filter { it.enabled }.map { it.id }
+
+    /** [id] one place earlier ([up]) or later; the same ranking when it is already at that end. */
+    fun moved(id: String, up: Boolean): Ranking {
+        val from = entries.indexOfFirst { it.id == id }
+        val to = if (up) from - 1 else from + 1
+        if (from < 0 || to !in entries.indices) return this
+        val next = entries.toMutableList()
+        next[from] = entries[to]
+        next[to] = entries[from]
+        return Ranking(next)
+    }
+
+    fun switched(id: String, enabled: Boolean): Ranking =
+        Ranking(entries.map { if (it.id == id) it.copy(enabled = enabled) else it })
 }
 
 /** What a stored value reads as: its meaning, or the default when it has none. */

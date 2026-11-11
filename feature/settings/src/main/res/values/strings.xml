@@ -9,6 +9,19 @@
     <string name="settings_cancel">Cancel</string>
     <string name="settings_confirm">Confirm</string>
     <string name="settings_choose">Choose</string>
+    <string name="settings_done">Done</string>
+
+    <string name="about_version">Version</string>
+    <string name="about_engine">SIP engine</string>
+    <string name="about_engine_keywords">linphone liblinphone library version</string>
+    <string name="about_source">Source code</string>
+    <string name="about_source_summary">Sona is free software under the GNU GPL v3: its source is yours to read, change and share</string>
+    <string name="about_source_keywords">github repository gpl open source free software code</string>
+    <string name="about_licenses">Licenses</string>
+    <string name="about_licenses_summary">The software Sona is made with</string>
+    <string name="about_licenses_keywords">license gpl apache mit open source libraries third party linphone</string>
+    <string name="about_own_license">Sona is free software: you can redistribute it and modify it under the terms of the GNU General Public License, version 3 or later. It comes with no warranty. It is built on the works below, each under its own license.</string>
+    <string name="settings_ranked_none">None</string>
 
     <string name="appearance_theme">Theme</string>
     <string name="appearance_theme_keywords">dark light night mode</string>

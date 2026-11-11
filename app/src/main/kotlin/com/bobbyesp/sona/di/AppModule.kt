@@ -13,10 +13,13 @@ import com.bobbyesp.sona.accounts.domain.SaveAccount
 import com.bobbyesp.sona.accounts.domain.SetAccountEnabled
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.CallerNames
+import com.bobbyesp.sona.calling.domain.EngineConfigBuilder
 import com.bobbyesp.sona.calling.platform.CallNotifications
 import com.bobbyesp.sona.calling.platform.CallScreenIntents
 import com.bobbyesp.sona.calling.platform.MissedCallNotifications
 import com.bobbyesp.sona.calling.platform.ServiceController
+import com.bobbyesp.sona.calling.platform.callReadinessChecks
+import com.bobbyesp.sona.core.common.AppInfo
 import com.bobbyesp.sona.core.common.DefaultDispatchers
 import com.bobbyesp.sona.core.common.DispatcherProvider
 import com.bobbyesp.sona.core.common.StringProvider
@@ -27,6 +30,7 @@ import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.settings.HistorySettings
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.ui.AndroidStringProvider
+import com.bobbyesp.sona.core.ui.contribution.ReadinessMonitor
 import com.bobbyesp.sona.credentials.api.CredentialVault
 import com.bobbyesp.sona.credentials.keystore.createCredentialVault
 import com.bobbyesp.sona.directory.data.callHistory
@@ -39,7 +43,6 @@ import com.bobbyesp.sona.directory.domain.Directory
 import com.bobbyesp.sona.directory.domain.LocalContacts
 import com.bobbyesp.sona.directory.domain.prune
 import com.bobbyesp.sona.shell.ShellViewModel
-import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.SipEngine
 import com.bobbyesp.sona.telecom.api.SystemCalls
 import com.bobbyesp.sona.telecom.jetpack.createSystemCalls
@@ -70,6 +73,7 @@ class EngineBootstrap(
     private val missed: MissedCallNotifications,
     private val history: CallHistory,
     private val settings: SettingsStore,
+    private val config: EngineConfigBuilder,
 ) {
     fun start() {
         calls.start()
@@ -83,7 +87,9 @@ class EngineBootstrap(
             )
         }
         scope.launch {
-            engine.start(EngineConfig(userAgent = "Sona", verboseLogs = BuildConfig.DEBUG))
+            // The settings that reach the engine: as they are now, then every change.
+            engine.start(config.config.first())
+            launch { config.config.collect { engine.apply(it) } }
             sync.run()
         }
     }
@@ -94,6 +100,7 @@ val appModule = module {
     single { ApplicationScope() }
     single<DispatcherProvider> { DefaultDispatchers }
     single<StringProvider> { AndroidStringProvider(androidContext()) }
+    single { AppInfo(version = BuildConfig.VERSION_NAME, sourceUrl = BuildConfig.SOURCE_URL) }
     single<SettingsStore> { androidContext().createSettingsStore() }
 
     // Accounts: stored on the phone, their passwords in the vault.
@@ -115,9 +122,13 @@ val appModule = module {
             history = get(),
             scope = get<ApplicationScope>(),
             names = { address -> get<Directory>().nameFor(address) },
+            refused = get<CallCoordinator>().refused,
         )
     }
-    single { EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { EngineConfigBuilder(get()) }
+    single {
+        EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
+    }
 
     // Calls: the coordinator, Android's Telecom, and the services and notifications that go with.
     single<SystemCalls> { androidContext().createSystemCalls(get<ApplicationScope>()) }
@@ -135,6 +146,15 @@ val appModule = module {
     single { CallNotifications(androidContext(), get()) }
     single { ServiceController(androidContext(), get(), get(), get(), get<ApplicationScope>()) }
     single { MissedCallNotifications(androidContext(), get(), get(), get<ApplicationScope>()) }
+
+    // What the system must allow for calls to work: the checks, and the one monitor that keeps
+    // them answered for the readiness screen and the account chip.
+    single {
+        ReadinessMonitor(
+            callReadinessChecks(androidContext(), get(), get(), get()),
+            get<ApplicationScope>(),
+        )
+    }
 
     viewModelOf(::ShellViewModel)
 }

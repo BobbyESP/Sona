@@ -12,7 +12,7 @@ import org.koin.dsl.module
 
 val historyModule = module {
     single { RecentsSection } bind NavSection::class
-    single { RecentsTab } bind TopLevelDestination::class
+    single { RecentsTab(get()) } bind TopLevelDestination::class
     single { HistorySettingsContributor(get()) } bind SettingsContributor::class
     viewModelOf(::RecentsViewModel)
 }

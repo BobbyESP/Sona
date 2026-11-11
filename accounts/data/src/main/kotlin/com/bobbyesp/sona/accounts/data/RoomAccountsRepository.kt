@@ -7,8 +7,13 @@ import com.bobbyesp.sona.accounts.domain.Account
 import com.bobbyesp.sona.accounts.domain.AccountsRepository
 import com.bobbyesp.sona.core.database.AccountDao
 import com.bobbyesp.sona.core.database.AccountEntity
+import com.bobbyesp.sona.core.database.AccountOverrideEntity
+import com.bobbyesp.sona.core.database.AccountWithOverrides
 import com.bobbyesp.sona.core.database.SonaDatabase
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.settings.Overrides
+import com.bobbyesp.sona.core.model.settings.storedValueOf
+import com.bobbyesp.sona.core.model.settings.toText
 import com.bobbyesp.sona.sip.api.ServerEndpoint
 import com.bobbyesp.sona.sip.api.Transport
 import kotlin.time.Duration.Companion.seconds
@@ -30,12 +35,28 @@ internal class RoomAccountsRepository(
 
     override suspend fun get(id: AccountId): Account? = dao.get(id.value)?.toAccount()
 
-    override suspend fun upsert(account: Account) = dao.save(account.toEntity(createdAt = clock()))
+    override suspend fun upsert(account: Account) =
+        dao.save(account.toEntity(createdAt = clock()), account.overrideEntities())
 
     override suspend fun delete(id: AccountId) = dao.delete(id.value)
 
     override suspend fun setDefault(id: AccountId) = dao.setDefault(id.value)
 }
+
+internal fun AccountWithOverrides.toAccount(): Account =
+    account
+        .toAccount()
+        .copy(
+            overrides =
+                Overrides(
+                    overrides
+                        .mapNotNull { row -> storedValueOf(row.value)?.let { row.key to it } }
+                        .toMap(),
+                ),
+        )
+
+internal fun Account.overrideEntities(): List<AccountOverrideEntity> =
+    overrides.stored.map { (key, value) -> AccountOverrideEntity(id.value, key, value.toText()) }
 
 internal fun AccountEntity.toAccount(): Account {
     val transport = Transport.entries.firstOrNull { it.name == transport } ?: Transport.Udp

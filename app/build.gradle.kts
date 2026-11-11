@@ -17,6 +17,9 @@ android {
         // Phones and the emulator. Linphone ships native code for four ABIs; the two 32-bit ones
         // only add size for devices no lab has.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        // Where this app's source is published: the GPLv3 owes it to whoever has the app, and
+        // About links to it. To be the real address once the repository exists.
+        buildConfigField("String", "SOURCE_URL", "\"https://github.com/BobbyESP/Sona\"")
     }
 
     buildFeatures { buildConfig = true }

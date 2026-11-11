@@ -6,6 +6,22 @@
     <string name="channel_reachable">Staying reachable</string>
     <string name="channel_reachable_description">Shown while Sona keeps your accounts registered so calls can ring</string>
 
+    <string name="readiness_account">An account turned on</string>
+    <string name="readiness_account_problem">Without an account that is on, nobody can call you and you cannot call</string>
+    <string name="readiness_account_fix">Open accounts</string>
+    <string name="readiness_microphone">Microphone</string>
+    <string name="readiness_microphone_problem">Without it the other side does not hear you</string>
+    <string name="readiness_notifications">Notifications</string>
+    <string name="readiness_notifications_problem">A call rings through its notification, and a missed call is told by one. Without them you may never know someone called</string>
+    <string name="readiness_channel">Incoming calls make a sound</string>
+    <string name="readiness_channel_problem">The Incoming calls notifications are silenced, so calls arrive without ringing</string>
+    <string name="readiness_full_screen">Calls over the lock screen</string>
+    <string name="readiness_full_screen_problem">With the phone locked, a call shows as a small notification instead of the call screen</string>
+    <string name="readiness_battery">Not stopped to save battery</string>
+    <string name="readiness_battery_problem">Android may stop Sona some time after you leave it, and calls then stop ringing until you open it again</string>
+    <string name="readiness_allow">Allow</string>
+    <string name="readiness_open_settings">Open its settings</string>
+
     <string name="notification_incoming">Incoming call</string>
     <string name="notification_incoming_on">Incoming call on %1$s</string>
     <string name="notification_calling">Calling…</string>

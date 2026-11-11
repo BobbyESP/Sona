@@ -14,12 +14,21 @@ import com.bobbyesp.sona.accounts.domain.SaveOutcome
 import com.bobbyesp.sona.accounts.domain.observeAccountStatuses
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.Secret
+import com.bobbyesp.sona.core.model.settings.AudioSettings
+import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.DtmfMethod
+import com.bobbyesp.sona.core.model.settings.Overrides
+import com.bobbyesp.sona.core.model.settings.Ranking
+import com.bobbyesp.sona.core.model.settings.SettingsStore
+import com.bobbyesp.sona.core.model.settings.storedValueOf
+import com.bobbyesp.sona.core.model.settings.toText
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
 import com.bobbyesp.sona.sip.api.Transport
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
@@ -47,6 +56,9 @@ internal data class EditorState(
     /** The account's live state, once it exists. */
     val status: AccountStatus? = null,
     val phase: EditorPhase = EditorPhase.Editing,
+    /** The app's own values of what an account may override, to say what *app default* means. */
+    val appCodecs: Ranking = AudioSettings.Codecs.default,
+    val appDtmf: DtmfMethod = CallSettings.Dtmf.default,
 )
 
 internal sealed interface EditorIntent {
@@ -95,6 +107,7 @@ internal class AccountEditorViewModel(
     private val repository: AccountsRepository,
     private val saveAccount: SaveAccount,
     private val engine: SipEngine,
+    private val settings: SettingsStore,
 ) :
     BaseViewModel<EditorIntent, EditorState, EditorEffect>(
         EditorState(isNew = accountId == null),
@@ -117,6 +130,14 @@ internal class AccountEditorViewModel(
             }
         }
         existingId?.let(::followStatus)
+        launch {
+            combine(settings.observe(AudioSettings.Codecs), settings.observe(CallSettings.Dtmf)) {
+                    codecs,
+                    dtmf ->
+                    codecs to dtmf
+                }
+                .collect { (codecs, dtmf) -> setState { copy(appCodecs = codecs, appDtmf = dtmf) } }
+        }
     }
 
     override fun onHandleIntent(intent: EditorIntent) {
@@ -232,7 +253,14 @@ private fun RegistrationState?.isAnswer(): Boolean =
 private fun SaveOutcome.Invalid.needsMore(): Boolean =
     problems.keys.any { it != DraftField.Server && it != DraftField.Username }
 
+private const val OVERRIDE_PREFIX = "override:"
+
 private fun AccountDraft.toMap(): HashMap<String, String> =
+    fieldsMap().apply {
+        overrides.stored.forEach { (key, value) -> put(OVERRIDE_PREFIX + key, value.toText()) }
+    }
+
+private fun AccountDraft.fieldsMap(): HashMap<String, String> =
     hashMapOf(
         "id" to (id?.value ?: ""),
         "server" to server,
@@ -266,4 +294,12 @@ private fun Map<String, String>.toDraft(): AccountDraft =
         voicemailNumber = this["voicemailNumber"].orEmpty(),
         color = this["color"]?.toIntOrNull(),
         enabled = this["enabled"] != "false",
+        overrides =
+            Overrides(
+                filterKeys { it.startsWith(OVERRIDE_PREFIX) }
+                    .mapNotNull { (key, text) ->
+                        storedValueOf(text)?.let { key.removePrefix(OVERRIDE_PREFIX) to it }
+                    }
+                    .toMap(),
+            ),
     )

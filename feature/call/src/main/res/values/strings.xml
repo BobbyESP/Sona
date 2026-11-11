@@ -51,4 +51,19 @@
     <string name="settings_decline_busy">Busy (486)</string>
     <string name="settings_decline_declined">Declined (603)</string>
     <string name="settings_decline_keywords">busy declined 486 603 sip</string>
+    <string name="settings_dtmf">Keypad tones are sent as</string>
+    <string name="settings_dtmf_summary">How the keys pressed during a call reach the server. Change it if a menu does not hear them</string>
+    <string name="settings_dtmf_rfc4733">RTP events</string>
+    <string name="settings_dtmf_info">SIP INFO</string>
+    <string name="settings_dtmf_inband">In the audio</string>
+    <string name="settings_dtmf_keywords">dtmf rfc 4733 2833 info inband digits menu ivr voicemail</string>
+    <string name="settings_codecs">Codecs</string>
+    <string name="settings_codecs_summary">Sona offers the checked codecs in this order, and the call uses the first one the other side has too. It applies from the next call.</string>
+    <string name="settings_codecs_keywords">codec order opus g722 g711 pcmu pcma ulaw alaw gsm speex quality hd</string>
+    <string name="settings_echo">Echo cancellation</string>
+    <string name="settings_echo_summary">Keeps what the speaker plays out of the microphone, so the other side does not hear itself</string>
+    <string name="settings_echo_keywords">echo aec feedback speaker</string>
+    <string name="settings_mobile_data">Use mobile data</string>
+    <string name="settings_mobile_data_summary">Off, Sona registers and calls only over Wi-Fi</string>
+    <string name="settings_mobile_data_keywords">wifi only cellular 4g 5g lte data network</string>
 </resources>

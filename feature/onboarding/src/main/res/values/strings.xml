@@ -7,4 +7,19 @@
     <string name="onboarding_point_why">When something fails, Sona says why, and shows the SIP behind it</string>
     <string name="onboarding_add">Add my extension</string>
     <string name="onboarding_skip">Not now</string>
+
+    <string name="readiness_title">Call readiness</string>
+    <string name="readiness_back">Back</string>
+    <string name="readiness_settings_summary">What Android must allow for calls to ring and be heard</string>
+    <string name="readiness_keywords">permissions microphone notifications battery lock screen ring silent not ringing checklist</string>
+    <string name="readiness_all_good">Everything is ready: calls will ring and be heard.</string>
+    <plurals name="readiness_problems">
+        <item quantity="one">%1$d thing can keep calls from working. It takes a moment to fix.</item>
+        <item quantity="other">%1$d things can keep calls from working. Each takes a moment to fix.</item>
+    </plurals>
+    <string name="readiness_state_ready">Ready</string>
+    <string name="readiness_state_problem">Needs attention</string>
+    <string name="readiness_reachable_note">Your server does not wake the phone for a call, so Sona stays registered while it is closed, with a quiet notification that says so. You can turn that off in Settings, under Calls: calls then ring only while Sona is open.</string>
+    <string name="readiness_done">Done</string>
+    <string name="readiness_later">Later</string>
 </resources>

@@ -43,6 +43,17 @@ sealed interface EngineCallState {
     ) : EngineCallState
 }
 
+/**
+ * The kind of device a call's audio is on. The engine never picks one: Android's call system does
+ * (the user's choice, a headset plugged in), and the engine is told so its streams follow.
+ */
+enum class AudioDeviceKind {
+    Earpiece,
+    Speaker,
+    WiredHeadset,
+    Bluetooth,
+}
+
 /** What is negotiated for the audio. */
 data class MediaInfo(val codec: String, val clockRate: Int, val encryption: String? = null) {
     override fun toString(): String = buildString {

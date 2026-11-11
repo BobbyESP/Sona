@@ -2,8 +2,13 @@
 <resources>
     <string name="cancel">Cancel</string>
 
+    <!-- A list whose order is chosen: "Move G.722 up" -->
+    <string name="ranked_move_up">Move %1$s up</string>
+    <string name="ranked_move_down">Move %1$s down</string>
+
     <!-- The account chip: "Lab Asterisk · 102, registered" -->
     <string name="account_chip_description">Account %1$s, %2$s</string>
+    <string name="account_chip_warning">Calls may not work</string>
     <string name="registration_registered">Registered</string>
     <string name="registration_registering">Registering…</string>
     <string name="registration_offline">Offline</string>

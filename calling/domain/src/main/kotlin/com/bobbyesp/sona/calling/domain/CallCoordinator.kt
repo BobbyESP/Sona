@@ -7,16 +7,20 @@ import com.bobbyesp.sona.accounts.domain.AccountsRepository
 import com.bobbyesp.sona.accounts.domain.defaultAccount
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
+import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.CallSettings
 import com.bobbyesp.sona.core.model.settings.DeclineMode
 import com.bobbyesp.sona.core.model.settings.SettingsStore
+import com.bobbyesp.sona.sip.api.AudioDeviceKind
 import com.bobbyesp.sona.sip.api.CallDirection
 import com.bobbyesp.sona.sip.api.DialResult
 import com.bobbyesp.sona.sip.api.EngineCall
 import com.bobbyesp.sona.sip.api.EngineCallState
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
+import com.bobbyesp.sona.sip.api.SipStatus
 import com.bobbyesp.sona.telecom.api.AudioRoute
+import com.bobbyesp.sona.telecom.api.AudioRouteKind
 import com.bobbyesp.sona.telecom.api.DisconnectCause
 import com.bobbyesp.sona.telecom.api.SystemCall
 import com.bobbyesp.sona.telecom.api.SystemCallEvents
@@ -27,10 +31,14 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -62,6 +70,23 @@ sealed interface CallForeground {
     /** A call exists. [microphone] once one was dialed or answered (ringing needs none). */
     data class Calls(val microphone: Boolean) : CallForeground
 }
+
+/**
+ * An incoming call that was refused before it rang: by do not disturb, or as busy during another
+ * call with call waiting off. It never becomes a [Call] (nothing rings, nothing is shown), but it
+ * is told, so the history can say who called.
+ *
+ * @property status What the caller was answered: `486 Busy Here` or `603 Decline`.
+ * @property quiet The user asked not to be disturbed: to be written down, not announced.
+ */
+data class RefusedCall(
+    val account: AccountId?,
+    val remote: SipAddress,
+    val remoteName: String?,
+    val status: SipStatus,
+    val quiet: Boolean,
+    val at: Long,
+)
 
 /**
  * The only thing that changes a call. It follows the engine's calls, keeps Android's call system
@@ -149,6 +174,11 @@ class CallCoordinator(
                     )
             }
             .stateIn(scope, SharingStarted.Eagerly, CallForeground.None)
+
+    private val _refused = MutableSharedFlow<RefusedCall>(extraBufferCapacity = 16)
+
+    /** The calls refused before they rang, as each happens: for the history, not for a screen. */
+    val refused: SharedFlow<RefusedCall> = _refused.asSharedFlow()
 
     /** Follows the engine's calls; once, at start. */
     fun start(): Job = scope.launch {
@@ -238,15 +268,30 @@ class CallCoordinator(
             // Do not disturb: refused before it rings, and told as the user chose.
             val busy = settings.observe(CallSettings.DeclineWith).first() == DeclineMode.Busy
             engine.decline(call.id, busy = busy)
+            refused(call, busy = busy, quiet = true)
             return
         }
         if (call.direction == CallDirection.Incoming && shouldRejectAsBusy()) {
             engine.decline(call.id, busy = true)
+            refused(call, busy = true, quiet = false)
             return
         }
         val name = names.nameFor(call.remote)
         tracked.update { it + (call.id to Tracked(call, name = name)) }
         scope.launch { addToSystem(call, name) }
+    }
+
+    private suspend fun refused(call: EngineCall, busy: Boolean, quiet: Boolean) {
+        _refused.emit(
+            RefusedCall(
+                account = call.account,
+                remote = call.remote,
+                remoteName = names.nameFor(call.remote) ?: call.remoteName,
+                status = if (busy) SipStatus(486, "Busy Here") else SipStatus(603, "Decline"),
+                quiet = quiet,
+                at = clock(),
+            ),
+        )
     }
 
     /** Busy when a call is in progress and call waiting is off. */
@@ -312,9 +357,19 @@ class CallCoordinator(
             if (known.engine.state == EngineCallState.Active) handle.setActive()
             if (known.engine.state == EngineCallState.LocalHold) handle.setInactive()
             val routeJob = scope.launch {
-                combine(handle.route, handle.routes, ::Audio).collect { now ->
-                    audio.update { it + (call.id to now) }
+                launch {
+                    combine(handle.route, handle.routes, ::Audio).collect { now ->
+                        audio.update { it + (call.id to now) }
+                    }
                 }
+                // The system owns the route; the engine's streams are moved to follow it. Without
+                // this the route changes and the sound stays where the engine first put it.
+                handle.route
+                    .map { it?.kind?.toEngineDevice() }
+                    .distinctUntilChanged()
+                    .collect { device ->
+                        if (device != null) lock.withLock { engine.setAudioDevice(call.id, device) }
+                    }
             }
             tracked.update { it + (call.id to known.with(system = handle, routeJob = routeJob)) }
         }
@@ -347,6 +402,16 @@ class CallCoordinator(
         override suspend fun onSetInactive() = lock.withLock { engine.hold(id, true) }
     }
 }
+
+/** The engine's kind of device for the system's; `null` for one the engine cannot be told of. */
+private fun AudioRouteKind.toEngineDevice(): AudioDeviceKind? =
+    when (this) {
+        AudioRouteKind.Earpiece -> AudioDeviceKind.Earpiece
+        AudioRouteKind.Speaker -> AudioDeviceKind.Speaker
+        AudioRouteKind.WiredHeadset -> AudioDeviceKind.WiredHeadset
+        AudioRouteKind.Bluetooth -> AudioDeviceKind.Bluetooth
+        AudioRouteKind.Other -> null
+    }
 
 private fun EndReason.toDisconnectCause(): DisconnectCause =
     when (this) {

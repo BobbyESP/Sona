@@ -15,13 +15,17 @@ import com.bobbyesp.sona.core.model.settings.CallSettings
 import com.bobbyesp.sona.core.model.settings.DeclineMode
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.credentials.api.InMemoryCredentialVault
+import com.bobbyesp.sona.sip.api.AudioDeviceKind
 import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.SipStatus
 import com.bobbyesp.sona.sip.fake.FakeSipEngine
+import com.bobbyesp.sona.telecom.api.AudioRoute
+import com.bobbyesp.sona.telecom.api.AudioRouteKind
 import com.bobbyesp.sona.telecom.api.FakeSystemCall
 import com.bobbyesp.sona.telecom.api.FakeSystemCalls
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -251,6 +255,33 @@ class CallCoordinatorTest {
     }
 
     @Test
+    fun `a call refused before it rang is told, with how it was answered`() = runTest {
+        settings.set(CallSettings.CallWaiting, false)
+        val world = world()
+        val refused = mutableListOf<RefusedCall>()
+        val listening = launch { world.calls.refused.toList(refused) }
+        runCurrent()
+
+        // Busy during another call, which the user will want to hear about afterwards.
+        world.engine.remoteAnswers(world.dial("600"))
+        runCurrent()
+        world.engine.incomingCall(alice, name = "Alice")
+        runCurrent()
+
+        // Do not disturb: written down quietly.
+        settings.set(CallSettings.DoNotDisturb, true)
+        settings.set(CallSettings.DeclineWith, DeclineMode.Declined)
+        world.engine.incomingCall(alice)
+        runCurrent()
+        listening.cancel()
+
+        assertEquals(listOf(alice, alice), refused.map { it.remote })
+        assertEquals(listOf("Alice", null), refused.map { it.remoteName })
+        assertEquals(listOf(486, 603), refused.map { it.status.code })
+        assertEquals(listOf(false, true), refused.map { it.quiet })
+    }
+
+    @Test
     fun `dialing without a registered account explains why`() = runTest {
         val world = world()
         world.engine.failRegistration(AccountId("lab"), SipStatus(401, "Unauthorized"))
@@ -289,6 +320,28 @@ class CallCoordinatorTest {
 
         assertEquals(FakeSystemCall.Speaker, world.call(id).route)
         assertEquals("route:Speaker", systemCall(id).log.last())
+    }
+
+    /**
+     * Found on a phone: the speaker button moved the system's route, its own look and the proximity
+     * lock, and the sound stayed in the earpiece, where the engine had opened its streams.
+     */
+    @Test
+    fun `the engine's audio follows the route the system chose`() = runTest {
+        val world = world()
+        val id = world.dial("600")
+        world.engine.remoteAnswers(id)
+        runCurrent()
+        assertEquals(AudioDeviceKind.Earpiece, world.engine.audioDevices[id])
+
+        world.calls.selectRoute(id, FakeSystemCall.Speaker)
+        runCurrent()
+        assertEquals(AudioDeviceKind.Speaker, world.engine.audioDevices[id])
+
+        // A headset plugged in: the system moves the call by itself, and the engine follows too.
+        systemCall(id).route.value = AudioRoute("wired", AudioRouteKind.WiredHeadset, "Headset")
+        runCurrent()
+        assertEquals(AudioDeviceKind.WiredHeadset, world.engine.audioDevices[id])
     }
 
     @Test

@@ -13,5 +13,7 @@ import org.koin.dsl.module
  * screen works as in the full app, with no server at all.
  */
 val engineModule = module {
-    single<SipEngine> { FakeSipEngine(get<ApplicationScope>(), demoCalls = true) }
+    single<SipEngine> {
+        FakeSipEngine(get<ApplicationScope>(), demoCalls = true, clock = System::currentTimeMillis)
+    }
 }

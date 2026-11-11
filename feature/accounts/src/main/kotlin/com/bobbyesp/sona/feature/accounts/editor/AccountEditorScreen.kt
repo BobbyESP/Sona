@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.rounded.Lan
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,6 +53,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -60,10 +64,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -76,7 +84,13 @@ import com.bobbyesp.sona.accounts.domain.DraftField
 import com.bobbyesp.sona.accounts.domain.DraftProblem
 import com.bobbyesp.sona.accounts.ui.explain
 import com.bobbyesp.sona.accounts.ui.stateText
+import com.bobbyesp.sona.core.designsystem.components.RankedList
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
+import com.bobbyesp.sona.core.model.settings.AudioCodec
+import com.bobbyesp.sona.core.model.settings.AudioSettings
+import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.DtmfMethod
+import com.bobbyesp.sona.core.model.settings.Override
 import com.bobbyesp.sona.core.ui.LocalNetworkAccess
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
 import com.bobbyesp.sona.core.ui.rememberLocalNetworkAccess
@@ -316,6 +330,47 @@ private fun MoreOptions(
             placeholderText = "*97",
             keyboardType = KeyboardType.Phone,
         )
+        Text(
+            stringResource(R.string.overrides_title),
+            style = MaterialTheme.typography.labelLarge,
+        )
+        OverrideRow(
+            title = R.string.override_codecs,
+            override = draft.overrides[AudioSettings.Codecs],
+            app = state.appCodecs,
+            describe = { ranking ->
+                ranking.enabled.joinToString(", ", transform = AudioCodec::labelOf).ifEmpty {
+                    stringResource(R.string.override_none)
+                }
+            },
+            onChange = { edit { copy(overrides = overrides.with(AudioSettings.Codecs, it)) } },
+        ) { ranking, change ->
+            RankedList(ranking = ranking, label = AudioCodec::labelOf, onChange = change)
+        }
+        OverrideRow(
+            title = R.string.override_dtmf,
+            override = draft.overrides[CallSettings.Dtmf],
+            app = state.appDtmf,
+            describe = { stringResource(it.label) },
+            onChange = { edit { copy(overrides = overrides.with(CallSettings.Dtmf, it)) } },
+        ) { method, change ->
+            DtmfMethod.entries.forEach { option ->
+                Row(
+                    Modifier.fillMaxWidth()
+                        .selectable(
+                            selected = option == method,
+                            role = Role.RadioButton,
+                            onClick = { change(option) },
+                        )
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = option == method, onClick = null)
+                    Spacer(Modifier.size(12.dp))
+                    Text(stringResource(option.label))
+                }
+            }
+        }
         SwitchRow(
             title = R.string.field_enabled,
             description = R.string.field_enabled_description,
@@ -404,6 +459,76 @@ private val DraftProblem.text: Int
             DraftProblem.NotAUsername -> R.string.problem_not_a_username
             DraftProblem.OutOfRange -> R.string.problem_out_of_range
         }
+
+private val DtmfMethod.label: Int
+    get() =
+        when (this) {
+            DtmfMethod.Rfc4733 -> R.string.dtmf_rfc4733
+            DtmfMethod.SipInfo -> R.string.dtmf_info
+            DtmfMethod.InBand -> R.string.dtmf_inband
+        }
+
+/**
+ * An option this account may have its own value for. The row says which applies, *Uses the app's
+ * setting (Opus, G.722)* or the account's own; it opens a dialog with the switch between the two
+ * and, for the account's own, [editor] to change it. Turning the app's setting off starts from the
+ * app's value, so the account's own differs only where the user changes it.
+ */
+@Composable
+private fun <T> OverrideRow(
+    title: Int,
+    override: Override<T>,
+    app: T,
+    describe: @Composable (T) -> String,
+    onChange: (Override<T>) -> Unit,
+    editor: @Composable (value: T, change: (T) -> Unit) -> Unit,
+) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    ListItem(
+        headlineContent = { Text(stringResource(title)) },
+        supportingContent = {
+            Text(
+                when (override) {
+                    Override.Inherit -> stringResource(R.string.override_inherit, describe(app))
+                    is Override.Value ->
+                        stringResource(R.string.override_own, describe(override.value))
+                },
+            )
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = Modifier.clickable { open = true },
+    )
+    if (open) {
+        AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text(stringResource(title)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    SwitchRow(
+                        title = R.string.override_use_app,
+                        checked = override is Override.Inherit,
+                        onCheckedChange = { useApp ->
+                            onChange(if (useApp) Override.Inherit else Override.Value(app))
+                        },
+                    )
+                    when (override) {
+                        Override.Inherit ->
+                            Text(
+                                describe(app),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                        is Override.Value -> editor(override.value) { onChange(Override.Value(it)) }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { open = false }) { Text(stringResource(R.string.done)) }
+            },
+        )
+    }
+}
 
 @Composable
 private fun SwitchRow(

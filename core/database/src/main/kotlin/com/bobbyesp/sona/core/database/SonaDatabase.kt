@@ -11,20 +11,21 @@ import androidx.room.RoomDatabase
 
 /**
  * Sona's one database. Version 1 held the accounts; version 2 adds the call history and the local
- * contacts. A released schema is never changed in place: each change is a new version with a
- * migration, and the schemas are exported to `schemas/` and committed. Per-account overrides arrive
- * the same way.
+ * contacts; version 3 adds what each account overrides. A released schema is never changed in
+ * place: each change is a new version with a migration, and the schemas are exported to `schemas/`
+ * and committed.
  */
 @Database(
     entities =
         [
             AccountEntity::class,
+            AccountOverrideEntity::class,
             CallRecordEntity::class,
             ContactEntity::class,
             ContactNumberEntity::class,
         ],
-    version = 2,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    version = 3,
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
     exportSchema = true,
 )
 abstract class SonaDatabase : RoomDatabase() {

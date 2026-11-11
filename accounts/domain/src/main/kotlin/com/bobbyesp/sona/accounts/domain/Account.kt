@@ -5,6 +5,7 @@ package com.bobbyesp.sona.accounts.domain
 
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.SipAddress
+import com.bobbyesp.sona.core.model.settings.Overrides
 import com.bobbyesp.sona.sip.api.ServerEndpoint
 import com.bobbyesp.sona.sip.api.Transport
 import kotlin.time.Duration
@@ -18,6 +19,7 @@ import kotlin.time.Duration.Companion.seconds
  *   server's own address.
  * @property revision Bumped on every save, so a change of password alone (which is not in this
  *   class) still reaches the engine.
+ * @property overrides Its own values for the options an account may override (codecs, DTMF).
  */
 data class Account(
     val id: AccountId,
@@ -34,6 +36,7 @@ data class Account(
     val enabled: Boolean = true,
     val isDefault: Boolean = false,
     val revision: Long = 0,
+    val overrides: Overrides = Overrides(),
 ) {
     val identity: SipAddress
         get() = SipAddress(user = username, host = domain)

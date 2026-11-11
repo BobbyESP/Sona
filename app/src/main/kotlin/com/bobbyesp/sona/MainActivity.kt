@@ -15,7 +15,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.CallState
+import com.bobbyesp.sona.calling.platform.ServiceController
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
+import com.bobbyesp.sona.core.ui.contribution.ReadinessMonitor
+import com.bobbyesp.sona.core.ui.contribution.problems
 import com.bobbyesp.sona.shell.ShellViewModel
 import com.bobbyesp.sona.shell.SonaApp
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -28,6 +31,8 @@ class MainActivity : ComponentActivity() {
 
     private val shell: ShellViewModel by viewModel()
     private val coordinator: CallCoordinator by inject()
+    private val readiness: ReadinessMonitor by inject()
+    private val services: ServiceController by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
@@ -52,10 +57,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             val startup by shell.startup.collectAsStateWithLifecycle()
             val accountChip by shell.accountChip.collectAsStateWithLifecycle()
+            val checks by readiness.results.collectAsStateWithLifecycle()
             val ready = startup ?: return@setContent
             SonaTheme(config = ready.theme) {
-                SonaApp(accountChip = accountChip, needsOnboarding = ready.needsOnboarding)
+                SonaApp(
+                    accountChip = accountChip,
+                    needsOnboarding = ready.needsOnboarding,
+                    readinessWarning = checks?.problems?.isNotEmpty() == true,
+                )
             }
         }
+    }
+
+    /**
+     * Back in front, possibly from the system's settings: what calls need is asked again, and the
+     * keep-alive notification is posted again in case it could not be shown before.
+     */
+    override fun onResume() {
+        super.onResume()
+        readiness.refresh()
+        services.refresh()
     }
 }

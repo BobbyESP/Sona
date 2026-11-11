@@ -10,6 +10,7 @@ import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.AccountSpec
+import com.bobbyesp.sona.sip.api.AudioDeviceKind
 import com.bobbyesp.sona.sip.api.CallDirection
 import com.bobbyesp.sona.sip.api.Capability
 import com.bobbyesp.sona.sip.api.DialResult
@@ -20,6 +21,8 @@ import com.bobbyesp.sona.sip.api.EngineState
 import com.bobbyesp.sona.sip.api.MediaInfo
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
+import com.bobbyesp.sona.sip.api.SipTraceEntry
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +31,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import org.linphone.core.Account
 import org.linphone.core.AccountListenerStub
+import org.linphone.core.AudioDevice
 import org.linphone.core.AuthInfo
 import org.linphone.core.Call
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.Factory
-import org.linphone.core.LogLevel
+import org.linphone.core.LoggingServiceListener
 import org.linphone.core.MediaEncryption
 import org.linphone.core.Reason
 
@@ -52,15 +56,20 @@ fun Context.createLinphoneEngine(appVersion: String): SipEngine =
  * any Linphone service; the accounts are whatever [setAccounts] last gave, rebuilt from the app's
  * storage at every start. See docs/calling.md.
  */
-internal class LinphoneSipEngine(private val context: Context, private val appVersion: String) :
-    SipEngine {
+internal class LinphoneSipEngine(private val context: Context, appVersion: String) : SipEngine {
 
     private val thread = HandlerThread("sona-core").apply { start() }
     private val handler = Handler(thread.looper)
     private val dispatcher = handler.asCoroutineDispatcher("sona-core")
+    private val configurer = LinphoneConfigurer(appVersion)
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Stopped)
     override val state: StateFlow<EngineState> = _state.asStateFlow()
+
+    // Linphone says its version through a Core; read by any thread.
+    @Volatile private var coreVersion: String? = null
+    override val version: String
+        get() = listOfNotNull("liblinphone", coreVersion).joinToString(" ")
 
     override val capabilities: Set<Capability> =
         setOf(
@@ -69,6 +78,7 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
             Capability.Hold,
             Capability.Srtp,
             Capability.Zrtp,
+            Capability.SipTrace,
         )
 
     private val _registrations = MutableStateFlow<Map<AccountId, RegistrationState>>(emptyMap())
@@ -78,6 +88,7 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
     // Only touched on the core thread.
     private var core: Core? = null
     private var desired: List<AccountSpec> = emptyList()
+    private var config = EngineConfig()
     private val bound = mutableMapOf<AccountId, Bound>()
 
     private class Bound(val spec: AccountSpec, val account: Account, val auth: AuthInfo)
@@ -89,6 +100,36 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
     // side ended (Linphone does not say who ended a call).
     private val live = mutableMapOf<CallId, Call>()
     private val endedHere = mutableSetOf<CallId>()
+
+    // Only touched on the core thread: the kind of device the system put each call's audio on.
+    private val devices = mutableMapOf<CallId, AudioDeviceKind>()
+
+    private val _trace = MutableStateFlow<List<SipTraceEntry>>(emptyList())
+    override val trace: StateFlow<List<SipTraceEntry>> = _trace.asStateFlow()
+    private val traceIds = AtomicLong()
+
+    // Read by whichever thread writes to Linphone's log.
+    @Volatile private var capturing = false
+
+    /** Every line of Linphone's log goes by here; the SIP messages among them are the trace. */
+    private val logListener = LoggingServiceListener { _, _, _, message ->
+        if (!capturing) return@LoggingServiceListener
+        val traced = tracedMessageOf(message) ?: return@LoggingServiceListener
+        val entry =
+            SipTraceEntry(
+                id = traceIds.incrementAndGet(),
+                atMillis = System.currentTimeMillis(),
+                outgoing = traced.outgoing,
+                transport = traced.transport,
+                peer = traced.peer,
+                raw = traced.raw,
+            )
+        _trace.update { all -> (all + entry).takeLast(TRACE_SIZE) }
+    }
+
+    override suspend fun clearTrace() {
+        _trace.value = emptyList()
+    }
 
     private val coreListener =
         object : CoreListenerStub() {
@@ -113,15 +154,14 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
             if (core != null) return@withContext
             _state.value = EngineState.Starting
             try {
-                val factory = Factory.instance()
-                factory.setDebugMode(config.verboseLogs, LOG_TAG)
-                factory.loggingService.setLogLevel(
-                    if (config.verboseLogs) LogLevel.Message else LogLevel.Warning,
-                )
-                val created = factory.createCore(null, null, context)
+                this@LinphoneSipEngine.config = config
+                capturing = config.captureTrace
+                configurer.logging(config)
+                Factory.instance().loggingService.addListener(logListener)
+                val created = Factory.instance().createCore(null, null, context)
+                coreVersion = created.version
                 created.setAutoIterateEnabled(false)
                 created.setPushNotificationEnabled(false)
-                created.setUserAgent(config.userAgent, appVersion)
                 // Random local ports: a fixed 5060 collides with anything else on the phone.
                 val transports = created.transports
                 transports.udpPort = RANDOM_PORT
@@ -132,8 +172,7 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
                 // volume apply; Linphone keeps only the ringback heard while calling out.
                 created.setNativeRingingEnabled(false)
                 created.setRing(null)
-                created.setUseRfc2833ForDtmf(true)
-                created.setUseInfoForDtmf(false)
+                configurer.apply(created, config)
                 created.addListener(coreListener)
                 created.start()
                 core = created
@@ -149,6 +188,7 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
         withContext(dispatcher) {
             val current = core ?: return@withContext
             handler.removeCallbacks(iterate)
+            Factory.instance().loggingService.removeListener(logListener)
             bound.values.forEach { current.removeAccount(it.account) }
             bound.clear()
             current.clearAllAuthInfo()
@@ -159,7 +199,22 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
         }
 
     override suspend fun apply(config: EngineConfig) =
-        withContext(dispatcher) { core?.setUserAgent(config.userAgent, appVersion) ?: Unit }
+        withContext(dispatcher) {
+            this@LinphoneSipEngine.config = config
+            capturing = config.captureTrace
+            core?.let { configurer.apply(it, config) } ?: Unit
+        }
+
+    /**
+     * Linphone has one codec list and one DTMF way for the whole Core, and an account may have its
+     * own: before a call is offered or answered, the Core is given what [account] wants, or the
+     * app's when it says nothing. Runs on the core thread.
+     */
+    private fun useOptionsOf(core: Core, account: AccountId?) {
+        val spec = account?.let { bound[it]?.spec }
+        (spec?.codecs ?: config.codecs)?.let { configurer.codecs(core, it) }
+        configurer.dtmf(core, spec?.dtmf ?: config.dtmf)
+    }
 
     override suspend fun setAccounts(accounts: List<AccountSpec>) =
         withContext(dispatcher) {
@@ -180,6 +235,7 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
             val address =
                 Factory.instance().createAddress(to.uri)
                     ?: return@withContext DialResult.Failed("Not a SIP address: $to")
+            useOptionsOf(current, account)
             val params =
                 current.createCallParams(null)
                     ?: return@withContext DialResult.Failed("No call parameters")
@@ -192,7 +248,11 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
             )
         }
 
-    override suspend fun answer(call: CallId) = onCall(call) { accept() }
+    override suspend fun answer(call: CallId) =
+        onCall(call) {
+            core?.let { useOptionsOf(it, accountOf(call)) }
+            accept()
+        }
 
     override suspend fun decline(call: CallId, busy: Boolean) =
         onCall(call) {
@@ -215,12 +275,63 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
             updateCall(call) { copy(muted = muted) }
         }
 
-    override suspend fun sendDtmf(call: CallId, digit: Char) = onCall(call) { sendDtmf(digit) }
+    override suspend fun sendDtmf(call: CallId, digit: Char) =
+        onCall(call) {
+            // With two calls on two accounts, the way of the call the digit is for.
+            core?.let { core ->
+                val spec = accountOf(call)?.let { bound[it]?.spec }
+                configurer.dtmf(core, spec?.dtmf ?: config.dtmf)
+            }
+            sendDtmf(digit)
+        }
+
+    private fun accountOf(call: CallId): AccountId? =
+        _calls.value.firstOrNull { it.id == call }?.account
+
+    override suspend fun setAudioDevice(call: CallId, device: AudioDeviceKind) =
+        withContext(dispatcher) {
+            devices[call] = device
+            live[call]?.let { follow(it, device) }
+            Unit
+        }
+
+    /**
+     * Moves [call]'s streams to the phone's device of [kind], when it has one. Linphone opens its
+     * player and recorder on a device of its own choosing (the earpiece) and keeps them there:
+     * without this the system's route changes and the sound does not. Found on a phone, where the
+     * speaker button did everything but move the audio. Runs on the core thread.
+     */
+    private fun follow(call: Call, kind: AudioDeviceKind) {
+        val all = core?.extendedAudioDevices?.toList() ?: return
+        val output =
+            pickDevice(
+                all.filter { it.hasCapability(AudioDevice.Capabilities.CapabilityPlay) },
+                kind.outputTypes(),
+            ) {
+                it.type
+            }
+        val input =
+            pickDevice(
+                all.filter { it.hasCapability(AudioDevice.Capabilities.CapabilityRecord) },
+                kind.inputTypes(),
+            ) {
+                it.type
+            }
+        // Setting a device restarts its stream: only when it is another one.
+        if (output != null && !output.isSame(call.outputAudioDevice)) {
+            call.outputAudioDevice = output
+        }
+        if (input != null && !input.isSame(call.inputAudioDevice)) call.inputAudioDevice = input
+    }
+
+    private fun AudioDevice.isSame(other: AudioDevice?): Boolean =
+        other != null && other.id == id && other.type == type
 
     override suspend fun forget(call: CallId) =
         withContext(dispatcher) {
             live.remove(call)
             endedHere.remove(call)
+            devices.remove(call)
             _calls.update { all -> all.filterNot { it.id == call } }
         }
 
@@ -237,7 +348,9 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
         val id = call.sonaId()
         if (id !in live) {
             if (state != Call.State.IncomingReceived) return
-            track(call, accountOf(call), CallDirection.Incoming, EngineCallState.Incoming)
+            val account = accountOf(call)
+            track(call, account, CallDirection.Incoming, EngineCallState.Incoming)
+            core?.let { useOptionsOf(it, account) }
         }
         val error = call.errorInfo
         val mapped =
@@ -245,6 +358,7 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
                 state = state,
                 code = error.protocolCode,
                 phrase = error.phrase,
+                protocol = error.protocol,
                 sendFailed = error.reason == Reason.IOError,
                 endedHere = id in endedHere,
                 remote = call.remoteAddress.asStringUriOnly(),
@@ -256,6 +370,9 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
             else copy(state = mapped, media = if (ended) media else call.mediaInfo() ?: media)
         }
         if (ended) live.remove(id)
+        // Streams that just started (the answer, a resume) open where Linphone likes: put them
+        // back on the device the system chose.
+        if (state == Call.State.StreamsRunning) devices[id]?.let { follow(call, it) }
     }
 
     private fun track(
@@ -417,6 +534,6 @@ internal class LinphoneSipEngine(private val context: Context, private val appVe
     private companion object {
         const val ITERATE_MS = 20L
         const val RANDOM_PORT = -1
-        const val LOG_TAG = "SonaSip"
+        const val TRACE_SIZE = 500
     }
 }

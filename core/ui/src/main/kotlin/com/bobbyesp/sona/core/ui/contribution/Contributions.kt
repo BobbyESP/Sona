@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.navigation.Navigator
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /*
  * Contribution points: what a feature adds to screens it does not own. Each feature binds its
@@ -39,6 +41,13 @@ interface TopLevelDestination {
     val icon: ImageVector
 
     val selectedIcon: ImageVector
+
+    /**
+     * How many things wait behind the tab (missed calls not yet seen), shown as a badge on its
+     * icon; zero shows none. The feature owns the count, the shell only draws it.
+     */
+    val badge: Flow<Int>
+        get() = flowOf(0)
 }
 
 /**

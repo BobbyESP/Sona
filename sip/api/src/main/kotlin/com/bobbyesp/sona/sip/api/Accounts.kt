@@ -31,6 +31,8 @@ data class ServerEndpoint(val host: String, val port: Int? = null, val transport
  *
  * @property identity The account's address of record: `sip:102@lab.local`.
  * @property authUsername The username to authenticate with, when it is not the identity's user.
+ * @property codecs, [dtmf] This account's own choice for its calls, over [EngineConfig]'s; `null`
+ *   where it has none.
  */
 data class AccountSpec(
     val id: AccountId,
@@ -43,6 +45,8 @@ data class AccountSpec(
     val outboundProxy: ServerEndpoint? = null,
     val expiry: Duration = 600.seconds,
     val enabled: Boolean = true,
+    val codecs: List<String>? = null,
+    val dtmf: DtmfMode? = null,
 )
 
 /** A SIP status line, kept as the server sent it: the domain decides what it means. */

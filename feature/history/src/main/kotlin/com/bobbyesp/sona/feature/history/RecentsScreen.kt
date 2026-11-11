@@ -3,6 +3,7 @@
  */
 package com.bobbyesp.sona.feature.history
 
+import android.app.KeyguardManager
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -109,9 +111,14 @@ internal fun RecentsRoute(
             RecentsEffect.OpenCall -> openCall()
         }
     }
-    // Looking at Recents is what makes missed calls seen.
+    // Looking at Recents is what makes missed calls seen, and behind the lock screen nobody is
+    // looking. Found on a phone: when a call rings a locked phone and its screen closes, this
+    // screen is resumed under the lock for a moment, which marked the call seen and took its
+    // notification down before anyone saw either. Unlocking resumes it again.
+    val context = LocalContext.current
     LifecycleResumeEffect(viewModel) {
-        viewModel.onSendIntent(RecentsIntent.Seen)
+        val locked = context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true
+        if (!locked) viewModel.onSendIntent(RecentsIntent.Seen)
         onPauseOrDispose {}
     }
     RecentsScreen(

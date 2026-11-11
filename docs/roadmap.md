@@ -109,7 +109,8 @@ cancellation, speaker by default, dialpad tones, mobile data, start on boot, hid
 screen, name and sort order, *Show SIP details*, trace capture, log level, language, reset
 everything). Not checked: the Linphone flavor against the lab (Docker was not running), the
 missed-call notification on a device, a real phone. A call still in progress when the process dies
-is not recorded.
+is not recorded. The full list, with what earlier phases left, is in
+[What is left](#what-is-left).
 
 - `:directory:*`: history written by the coordinator, local contacts, device contacts, favorites,
   the T9 matcher.
@@ -149,6 +150,267 @@ Each item is a new module plus contributions, without editing the features above
 
 Then, once Sona is stable: the design system shared by Docucraft, Metadator and Sona as one
 library.
+
+## What is left
+
+**The short list of what remains and what comes next is [todo.md](todo.md).** This section is
+the record behind it: what was found, when, and where each item was checked.
+
+From a review of the code on 2026-11-10, against this roadmap, [ux.md](ux.md) and
+[calling.md](calling.md). That day: 134 JVM test runs passed, both debug flavors and the `full`
+release (through R8, unsigned) assembled, Spotless was clean, and lint failed with the two errors
+listed under *Release*. The same day the `full` debug build was run on a Pixel 9 Pro XL (Android
+17) against the Docker lab over Wi-Fi: what that showed is under
+[Found on a real phone](#found-on-a-real-phone), and the items it checked are ticked. Everything
+else is read from the code and still has to be seen happening.
+
+Tick an item when it is built **and** checked; say where it was checked in the phase's paragraph
+above.
+
+### 1 · The MVP (phase 3's "done when")
+
+**Call readiness**
+
+- [ ] `ReadinessCheck` in `:core:ui`, its checks (microphone, notifications, full-screen
+      notifications, battery optimization, the incoming channel muted, an account registered), the
+      *Call readiness* screen in settings and the step in onboarding. **Built 2026-11-11**: the contract and
+      `ReadinessMonitor` (tested) in `:core:ui`, the six checks in `:calling:platform`, the screen
+      in `:feature:onboarding`, first in *Settings › Calls* and after the first account added from
+      the welcome. The account check asks for an account that is on, not a registered one: a
+      failed registration is already what the chip says. The battery check only applies while
+      *Always reachable* is on, and asks for the exemption directly
+      (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`: to weigh against Play's policy before publishing
+      there). None of the checks or fixes was seen on a phone.
+- [ ] Ask for notifications before the first call can arrive, not at the first call made. Today
+      they are asked for only when dialing or answering on screen (`CallPermissions.kt`,
+      `CallScreen.kt`). Seen on the phone: without the permission the incoming call's notification
+      is still posted (Android exempts a call's), but the missed-call notification and the
+      keep-alive one are not, so a call missed on a fresh install leaves nothing behind.
+      **Built 2026-11-11** as the readiness step after the first account; someone who adds the account another
+      way is told by the chip instead.
+- [ ] The account chip turns to a warning on a readiness problem, and the switcher starts with it.
+      **Built 2026-11-11**.
+
+**Settings that reach the engine**
+
+- [ ] `EngineConfig` carries more than the user agent and the log switch; `EngineConfigBuilder` in
+      `:calling:domain` builds it from the settings, `LinphoneConfigurer` applies it, and `apply()`
+      does more than set the user agent. **Built 2026-11-11** (the builder, the codec plan and the
+      ranked setting are tested on the JVM, both flavors assemble); not yet seen on a phone.
+- [ ] Per-account overrides: `Override<T>`, `EffectiveSettings`, their storage with the account,
+      and *Uses app default* / *Override* in the account editor. **Built 2026-11-11** for codecs and the DTMF
+      method: Room schema 3 (`account_overrides`, an automatic migration from 2), carried to the
+      engine in `AccountSpec`. Linphone has one codec list and one DTMF way for the whole Core, so
+      they are set for the call's account before each offer, answer and digit. To check on a
+      phone: the migration on an installed version 2, and that an answer (not only an offer)
+      follows the account's codecs.
+- [ ] Codec order and enablement (named by the "done when"), DTMF method, echo cancellation, mobile
+      data or Wi-Fi only, log level. **Built 2026-11-11**, each with its item and keywords, in the
+      new *Audio* and *Network* areas, *Calls* and *Diagnostics*. To check against the lab: that
+      the SDP offer follows the order (it should also settle "every call negotiated PCMU"), each
+      DTMF method against `*97`, registration dropping on mobile data with Wi-Fi only.
+
+**The MVP options still missing** (14 exist: call waiting, always reachable, do not disturb and how
+to decline, grouping, tap action, confirm before calling back, retention, clear history, device
+contacts, theme, dynamic color, pure black, palette style)
+
+- [ ] Calls: account for calls (default or ask every time), auto-answer with its delay and speaker,
+      full screen or banner when unlocked, answer by swipe, vibrate when ringing, the proximity
+      sensor's switch.
+- [ ] Audio: start calls on speaker, dialpad tones, the dialpad haptics' switch (they are always on).
+- [ ] Network: start on boot (it always does).
+- [ ] Privacy: hide caller on the lock screen (the incoming channel is `VISIBILITY_PUBLIC`, and
+      there is no public version of the notification).
+- [ ] Contacts and history: only contacts with a SIP address or number, name order and sort order,
+      Sona's calls in the phone app's history.
+- [ ] Appearance: high contrast, the seed color's picker, dialpad letters, addresses under names,
+      app language (with `localeConfig`).
+- [ ] Diagnostics: *Show SIP details* (the call screen always shows the status line), reset
+      everything. SIP trace capture and log level: **Built 2026-11-11**.
+- [ ] Accounts: choosing the color (it is assigned), the ringtone through a channel per account.
+- [ ] Each of them in the catalogue's items with keywords, as AGENTS.md asks.
+
+**Diagnostics**
+
+- [ ] The trace capability: `SipEngine.trace`, `LinphoneTrace` parsing Belle-SIP's log lines
+      (tested), the fake engine's scripted trace, `Authorization` headers redacted. **Built 2026-11-11**. The two
+      log formats were read from liblinphone 5.5.39's binary; that the log listener is handed
+      Belle-SIP's lines on a phone is still to be seen. SDP `crypto` keys are redacted too.
+      Linphone's own log (logcat, at *Every SIP message*) is not redacted.
+- [ ] The SIP trace list with the raw message, copy and share; the logs screen. **Built 2026-11-11**: the list,
+      the message, copy, and sharing one message as text or all of them as a file (a
+      `FileProvider` of the feature's own). The logs screen is not built.
+- [ ] The overview's network part (type, addresses, VPN, transport and ports in use) and the
+      expiry countdown.
+- [ ] Sharing a bundle (logs, trace, configuration without passwords) through `FileProvider`.
+
+**Keypad**
+
+- [ ] The split call button and the account picker; with one account, the round button.
+- [ ] A field that takes paste, letters and full SIP URIs. A hardware keyboard types into it,
+      Enter calls. **Built 2026-11-11**: a long press on the field pastes, a button swaps the dialpad for the
+      system's keyboard, and the field's rules (`DialInput`) are tested. The layout with the
+      keyboard up and the hardware keys are not yet seen on a device.
+- [ ] Long press on 1 calls the account's voicemail number. **Built 2026-11-11**.
+- [ ] The call icon on a suggestion, to call without filling the field first. **Built 2026-11-11**.
+
+**Recents**
+
+- [ ] The missed-calls badge on the tab. **Built 2026-11-11**: `TopLevelDestination.badge`, drawn by the shell.
+- [ ] Filters for incoming, outgoing and each account; today All and Missed.
+- [ ] Swipe to call back, and selecting several by long press.
+- [ ] Sona's calls in the system's call history, and `ACTION_CALL_BACK` as a standing request.
+- [ ] A record for a call refused by do not disturb, or as busy with call waiting off. **Built 2026-11-11**:
+      the coordinator tells them (`refused`), and they are recorded as missed with the status the
+      caller got. Under do not disturb the record is already seen, so no notification sounds.
+- [ ] Codec and quality in the details.
+
+**Call screen**
+
+- [ ] *End and answer* beside *Hold and answer*.
+- [ ] *Reconnecting…* when the network changes during a call.
+- [ ] `CallActionProvider`, so the controls are contributions; *More* with call info.
+- [ ] Haptics: connected, ended, failed.
+- [ ] Landscape and tabletop layouts; nothing truncated at 200% font scale.
+- [ ] The timer's format from the platform, not `"%d:%02d"`.
+
+**The rest of the shell**
+
+- [ ] About: version, Linphone's version, licenses, the link to the source (GPLv3 asks for it).
+      **Built 2026-11-11** as a settings area (`SipEngine.version`, `AppInfo`). The source link is
+      `SOURCE_URL` in `app/build.gradle.kts`, set to where the repository is expected to be: to
+      correct once it exists. The licenses are a list kept by hand.
+- [ ] `PartyActionProvider` for a contact, a history entry and a suggestion.
+- [ ] List-detail on expanded windows: the strategy is in the shell, no destination declares a
+      pane. The keypad as a supporting pane.
+- [ ] `tel:` and `sip:` intents, as standing requests.
+- [ ] The fast scroller in Contacts.
+
+### 2 · Promised by phases 0 to 2
+
+**To build**
+
+- [ ] `NetworkMonitor` in `:calling:platform`, refreshing registrations on a network change:
+      `refreshRegistrations()` is called only by the editor's *Retry*. Linphone watches the network
+      itself, which may be enough; see what turning Wi-Fi off and on does first.
+- [ ] `CallMachine` with its table tests, or AGENTS.md and calling.md say what is true: the
+      decisions are in `CallCoordinator`, with 16 scenario tests.
+- [ ] Remote surfaces within 5 seconds: the coordinator's `EventsFor` puts no 4-second bound on
+      the engine, and a hold the other side refused is not thrown back to Telecom.
+- [ ] With *Always reachable* off, unregister a minute after leaving the app.
+- [ ] A call in progress when the process dies is recorded at the next start.
+- [ ] TLS against the lab: a TLS transport and certificate in `lab/`, and a way for Linphone to
+      accept the lab's own certificate (verification and CA import are in phase 4; the phase 1
+      "done when" needs one of them sooner).
+
+**To check on a real phone, against the lab** (ticked: Pixel 9 Pro XL, Android 17, 2026-11-10)
+
+- [x] Registering over UDP on the local network, with `ACCESS_LOCAL_NETWORK` asked at *Check and
+      save*.
+- [x] 600 with audio both ways (4301 packets received and 4300 sent in 87 seconds, 6 and 4 lost;
+      the microphone not silenced; `CallService` as `phoneCall|microphone`), 486 as *Busy*, 199 as
+      *Not found*.
+- [x] Mute, hold and resume (`sendonly`, Telecom *on hold* then *active*), DTMF (`#` ended the echo
+      test on the server), the server hanging up (*Call ended*).
+- [x] The proximity sensor: the screen goes off on the earpiece, the lock is let go on the speaker.
+- [x] Audio keeps flowing with the phone asleep and locked; waking it shows the call over the lock
+      screen.
+- [ ] Audio routes: the earpiece works. **The speaker does not** (see below). Wired and Bluetooth
+      not tried.
+- [ ] Rings full screen when locked: seen after a minute asleep (the screen came on with the call
+      over the lock screen within 5 seconds), not after an hour, and with the phone's own do not
+      disturb on, so whether it sounded is not known.
+- [ ] The microphone foreground type when answering: right when answered on the call screen;
+      answering from the notification not tried.
+- [ ] The missed-call notification: posted with Sona in the background; its *Call back* not
+      pressed.
+- [ ] A Bluetooth headset answers, mutes and hangs up.
+- [ ] Two phones calling each other; call waiting with two real calls.
+- [ ] TCP; two accounts on two servers; Wi-Fi off and on; Wi-Fi to mobile data during a call.
+- [ ] The whole call matrix below, on the `full` flavor (it was last run before the directory).
+- [ ] Android 10 to 13, on emulators at least.
+
+#### Found on a real phone
+
+Pixel 9 Pro XL, Android 17, the Docker lab on the same Wi-Fi, 2026-11-10.
+
+- [x] **The speaker button moves the route, not the sound.** Telecom's communication device
+      becomes the speaker, the button and the proximity lock follow, and Linphone's playback stream
+      stays on the earpiece (`dumpsys media.audio_flinger`: its `MMAP_PLAYBACK` thread keeps
+      `AUDIO_DEVICE_OUT_EARPIECE`, with no new audio patch). Linphone opens its player on a device
+      it chose; the engine needs a function that selects Linphone's `AudioDevice` when Telecom's
+      endpoint changes, as calling.md says it has.
+- [x] **A `Reason: Q.850;cause=0` is read as a SIP `400`.** A call the server ends that way (a
+      hang-up requested from Asterisk's console, `channel originate` running out) shows *Call
+      failed · 400 Error* after an answered call, and is recorded as *Declined* (`400 Error`), not
+      *Missed*, when it was never answered. With `cause=16`, what a caller hanging up sends, both
+      are right. The mapper takes Linphone's `errorInfo.protocolCode`, which here does not come
+      from a SIP response.
+- [x] **A call missed on a locked phone is marked seen at once** when Recents was the last tab
+      open: as the call screen closes, `MainActivity` is resumed for a third of a second behind the
+      lock screen, Recents says *Seen*, and the missed-call notification never stays.
+- [x] **The call screen lets the phone sleep and lock** during a call, after the screen timeout (30
+      seconds on this phone). The call goes on; the screen should stay on while it is shown.
+  The four above were fixed and seen fixed on the same phone the same day: the playback stream
+  moves to the speaker and back, a `cause=0` ending reads as *Missed* or *Call ended*, the missed
+  call stays unseen with its notification, and the screen stays on through a call.
+- [ ] The keep-alive notification does not appear once notifications are allowed: the service was
+      started without the permission and does not post it again. **Built 2026-11-11**: the service is started
+      again each time the app comes to the front, and posts its notification again; to see on the
+      phone.
+- [ ] Linphone still plays tones of its own (an end-of-call tone on the earpiece, with its volume
+      workaround on the DTMF stream) and asks for `org.linphone.core.tools.service.CoreService`,
+      which is not in the app, on every incoming call (a warning in the log).
+- [ ] The keypad's hint says *Extension, number or SIP address*; only digits can be typed.
+      **Built 2026-11-11** (see *Keypad*); to see on the phone.
+- [x] Every call negotiated PCMU at 8 kHz, though the lab offers G.722 first. With the codec
+      order applied (2026-11-11) the offer is `opus, G722, PCMU, PCMA` and 600 settles on G.722.
+
+#### Seen on the phone, 2026-11-11
+
+The same Pixel 9 Pro XL, the `full` debug build installed over the one of the day before, the
+Docker lab on the same Wi-Fi. Of what was built that day:
+
+- [x] The database went from schema 2 to 3 in place: the account and its 14 calls were kept.
+- [x] The codec order reaches the SDP offer (`m=audio … 96 9 0 8`), and a call to 600 used G.722.
+- [x] The SIP trace: Linphone's log listener is handed Belle-SIP's lines, so REGISTER, INVITE and
+      their answers appear in both directions; the `Authorization` of the INVITE reads
+      `realm, algorithm, username, uri, qop, response=[redacted]`.
+- [x] The keypad: a hardware keyboard types an address into the field and Enter calls; the
+      system's keyboard swaps in with the field and the call button above it. Fast typing lost
+      characters there (an answer of the state to an earlier key replaced the text): fixed and
+      seen fixed.
+- [x] Call readiness: the chip's warning, the switcher's row, the checklist (five ready, battery
+      not), and the battery fix opening the system's question. The other fixes, and a permission
+      refused for good, were not tried: everything else was already allowed on this phone.
+- [x] About says `liblinphone 5.5.39`; the keep-alive notification is there after the app comes
+      back.
+
+Not tried there: an account's own codecs and DTMF method, sharing the trace as a file, pasting,
+the long press on 1, a call refused by do not disturb, the badge, the readiness step after a first
+account.
+
+### 3 · Release
+
+- [ ] A remote repository; CI seen green there.
+- [ ] CI runs lint, `testFullDebugUnitTest` and `assembleFullDebug` too.
+- [ ] Lint passes: `MANAGE_OWN_CALLS` is declared in `:calling:platform` and used in
+      `:telecom:jetpack` (`JetpackSystemCalls.kt`, `registerAppWithTelecom` and `addCall`).
+- [ ] A signing configuration, and the release APK run on a device: R8 passes, but Linphone's
+      native bindings under it were never started. `proguard-rules.pro` is one comment.
+- [ ] Device tests: the Room migration from 1 to 2, the device contacts query, Core-Telecom.
+- [ ] Screens on the fake engine, with screenshots in light, dark and large font.
+- [ ] Previews in large font and right-to-left for the components.
+- [ ] A translation, if the course wants one: every string is English.
+
+### 4 · Docs
+
+- [ ] AGENTS.md, architecture.md and calling.md name as built what is not: `CallMachine`,
+      `NetworkMonitor`, `PermissionHost`, `CallActionProvider`, `PartyActionProvider`,
+      `ForegroundNeed` (it is `CallForeground`), a back stack inside
+      `CallActivity`. Build each or mark it as planned.
+
+Phases 4 and 5 are untouched, as planned.
 
 ## The Asterisk lab
 

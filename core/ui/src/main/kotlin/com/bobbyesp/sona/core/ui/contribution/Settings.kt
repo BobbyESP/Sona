@@ -7,8 +7,11 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Contacts
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Troubleshoot
+import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.model.settings.Setting
@@ -37,6 +40,22 @@ object SettingsAreas {
             R.string.settings_area_calls_summary,
             Icons.Rounded.Call,
         )
+    val Audio =
+        SettingsArea(
+            "audio",
+            12,
+            R.string.settings_area_audio,
+            R.string.settings_area_audio_summary,
+            Icons.Rounded.GraphicEq,
+        )
+    val Network =
+        SettingsArea(
+            "network",
+            14,
+            R.string.settings_area_network,
+            R.string.settings_area_network_summary,
+            Icons.Rounded.Wifi,
+        )
     val Directory =
         SettingsArea(
             "directory",
@@ -60,6 +79,14 @@ object SettingsAreas {
             R.string.settings_area_diagnostics,
             R.string.settings_area_diagnostics_summary,
             Icons.Rounded.Troubleshoot,
+        )
+    val About =
+        SettingsArea(
+            "about",
+            100,
+            R.string.settings_area_about,
+            R.string.settings_area_about_summary,
+            Icons.Rounded.Info,
         )
 }
 
@@ -91,6 +118,18 @@ sealed interface SettingItem {
         @StringRes override val keywords: Int? = null,
     ) : SettingItem
 
+    /**
+     * Several things in the order the user wants them, each on or off (the codecs). [label] names
+     * each by its id; such names (`G.722`) are the same in every language.
+     */
+    class Ranked(
+        val setting: Setting.Ranked,
+        @StringRes override val title: Int,
+        val label: (String) -> String,
+        @StringRes override val summary: Int? = null,
+        @StringRes override val keywords: Int? = null,
+    ) : SettingItem
+
     /** Something that is done, not stored (*Clear history*), asked about first when [confirm]. */
     class Action(
         @StringRes override val title: Int,
@@ -100,6 +139,15 @@ sealed interface SettingItem {
         @StringRes val confirm: Int? = null,
         val run: suspend () -> Unit,
     ) : SettingItem
+
+    /** Something to read, not to change (a version); a touch copies it. */
+    class Info(
+        @StringRes override val title: Int,
+        val text: () -> String,
+        @StringRes override val keywords: Int? = null,
+    ) : SettingItem {
+        override val summary: Int? = null
+    }
 
     /** A screen of its own, opened through its key. */
     class Link(

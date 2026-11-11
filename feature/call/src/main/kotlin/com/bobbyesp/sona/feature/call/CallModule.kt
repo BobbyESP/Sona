@@ -11,4 +11,6 @@ import org.koin.dsl.module
 val callModule = module {
     viewModelOf(::CallViewModel)
     single { CallSettingsContributor } bind SettingsContributor::class
+    single { AudioSettingsContributor } bind SettingsContributor::class
+    single { NetworkSettingsContributor } bind SettingsContributor::class
 }

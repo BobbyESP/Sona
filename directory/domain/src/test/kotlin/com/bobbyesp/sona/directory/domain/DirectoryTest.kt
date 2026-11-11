@@ -6,11 +6,13 @@ package com.bobbyesp.sona.directory.domain
 import com.bobbyesp.sona.calling.domain.Call
 import com.bobbyesp.sona.calling.domain.CallState
 import com.bobbyesp.sona.calling.domain.EndReason
+import com.bobbyesp.sona.calling.domain.RefusedCall
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.CallDirection
 import com.bobbyesp.sona.sip.api.SipStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
@@ -177,6 +179,38 @@ class CallRecorderTest {
         recorder.start()
         return world to recorder
     }
+
+    @Test
+    fun `a call refused before it rang is recorded as missed, quietly under do not disturb`() =
+        runTest {
+            val history = InMemoryCallHistory()
+            val refused = MutableSharedFlow<RefusedCall>()
+            CallRecorder(
+                    MutableStateFlow(emptyList()),
+                    history,
+                    backgroundScope,
+                    names = { null },
+                    refused = refused,
+                )
+                .start()
+            runCurrent()
+            val from = SipAddress(user = "101", host = "lab.local")
+
+            refused.emit(
+                RefusedCall(null, from, "Alice", SipStatus(486, "Busy Here"), quiet = false, 5_000),
+            )
+            refused.emit(
+                RefusedCall(null, from, null, SipStatus(603, "Decline"), quiet = true, 6_000),
+            )
+            runCurrent()
+
+            val records = history.records.first().sortedBy { it.startedAt }
+            assertEquals(listOf(CallOutcome.Missed, CallOutcome.Missed), records.map { it.outcome })
+            assertEquals(listOf("Alice", null), records.map { it.name })
+            assertEquals(listOf("486 Busy Here", "603 Decline"), records.map { it.statusLine })
+            assertEquals(listOf(false, true), records.map { it.seen })
+            assertEquals(listOf(5_000L, 6_000L), records.map { it.startedAt })
+        }
 
     @Test
     fun `an answered call is recorded with its talk time`() = runTest {

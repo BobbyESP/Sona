@@ -6,6 +6,8 @@ package com.bobbyesp.sona.shell
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -18,6 +20,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -66,6 +70,7 @@ import org.koin.compose.getKoin
 fun SonaApp(
     accountChip: AccountChipState?,
     needsOnboarding: Boolean,
+    readinessWarning: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val koin = getKoin()
@@ -111,7 +116,7 @@ fun SonaApp(
         else NavigationSuiteType.None
     val openSettings: () -> Unit = remember(navigator) { { navigator.goTo(Settings) } }
     val chip: @Composable () -> Unit =
-        remember(accountChip, navigator) {
+        remember(accountChip, navigator, readinessWarning) {
             {
                 if (accountChip != null) {
                     RegistrationChip(
@@ -119,6 +124,7 @@ fun SonaApp(
                         indicator = accountChip.indicator,
                         onClick = { navigator.goTo(AccountSwitcher) },
                         accent = accountChip.color?.let(::Color),
+                        warning = readinessWarning,
                     )
                 } else {
                     AddAccountChip(onClick = { navigator.goTo(AccountEditor()) })
@@ -136,11 +142,14 @@ fun SonaApp(
                     selected = selected,
                     onClick = { navigator.switchTopLevel(destination.key) },
                     icon = {
-                        Icon(
-                            imageVector =
-                                if (selected) destination.selectedIcon else destination.icon,
-                            contentDescription = null,
-                        )
+                        val waiting by destination.badge.collectAsStateWithLifecycle(0)
+                        BadgedBox(badge = { if (waiting > 0) Badge { Text("$waiting") } }) {
+                            Icon(
+                                imageVector =
+                                    if (selected) destination.selectedIcon else destination.icon,
+                                contentDescription = null,
+                            )
+                        }
                     },
                     label = { Text(stringResource(destination.label)) },
                     navigationSuiteType = suiteType,

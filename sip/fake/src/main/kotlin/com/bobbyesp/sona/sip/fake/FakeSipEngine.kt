@@ -7,6 +7,7 @@ import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.AccountSpec
+import com.bobbyesp.sona.sip.api.AudioDeviceKind
 import com.bobbyesp.sona.sip.api.CallDirection
 import com.bobbyesp.sona.sip.api.Capability
 import com.bobbyesp.sona.sip.api.DialResult
@@ -18,6 +19,7 @@ import com.bobbyesp.sona.sip.api.MediaInfo
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
 import com.bobbyesp.sona.sip.api.SipStatus
+import com.bobbyesp.sona.sip.api.SipTraceEntry
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
@@ -49,13 +51,16 @@ class FakeSipEngine(
     private val scope: CoroutineScope,
     private val registrationDelay: Duration = 600.milliseconds,
     private val demoCalls: Boolean = false,
+    private val clock: () -> Long = { 0L },
 ) : SipEngine {
 
     private val _state = MutableStateFlow<EngineState>(EngineState.Stopped)
     override val state: StateFlow<EngineState> = _state.asStateFlow()
 
+    override val version: String = "Demo engine (no SIP)"
+
     override val capabilities: Set<Capability> =
-        setOf(Capability.AudioCalls, Capability.Dtmf, Capability.Hold)
+        setOf(Capability.AudioCalls, Capability.Dtmf, Capability.Hold, Capability.SipTrace)
 
     private val _registrations = MutableStateFlow<Map<AccountId, RegistrationState>>(emptyMap())
     override val registrations: StateFlow<Map<AccountId, RegistrationState>> =
@@ -76,6 +81,33 @@ class FakeSipEngine(
     val dtmfSent: MutableList<Pair<CallId, Char>> = mutableListOf()
 
     private var nextCall = 0
+
+    private val _trace = MutableStateFlow<List<SipTraceEntry>>(emptyList())
+    override val trace: StateFlow<List<SipTraceEntry>> = _trace.asStateFlow()
+
+    override suspend fun clearTrace() {
+        _trace.value = emptyList()
+    }
+
+    /**
+     * A SIP message goes by, kept when the configuration captures the trace: `fake.traced(true,
+     * "REGISTER sip:lab.local SIP/2.0", "CSeq: 1 REGISTER")`. The fake writes its own for what it
+     * plays (a registration, a call), so the demo has a trace to read.
+     */
+    fun traced(outgoing: Boolean, vararg lines: String, peer: String = "lab.local:5060") {
+        if (config?.captureTrace != true) return
+        _trace.update { all ->
+            all +
+                SipTraceEntry(
+                    id = all.size + 1L,
+                    atMillis = clock(),
+                    outgoing = outgoing,
+                    transport = "UDP",
+                    peer = peer,
+                    raw = lines.joinToString("\n"),
+                )
+        }
+    }
 
     private val failures = mutableMapOf<AccountId, SipStatus?>()
     private val pending = mutableMapOf<AccountId, Job>()
@@ -145,6 +177,13 @@ class FakeSipEngine(
         }
         val id = newCallId()
         put(EngineCall(id, account, CallDirection.Outgoing, to, state = EngineCallState.Dialing))
+        traced(
+            true,
+            "INVITE ${to.uri} SIP/2.0",
+            "Call-ID: ${id.value}",
+            "CSeq: 20 INVITE",
+            peer = "${to.host}:5060",
+        )
         if (demoCalls) scope.launch { playDemoCall(id, to) }
         return DialResult.Started(id)
     }
@@ -192,7 +231,15 @@ class FakeSipEngine(
         dtmfSent += call to digit
     }
 
+    /** The device each call's audio was last put on, for asserting. */
+    val audioDevices: MutableMap<CallId, AudioDeviceKind> = mutableMapOf()
+
+    override suspend fun setAudioDevice(call: CallId, device: AudioDeviceKind) {
+        audioDevices[call] = device
+    }
+
     override suspend fun forget(call: CallId) {
+        audioDevices.remove(call)
         _calls.update { all -> all.filterNot { it.id == call } }
     }
 
@@ -209,10 +256,25 @@ class FakeSipEngine(
 
     fun remoteRings(call: CallId) = update(call) { copy(state = EngineCallState.Ringing) }
 
-    fun remoteAnswers(call: CallId) =
+    fun remoteAnswers(call: CallId) {
+        answered(call, SipStatus(200, "OK"))
         update(call) {
             copy(state = EngineCallState.Active, media = MediaInfo("opus", 48_000))
         }
+    }
+
+    /** The trace of the other side's answer to an outgoing [call]. */
+    private fun answered(call: CallId, status: SipStatus) {
+        val known = _calls.value.firstOrNull { it.id == call } ?: return
+        if (known.direction != CallDirection.Outgoing) return
+        traced(
+            false,
+            "SIP/2.0 $status",
+            "Call-ID: ${call.value}",
+            "CSeq: 20 INVITE",
+            peer = "${known.remote.host}:5060",
+        )
+    }
 
     fun remoteHolds(call: CallId, onHold: Boolean) =
         update(call) {
@@ -220,10 +282,12 @@ class FakeSipEngine(
         }
 
     /** The other side ends the call: hangs up ([status] `null`), or fails it with [status]. */
-    fun remoteEnds(call: CallId, status: SipStatus? = null, detail: String? = null) =
+    fun remoteEnds(call: CallId, status: SipStatus? = null, detail: String? = null) {
+        status?.let { answered(call, it) }
         update(call) {
             copy(state = EngineCallState.Ended(status, byRemote = true, detail = detail))
         }
+    }
 
     private suspend fun playDemoCall(id: CallId, to: SipAddress) {
         delay(DemoStep)
@@ -264,8 +328,19 @@ class FakeSipEngine(
         }
 
         set(id, RegistrationState.Registering)
+        val peer = "${account.registrar.host}:${account.registrar.port ?: 5060}"
+        val headers =
+            arrayOf(
+                "From: <${account.identity.uri}>",
+                "To: <${account.identity.uri}>",
+                "Call-ID: register-${id.value}",
+                "CSeq: 20 REGISTER",
+            )
+        traced(true, "REGISTER sip:${account.registrar.host} SIP/2.0", *headers, peer = peer)
         pending[id] = scope.launch {
             delay(registrationDelay)
+            failures[id]?.let { traced(false, "SIP/2.0 $it", *headers, peer = peer) }
+            if (id !in failures) traced(false, "SIP/2.0 200 OK", *headers, peer = peer)
             val result =
                 if (id in failures) {
                     val status = failures[id]

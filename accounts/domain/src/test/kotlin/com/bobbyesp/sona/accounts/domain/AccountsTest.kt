@@ -5,7 +5,13 @@ package com.bobbyesp.sona.accounts.domain
 
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.Secret
+import com.bobbyesp.sona.core.model.settings.AudioSettings
+import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.DtmfMethod
+import com.bobbyesp.sona.core.model.settings.Override
+import com.bobbyesp.sona.core.model.settings.Overrides
 import com.bobbyesp.sona.credentials.api.InMemoryCredentialVault
+import com.bobbyesp.sona.sip.api.DtmfMode
 import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.ServerEndpoint
@@ -108,6 +114,36 @@ class AccountsTest {
         assertTrue(engine.accounts.isEmpty())
         sync.cancel()
     }
+
+    @Test
+    fun `what an account overrides reaches the engine with it, and nothing where it says nothing`() =
+        runTest {
+            val engine = FakeSipEngine(this)
+            engine.start(EngineConfig())
+            val sync = launch { AccountEngineSync(repository, vault, engine).run() }
+            val codecs = AudioSettings.Codecs
+
+            save(lab, Secret("secret"))
+            advanceUntilIdle()
+            assertEquals(null, engine.accounts.single().codecs)
+            assertEquals(null, engine.accounts.single().dtmf)
+
+            val own =
+                Overrides()
+                    .with(codecs, Override.Value(codecs.default.moved("G722", up = true)))
+                    .with(CallSettings.Dtmf, Override.Value(DtmfMethod.SipInfo))
+            val saved = repository.accounts.first().single()
+            save(AccountDraft.of(saved).copy(overrides = own), null)
+            advanceUntilIdle()
+
+            assertEquals(own, repository.accounts.first().single().overrides)
+            assertEquals(
+                listOf("G722", "opus", "PCMU", "PCMA"),
+                engine.accounts.single().codecs,
+            )
+            assertEquals(DtmfMode.SipInfo, engine.accounts.single().dtmf)
+            sync.cancel()
+        }
 
     @Test
     fun `a password that cannot be opened keeps the account from registering`() = runTest {

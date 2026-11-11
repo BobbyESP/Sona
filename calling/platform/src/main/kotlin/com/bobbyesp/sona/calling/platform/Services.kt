@@ -26,6 +26,7 @@ import com.bobbyesp.sona.core.model.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
@@ -132,13 +133,23 @@ class KeepAliveService : LifecycleService(), KoinComponent {
             accounts.accounts
                 .map { all -> all.filter { it.enabled }.map { it.label } }
                 .distinctUntilChanged()
-                .collect { labels -> if (labels.isNotEmpty()) show(labels) }
+                .collect { labels ->
+                    this@KeepAliveService.labels = labels
+                    if (labels.isNotEmpty()) show(labels)
+                }
         }
     }
 
+    private var labels: List<String> = emptyList()
+
+    /**
+     * Also when it is already running: the app starts it again as it comes back to the front, so
+     * the notification is posted once more. One posted while notifications were not allowed was
+     * dropped by the system, and nothing else would bring it back after the user allows them.
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        show(emptyList())
+        show(labels)
         return START_STICKY
     }
 
@@ -185,6 +196,19 @@ class ServiceController(
                     if (keep) startForeground(KeepAliveService::class.java)
                     else context.stopService(Intent(context, KeepAliveService::class.java))
                 }
+        }
+    }
+
+    /**
+     * The app is back in front: the keep-alive notification is posted again when it should be
+     * there, in case it could not be shown before (notifications allowed since).
+     */
+    fun refresh() {
+        scope.launch {
+            val keep =
+                settings.observe(CallSettings.AlwaysReachable).first() &&
+                    accounts.accounts.first().any { it.enabled }
+            if (keep) startForeground(KeepAliveService::class.java)
         }
     }
 

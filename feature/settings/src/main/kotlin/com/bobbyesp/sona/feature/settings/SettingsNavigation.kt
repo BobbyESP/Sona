@@ -27,6 +27,7 @@ internal object SettingsSection : NavSection {
                 onBack = navigator::goBack,
             )
         }
+        entry<Licenses> { LicensesScreen(onBack = navigator::goBack) }
         entry<SettingsPage> { key ->
             val viewModel: SettingsViewModel = koinViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()

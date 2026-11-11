@@ -66,6 +66,84 @@ object CallSettings {
     val DoNotDisturb = Setting.Toggle("calls.do_not_disturb", default = false)
 
     val DeclineWith = Setting.choice("calls.decline_with", DeclineMode.Busy)
+
+    /** How a key pressed during a call reaches the other side. */
+    val Dtmf = Setting.choice("calls.dtmf_method", DtmfMethod.Rfc4733, overridable = true)
+}
+
+/** How DTMF digits are sent. A server says which it listens to (Asterisk: `dtmf_mode`). */
+enum class DtmfMethod {
+    /** As RTP events (RFC 4733, once RFC 2833): what nearly every server expects. */
+    Rfc4733,
+
+    /** As SIP `INFO` requests, beside the audio. */
+    SipInfo,
+
+    /** As tones in the audio itself; lost by codecs that compress hard. */
+    InBand,
+}
+
+/** An audio codec Sona can offer, with the name SDP gives it. */
+enum class AudioCodec(val mime: String, val label: String) {
+    Opus("opus", "Opus"),
+    G722("G722", "G.722"),
+    Pcmu("PCMU", "PCMU (G.711 µ-law)"),
+    Pcma("PCMA", "PCMA (G.711 A-law)"),
+    Gsm("GSM", "GSM"),
+    Speex("speex", "Speex");
+
+    companion object {
+        /** The name to show for a codec as [AudioSettings.Codecs] ranks it (by its enum name). */
+        fun labelOf(id: String): String = entries.firstOrNull { it.name == id }?.label ?: id
+    }
+}
+
+/** How calls sound. */
+object AudioSettings {
+    /** The codecs offered, first choice first. The two sides settle on the first both have. */
+    val Codecs =
+        Setting.Ranked(
+            "audio.codecs",
+            default =
+                Ranking(
+                    AudioCodec.entries.map { codec ->
+                        Ranking.Entry(
+                            codec.name,
+                            enabled = codec != AudioCodec.Gsm && codec != AudioCodec.Speex,
+                        )
+                    },
+                ),
+            overridable = true,
+        )
+
+    /**
+     * Remove from the microphone what the speaker plays, so the other side does not hear itself.
+     */
+    val EchoCancellation = Setting.Toggle("audio.echo_cancellation", default = true)
+}
+
+/** Which networks Sona uses. */
+object NetworkSettings {
+    /** Register and call over mobile data too; off, only over Wi-Fi. */
+    val MobileData = Setting.Toggle("network.mobile_data", default = true)
+}
+
+/** How much the SIP engine writes to the log. */
+enum class LogLevel {
+    Errors,
+    Warnings,
+
+    /** Every SIP message too. */
+    Messages,
+    Debug,
+}
+
+/** What helps to find a problem. */
+object DiagnosticsSettings {
+    val Logging = Setting.choice("diagnostics.log_level", LogLevel.Warnings)
+
+    /** Keep the SIP messages Sona sends and receives, to read them in the diagnostics. */
+    val TraceCapture = Setting.Toggle("diagnostics.trace_capture", default = false)
 }
 
 /** How long the call history is kept. */

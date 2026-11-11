@@ -3,6 +3,7 @@
  */
 package com.bobbyesp.sona.feature.settings
 
+import android.content.ClipData
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,7 +16,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -41,11 +44,14 @@ import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -53,12 +59,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.designsystem.components.ConnectedChoice
 import com.bobbyesp.sona.core.designsystem.components.ExpressiveSearch
+import com.bobbyesp.sona.core.designsystem.components.RankedList
 import com.bobbyesp.sona.core.designsystem.components.SectionHeader
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
+import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.ui.contribution.SettingItem
 import com.bobbyesp.sona.core.ui.contribution.SettingsArea
+import kotlinx.coroutines.launch
 
 /**
  * The settings root: every area as a segmented group, and a search that opens full screen and shows
@@ -254,9 +263,30 @@ private fun SettingRow(
     when (item) {
         is SettingItem.Switch -> SwitchRow(item, shapes, modifier, store, onIntent)
         is SettingItem.Choice<*> -> ChoiceRow(item, shapes, modifier, store, onIntent)
+        is SettingItem.Ranked -> RankedRow(item, shapes, modifier, store, onIntent)
         is SettingItem.Action -> ActionRow(item, shapes, modifier, onIntent)
         is SettingItem.Link -> LinkRow(item, shapes, modifier, onOpenKey)
+        is SettingItem.Info -> InfoRow(item, shapes, modifier)
     }
+}
+
+/** Something to read: its name and its value in the face versions are read in; a touch copies. */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun InfoRow(item: SettingItem.Info, shapes: ListItemShapes, modifier: Modifier) {
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val text = item.text()
+    SegmentedListItem(
+        onClick = {
+            scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("sona", text))) }
+        },
+        shapes = shapes,
+        modifier = modifier,
+        colors = segmentedListColors(),
+        supportingContent = { Text(text, fontFamily = SonaTheme.typography.monospace) },
+        content = { Text(stringResource(item.title)) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -420,6 +450,58 @@ private fun <E : Enum<E>> DialogChoice(
             confirmButton = {
                 TextButton(onClick = { open = false }) {
                     Text(stringResource(R.string.settings_cancel))
+                }
+            },
+        )
+    }
+}
+
+/**
+ * Things in an order, each on or off: the row says which are on, first choice first, and opens the
+ * list where each is switched and moved up or down. Every touch is written at once, as a switch is.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun RankedRow(
+    item: SettingItem.Ranked,
+    shapes: ListItemShapes,
+    modifier: Modifier,
+    store: SettingsStore,
+    onIntent: (SettingsIntent) -> Unit,
+) {
+    val ranking by store.observe(item.setting).collectAsStateWithLifecycle(item.setting.default)
+    var open by rememberSaveable { mutableStateOf(false) }
+    val chosen = ranking.enabled.joinToString(", ") { item.label(it) }
+    SegmentedListItem(
+        onClick = { open = true },
+        shapes = shapes,
+        modifier = modifier,
+        colors = segmentedListColors(),
+        supportingContent = {
+            Text(chosen.ifEmpty { stringResource(R.string.settings_ranked_none) })
+        },
+        content = { Text(stringResource(item.title)) },
+    )
+    if (open) {
+        AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text(stringResource(item.title)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    item.summary?.let {
+                        Text(stringResource(it), style = MaterialTheme.typography.bodyMedium)
+                        Spacer(Modifier.size(8.dp))
+                    }
+                    RankedList(
+                        ranking = ranking,
+                        label = item.label,
+                        onChange = { onIntent(SettingsIntent.Write(item.setting, it)) },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { open = false }) {
+                    Text(stringResource(R.string.settings_done))
                 }
             },
         )

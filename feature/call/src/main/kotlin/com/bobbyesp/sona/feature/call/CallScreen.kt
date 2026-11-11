@@ -77,6 +77,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -128,6 +129,7 @@ internal fun CallScreen(
     ProximityLock(
         active = call.state == CallState.Active && call.route?.kind == AudioRouteKind.Earpiece,
     )
+    KeepScreenOn(active = !call.isOver)
 
     SonaAccentTheme(accent = state.account?.color?.let(::Color)) {
         Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
@@ -571,6 +573,20 @@ private fun ProximityLock(active: Boolean) {
                     .apply { acquire() }
             else null
         onDispose { lock?.takeIf { it.isHeld }?.release() }
+    }
+}
+
+/**
+ * Keeps the screen on while a call is shown: its controls stay one touch away, and the phone does
+ * not lock under a call on the speaker. At the ear the proximity sensor still turns it off. Found
+ * on a phone, which slept and locked thirty seconds into a call.
+ */
+@Composable
+private fun KeepScreenOn(active: Boolean) {
+    val view = LocalView.current
+    DisposableEffect(view, active) {
+        view.keepScreenOn = active
+        onDispose { view.keepScreenOn = false }
     }
 }
 

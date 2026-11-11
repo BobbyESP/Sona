@@ -14,6 +14,10 @@ import com.bobbyesp.sona.core.navigation.keys.ContactEditor
 import com.bobbyesp.sona.core.navigation.motion.TopLevelMotion
 import com.bobbyesp.sona.core.ui.contribution.NavSection
 import com.bobbyesp.sona.core.ui.contribution.TopLevelDestination
+import com.bobbyesp.sona.directory.domain.CallHistory
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
 /** The Recents tab. Only this feature opens it, through its [TopLevelDestination]. */
@@ -36,7 +40,10 @@ internal object RecentsSection : NavSection {
     }
 }
 
-internal object RecentsTab : TopLevelDestination {
+/** The tab, with the missed calls not yet seen as its badge. */
+internal class RecentsTab(history: CallHistory) : TopLevelDestination {
+    override val badge: Flow<Int> = history.unseenMissed.map { it.size }.distinctUntilChanged()
+
     override val key: NavKey = Recents
     override val order: Int = 0
     override val label: Int = R.string.history_title

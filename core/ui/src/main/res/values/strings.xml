@@ -3,10 +3,16 @@
     <string name="settings_open">Settings</string>
     <string name="settings_area_calls">Calls</string>
     <string name="settings_area_calls_summary">Waiting, do not disturb, staying reachable</string>
+    <string name="settings_area_audio">Audio</string>
+    <string name="settings_area_audio_summary">Codecs and echo</string>
+    <string name="settings_area_network">Network</string>
+    <string name="settings_area_network_summary">Mobile data or Wi-Fi only</string>
     <string name="settings_area_directory">Contacts and history</string>
     <string name="settings_area_directory_summary">Recents, contacts, how long calls are kept</string>
     <string name="settings_area_appearance">Appearance</string>
     <string name="settings_area_appearance_summary">Theme and colors</string>
     <string name="settings_area_diagnostics">Diagnostics</string>
     <string name="settings_area_diagnostics_summary">What Sona sees of your server</string>
+    <string name="settings_area_about">About</string>
+    <string name="settings_area_about_summary">Version, source code and licenses</string>
 </resources>

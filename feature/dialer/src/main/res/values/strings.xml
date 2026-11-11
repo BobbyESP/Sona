@@ -5,4 +5,8 @@
     <string name="dialer_delete">Delete</string>
     <string name="dialer_clear">Clear</string>
     <string name="dialer_call">Call</string>
+    <string name="dialer_call_suggestion">Call %1$s</string>
+    <string name="dialer_use_keyboard">Type with the keyboard</string>
+    <string name="dialer_use_keypad">Back to the keypad</string>
+    <string name="dialer_paste">Paste</string>
 </resources>

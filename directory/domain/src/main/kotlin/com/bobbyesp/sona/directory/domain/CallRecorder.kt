@@ -6,12 +6,14 @@ package com.bobbyesp.sona.directory.domain
 import com.bobbyesp.sona.calling.domain.Call
 import com.bobbyesp.sona.calling.domain.CallState
 import com.bobbyesp.sona.calling.domain.EndReason
+import com.bobbyesp.sona.calling.domain.RefusedCall
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.CallDirection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -27,12 +29,20 @@ class CallRecorder(
     private val scope: CoroutineScope,
     private val names: suspend (SipAddress) -> String? = { null },
     private val clock: () -> Long = System::currentTimeMillis,
+    private val refused: Flow<RefusedCall> = emptyFlow(),
 ) {
     private val firstSeen = mutableMapOf<CallId, Long>()
     private val recorded = mutableSetOf<CallId>()
 
     /** Follows the calls; once, at start. */
     fun start(): Job = scope.launch {
+        // A call refused before it rang (do not disturb, busy without call waiting) never was in
+        // the list below: it is written as it is told, or nobody would learn who called.
+        launch {
+            refused.collect { call ->
+                history.add(call.toRecord(names(call.remote) ?: call.remoteName))
+            }
+        }
         calls.collect { list ->
             val now = clock()
             for (call in list) {
@@ -56,6 +66,24 @@ class CallRecorder(
 }
 
 /** The record of an ended call; [startedAt] and [endedAt] are epoch milliseconds. */
+/**
+ * A missed call, with what the caller was answered as its SIP line. One refused by do not disturb
+ * is already seen: it is in Recents, and no notification says so.
+ */
+fun RefusedCall.toRecord(name: String?): CallRecord =
+    CallRecord(
+        account = account,
+        direction = CallDirection.Incoming,
+        outcome = CallOutcome.Missed,
+        address = remote,
+        name = name,
+        startedAt = at,
+        durationMillis = 0,
+        statusCode = status.code,
+        statusText = status.phrase,
+        seen = quiet,
+    )
+
 fun Call.toRecord(startedAt: Long, endedAt: Long, name: String?): CallRecord {
     val reason = (state as? CallState.Ended)?.reason
     val status = reason?.status

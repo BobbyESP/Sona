@@ -11,14 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ManageAccounts
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -31,6 +36,8 @@ import com.bobbyesp.sona.accounts.domain.observeAccountStatuses
 import com.bobbyesp.sona.accounts.ui.AccountStatusRow
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.navigation.overlay.OverlaySheetSkeleton
+import com.bobbyesp.sona.core.ui.contribution.ReadinessMonitor
+import com.bobbyesp.sona.core.ui.contribution.problems
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
 import com.bobbyesp.sona.feature.accounts.R
 import com.bobbyesp.sona.sip.api.SipEngine
@@ -38,7 +45,11 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
-internal data class SwitcherState(val accounts: ImmutableList<AccountStatus> = persistentListOf())
+internal data class SwitcherState(
+    val accounts: ImmutableList<AccountStatus> = persistentListOf(),
+    /** How many things keep calls from working (see *Call readiness*); the sheet starts with it. */
+    val readinessProblems: Int = 0,
+)
 
 internal sealed interface SwitcherIntent {
     data class Enable(val id: AccountId, val enabled: Boolean) : SwitcherIntent
@@ -49,9 +60,15 @@ internal class AccountSwitcherViewModel(
     repository: AccountsRepository,
     engine: SipEngine,
     private val setEnabled: SetAccountEnabled,
+    readiness: ReadinessMonitor,
 ) : BaseViewModel<SwitcherIntent, SwitcherState, Nothing>(SwitcherState()) {
 
     init {
+        launch {
+            readiness.results.collect { results ->
+                setState { copy(readinessProblems = results?.problems?.size ?: 0) }
+            }
+        }
         launch {
             observeAccountStatuses(repository, engine).collect { all ->
                 setState { copy(accounts = all.toImmutableList()) }
@@ -71,10 +88,12 @@ internal fun AccountSwitcherRoute(
     viewModel: AccountSwitcherViewModel,
     onEdit: (AccountId) -> Unit,
     onAdd: () -> Unit,
+    onReadiness: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     AccountSwitcherSheet(
         state = state,
+        onReadiness = onReadiness,
         onEnable = { id, enabled -> viewModel.onSendIntent(SwitcherIntent.Enable(id, enabled)) },
         onEdit = onEdit,
         onAdd = onAdd,
@@ -89,6 +108,7 @@ internal fun AccountSwitcherSheet(
     onEdit: (AccountId) -> Unit,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
+    onReadiness: () -> Unit = {},
 ) {
     OverlaySheetSkeleton(
         headingTitle = stringResource(R.string.accounts_title),
@@ -107,6 +127,37 @@ internal fun AccountSwitcherSheet(
         },
     ) {
         Column {
+            if (state.readinessProblems > 0) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.accounts_readiness)) },
+                    supportingContent = {
+                        Text(
+                            pluralStringResource(
+                                R.plurals.accounts_readiness_problems,
+                                state.readinessProblems,
+                                state.readinessProblems,
+                            ),
+                        )
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Rounded.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    colors =
+                        ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            headlineColor = MaterialTheme.colorScheme.onErrorContainer,
+                            supportingColor = MaterialTheme.colorScheme.onErrorContainer,
+                        ),
+                    modifier =
+                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            .clip(MaterialTheme.shapes.large)
+                            .clickable(onClick = onReadiness),
+                )
+            }
             state.accounts.forEach { status ->
                 val label = status.account.label
                 val enabledDescription =

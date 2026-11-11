@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,6 +59,8 @@ enum class RegistrationIndicator {
  * @param onClick What a tap opens (the account switcher), or `null` while there is nothing to open:
  *   the chip is then a label, not a button that does nothing.
  * @param accent The account's color; the theme's primary when it has none.
+ * @param warning Something outside the account keeps calls from working (see *Call readiness*): the
+ *   chip then carries a warning sign, and says so to a screen reader.
  */
 @Composable
 fun RegistrationChip(
@@ -64,11 +69,14 @@ fun RegistrationChip(
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     accent: Color? = null,
+    warning: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val motion = MaterialTheme.motionScheme
     val stateText = stringResource(indicator.textRes)
-    val description = stringResource(R.string.account_chip_description, label, stateText)
+    val description =
+        stringResource(R.string.account_chip_description, label, stateText) +
+            if (warning) ". " + stringResource(R.string.account_chip_warning) else ""
 
     val dotColor by
         animateColorAsState(
@@ -130,6 +138,14 @@ fun RegistrationChip(
                         if (indicator == RegistrationIndicator.Failed) colors.error
                         else colors.onSurfaceVariant,
                     maxLines = 1,
+                )
+            }
+            if (warning) {
+                Icon(
+                    Icons.Rounded.Warning,
+                    contentDescription = null,
+                    tint = colors.error,
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }

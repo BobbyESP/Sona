@@ -4,6 +4,9 @@
 package com.bobbyesp.sona.accounts.domain
 
 import com.bobbyesp.sona.core.model.Secret
+import com.bobbyesp.sona.core.model.settings.AudioSettings
+import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.Override
 import com.bobbyesp.sona.credentials.api.CredentialVault
 import com.bobbyesp.sona.sip.api.AccountSpec
 import com.bobbyesp.sona.sip.api.SipEngine
@@ -42,4 +45,8 @@ internal fun Account.toSpec(password: Secret?): AccountSpec =
         outboundProxy = outboundProxy,
         expiry = expiry,
         enabled = enabled && password != null,
+        codecs = overrides[AudioSettings.Codecs].valueOrNull()?.toCodecMimes(),
+        dtmf = overrides[CallSettings.Dtmf].valueOrNull()?.toEngine(),
     )
+
+private fun <T> Override<T>.valueOrNull(): T? = (this as? Override.Value)?.value

@@ -56,9 +56,11 @@ import com.bobbyesp.sona.core.model.settings.AppSettings
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.navigation.Navigator
 import com.bobbyesp.sona.core.navigation.keys.AccountEditor
+import com.bobbyesp.sona.core.navigation.keys.CallReadiness
 import com.bobbyesp.sona.core.navigation.keys.Onboarding
 import com.bobbyesp.sona.core.navigation.motion.RisingMotion
 import com.bobbyesp.sona.core.ui.contribution.NavSection
+import com.bobbyesp.sona.core.ui.contribution.SettingsContributor
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -105,12 +107,22 @@ internal object OnboardingSection : NavSection {
             }
             OnboardingScreen(onIntent = viewModel::onSendIntent)
         }
+        entry<CallReadiness> { key ->
+            ReadinessRoute(
+                viewModel = koinViewModel(),
+                firstStart = key.firstStart,
+                onOpenKey = navigator::goTo,
+                onBack = navigator::goBack,
+            )
+        }
     }
 }
 
 val onboardingModule = module {
     single { OnboardingSection } bind NavSection::class
+    single { ReadinessSettingsContributor } bind SettingsContributor::class
     viewModelOf(::OnboardingViewModel)
+    viewModelOf(::ReadinessViewModel)
 }
 
 /**

@@ -11,6 +11,11 @@ import com.bobbyesp.sona.accounts.domain.DraftProblem
 import com.bobbyesp.sona.accounts.domain.InMemoryAccountsRepository
 import com.bobbyesp.sona.accounts.domain.SaveAccount
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.settings.CallSettings
+import com.bobbyesp.sona.core.model.settings.DtmfMethod
+import com.bobbyesp.sona.core.model.settings.Override
+import com.bobbyesp.sona.core.model.settings.Overrides
+import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.core.testing.MainDispatcherRule
 import com.bobbyesp.sona.credentials.api.InMemoryCredentialVault
 import com.bobbyesp.sona.feature.accounts.editor.AccountEditorViewModel
@@ -38,6 +43,7 @@ class AccountEditorViewModelTest {
 
     private val repository = InMemoryAccountsRepository()
     private val vault = InMemoryCredentialVault()
+    private val settings = InMemorySettingsStore()
     private val save = SaveAccount(repository, vault) { AccountId("lab") }
 
     private fun TestScope.engine(): FakeSipEngine {
@@ -48,7 +54,34 @@ class AccountEditorViewModelTest {
     }
 
     private fun editor(engine: FakeSipEngine, id: String? = null) =
-        AccountEditorViewModel(id, SavedStateHandle(), repository, save, engine)
+        AccountEditorViewModel(id, SavedStateHandle(), repository, save, engine, settings)
+
+    @Test
+    fun `an override is saved with the account, and the editor knows the app's own value`() =
+        runTest(main.dispatcher) {
+            val engine = engine()
+            settings.set(CallSettings.Dtmf, DtmfMethod.InBand)
+            val editor = editor(engine)
+            editor.fill("lab.local", "102", "secret")
+            editor.onSendIntent(
+                EditorIntent.Edit {
+                    copy(
+                        overrides =
+                            overrides.with(CallSettings.Dtmf, Override.Value(DtmfMethod.SipInfo)),
+                    )
+                },
+            )
+            advanceUntilIdle()
+            assertEquals(DtmfMethod.InBand, editor.state.value.appDtmf)
+
+            editor.onSendIntent(EditorIntent.Save)
+            advanceUntilIdle()
+
+            assertEquals(
+                Override.Value(DtmfMethod.SipInfo),
+                repository.get(AccountId("lab"))!!.overrides[CallSettings.Dtmf],
+            )
+        }
 
     private fun AccountEditorViewModel.fill(server: String, user: String, password: String) {
         onSendIntent(EditorIntent.Edit { copy(server = server, username = user) })
@@ -136,8 +169,11 @@ class AccountEditorViewModelTest {
         runTest(main.dispatcher) {
             val saved = SavedStateHandle()
             val engine = engine()
-            AccountEditorViewModel(null, saved, repository, save, engine)
-                .fill("lab.local", "102", "secret")
+            val own = Overrides().with(CallSettings.Dtmf, Override.Value(DtmfMethod.SipInfo))
+            AccountEditorViewModel(null, saved, repository, save, engine, settings).apply {
+                fill("lab.local", "102", "secret")
+                onSendIntent(EditorIntent.Edit { copy(overrides = own) })
+            }
 
             val restored =
                 AccountEditorViewModel(
@@ -146,11 +182,12 @@ class AccountEditorViewModelTest {
                     repository,
                     save,
                     engine,
+                    settings,
                 )
             advanceUntilIdle()
 
             assertEquals(
-                AccountDraft(server = "lab.local", username = "102"),
+                AccountDraft(server = "lab.local", username = "102", overrides = own),
                 restored.state.value.draft,
             )
             assertEquals("", restored.state.value.password)

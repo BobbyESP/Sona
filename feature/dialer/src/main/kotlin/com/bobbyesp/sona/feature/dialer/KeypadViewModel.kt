@@ -25,6 +25,8 @@ internal data class KeypadState(
     val problem: DialOutcome? = null,
     /** People and numbers the input could be, from contacts and recent calls. */
     val suggestions: List<Suggestion> = emptyList(),
+    /** The number a long press on 1 calls: the default account's voicemail. */
+    val voicemail: String? = null,
 ) {
     /** The address [input] would call, shown under it as it is typed. */
     val preview: String?
@@ -44,12 +46,31 @@ internal sealed interface KeypadIntent {
 
     data object Clear : KeypadIntent
 
+    /** The field as a keyboard left it: kept as far as the field's rules allow. */
+    data class Edit(val text: String) : KeypadIntent
+
+    /** Text from the clipboard, which replaces what was typed. */
+    data class Paste(val text: String) : KeypadIntent
+
     /** A suggestion was chosen: its number replaces what was typed. */
     data class Pick(val number: String) : KeypadIntent
 
     /** Calls what was typed, from the default account. */
     data object Call : KeypadIntent
+
+    /** Calls a suggestion at once; it stays in the field, as if typed and called. */
+    data class CallNumber(val number: String) : KeypadIntent
+
+    /** The long press on 1: calls the default account's voicemail. */
+    data object Voicemail : KeypadIntent
 }
+
+/** Whether [this] starts a call, which needs the microphone asked for first. */
+internal val KeypadIntent.startsCall: Boolean
+    get() =
+        this == KeypadIntent.Call ||
+            this == KeypadIntent.Voicemail ||
+            this is KeypadIntent.CallNumber
 
 internal sealed interface KeypadEffect {
     data object OpenCall : KeypadEffect
@@ -79,7 +100,16 @@ internal class KeypadViewModel(
                 .flatMapLatest { directory.suggest(it) }
                 .collect { setState { copy(suggestions = it) } }
         }
-        launch { accounts.defaultAccount().collect { setState { copy(domain = it?.domain) } } }
+        launch {
+            accounts.defaultAccount().collect { account ->
+                setState {
+                    copy(
+                        domain = account?.domain,
+                        voicemail = account?.voicemailNumber?.takeIf { it.isNotBlank() },
+                    )
+                }
+            }
+        }
     }
 
     override fun onHandleIntent(intent: KeypadIntent) {
@@ -89,16 +119,25 @@ internal class KeypadViewModel(
                 is KeypadIntent.Type -> DialInput.type(input, intent.key)
                 KeypadIntent.Delete -> DialInput.delete(input)
                 KeypadIntent.Clear -> ""
+                is KeypadIntent.Edit -> DialInput.typed(intent.text)
+                is KeypadIntent.Paste -> DialInput.clean(intent.text).ifEmpty { input }
                 is KeypadIntent.Pick -> intent.number
+                is KeypadIntent.CallNumber -> intent.number
                 KeypadIntent.Call -> {
                     call(input)
                     return
                 }
+                KeypadIntent.Voicemail -> {
+                    currentState.voicemail?.let(::call)
+                    return
+                }
             }
-        if (next == input) return
-        setState { copy(input = next, problem = null) }
-        savedState[INPUT_KEY] = next
-        typed.value = next
+        if (next != input) {
+            setState { copy(input = next, problem = null) }
+            savedState[INPUT_KEY] = next
+            typed.value = next
+        }
+        if (intent is KeypadIntent.CallNumber) call(next)
     }
 
     private fun call(input: String) {

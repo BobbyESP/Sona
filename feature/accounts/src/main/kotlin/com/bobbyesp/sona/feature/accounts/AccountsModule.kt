@@ -8,7 +8,9 @@ import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.navigation.Navigator
 import com.bobbyesp.sona.core.navigation.keys.AccountEditor
 import com.bobbyesp.sona.core.navigation.keys.AccountSwitcher
+import com.bobbyesp.sona.core.navigation.keys.CallReadiness
 import com.bobbyesp.sona.core.navigation.keys.DeleteAccount
+import com.bobbyesp.sona.core.navigation.keys.Onboarding
 import com.bobbyesp.sona.core.navigation.keys.isAccountSetup
 import com.bobbyesp.sona.core.navigation.overlay.OverlayPreference
 import com.bobbyesp.sona.core.navigation.overlay.OverlaySceneStrategy
@@ -33,6 +35,7 @@ internal object AccountsSection : NavSection {
         ) {
             AccountSwitcherRoute(
                 viewModel = koinViewModel(),
+                onReadiness = { navigator.replaceTop(CallReadiness()) },
                 // The sheet gives way to the editor, rather than staying under it.
                 onEdit = { id -> navigator.replaceTop(AccountEditor(id.value)) },
                 onAdd = { navigator.replaceTop(AccountEditor()) },
@@ -42,7 +45,15 @@ internal object AccountsSection : NavSection {
             AccountEditorRoute(
                 viewModel = koinViewModel(key = key.toString()) { parametersOf(key.accountId) },
                 onBack = navigator::goBack,
-                onLeave = { navigator.goBackWhile(::isAccountSetup) },
+                onLeave = {
+                    // A first account added from the welcome: what calls need comes next.
+                    var fromWelcome = false
+                    navigator.goBackWhile { open ->
+                        if (open == Onboarding) fromWelcome = true
+                        isAccountSetup(open)
+                    }
+                    if (fromWelcome) navigator.goTo(CallReadiness(firstStart = true))
+                },
                 onConfirmDelete = { id -> navigator.goTo(DeleteAccount(id)) },
             )
         }
@@ -76,6 +87,7 @@ val accountsModule = module {
             repository = get(),
             saveAccount = get(),
             engine = get(),
+            settings = get(),
         )
     }
     viewModel { params -> DeleteAccountViewModel(params.get(), get(), get()) }

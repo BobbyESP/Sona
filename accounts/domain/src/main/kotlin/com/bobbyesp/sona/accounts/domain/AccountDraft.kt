@@ -4,6 +4,7 @@
 package com.bobbyesp.sona.accounts.domain
 
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.settings.Overrides
 import com.bobbyesp.sona.sip.api.ServerEndpoint
 import com.bobbyesp.sona.sip.api.Transport
 import kotlin.time.Duration.Companion.seconds
@@ -30,6 +31,7 @@ data class AccountDraft(
     val voicemailNumber: String = "",
     val color: Int? = null,
     val enabled: Boolean = true,
+    val overrides: Overrides = Overrides(),
 ) {
     /** The label shown when the user gives none: `lab.local · 102`. */
     val suggestedLabel: String
@@ -64,6 +66,7 @@ data class AccountDraft(
                     account.voicemailNumber.takeIf { it != Account.DEFAULT_VOICEMAIL }.orEmpty(),
                 color = account.color,
                 enabled = account.enabled,
+                overrides = account.overrides,
             )
     }
 }
@@ -155,6 +158,7 @@ fun AccountDraft.validate(id: AccountId, color: Int): DraftValidation {
             expiry = expiry?.seconds ?: Account.DefaultExpiry,
             voicemailNumber = voicemailNumber.trim().ifEmpty { Account.DEFAULT_VOICEMAIL },
             enabled = enabled,
+            overrides = overrides,
         ),
     )
 }

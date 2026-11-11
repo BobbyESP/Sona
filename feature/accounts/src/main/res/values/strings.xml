@@ -4,6 +4,11 @@
     <string name="accounts_description">Your extensions. They stay on this phone.</string>
     <string name="accounts_add">Add account</string>
     <string name="accounts_default">Default for calls</string>
+    <string name="accounts_readiness">Calls may not work</string>
+    <plurals name="accounts_readiness_problems">
+        <item quantity="one">%1$d thing to fix in Call readiness</item>
+        <item quantity="other">%1$d things to fix in Call readiness</item>
+    </plurals>
     <string name="accounts_enabled_description">%1$s turned on</string>
 
     <string name="editor_title_new">Add account</string>
@@ -33,6 +38,17 @@
     <string name="field_enabled">Use this account</string>
     <string name="field_enabled_description">Off, it does not register and cannot call, but keeps everything.</string>
     <string name="field_default">Default for calls</string>
+
+    <string name="overrides_title">Calls with this account</string>
+    <string name="override_codecs">Codecs</string>
+    <string name="override_dtmf">Keypad tones are sent as</string>
+    <string name="override_inherit">Uses the app\'s setting (%1$s)</string>
+    <string name="override_own">%1$s, for this account only</string>
+    <string name="override_use_app">Use the app\'s setting</string>
+    <string name="override_none">None</string>
+    <string name="dtmf_rfc4733">RTP events</string>
+    <string name="dtmf_info">SIP INFO</string>
+    <string name="dtmf_inband">In the audio</string>
 
     <string name="more_options">More options</string>
     <string name="fewer_options">Fewer options</string>

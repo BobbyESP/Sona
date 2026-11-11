@@ -18,6 +18,12 @@ import kotlinx.coroutines.flow.StateFlow
 interface SipEngine {
     val state: StateFlow<EngineState>
 
+    /**
+     * What this engine is, for *About* and a bug report: `liblinphone 5.5.39`. An engine that only
+     * knows its version once started says its name alone before.
+     */
+    val version: String
+
     /** What this engine can do at all. A feature hides what is not here. */
     val capabilities: Set<Capability>
 
@@ -63,8 +69,24 @@ interface SipEngine {
     /** Sends a DTMF digit (`0`–`9`, `*`, `#`) on an active call. */
     suspend fun sendDtmf(call: CallId, digit: Char)
 
+    /**
+     * Plays and captures [call]'s audio on [device], the kind the system routed the call to. It is
+     * remembered for the call: streams that start later (the answer, a resume) open on it too. An
+     * engine that has no such device keeps the one it is on.
+     */
+    suspend fun setAudioDevice(call: CallId, device: AudioDeviceKind)
+
     /** Drops an ended call from [calls], once its ending was taken into account. */
     suspend fun forget(call: CallId)
+
+    /**
+     * The SIP messages sent and received while [EngineConfig.captureTrace] is on, oldest first,
+     * without their secrets. Only the last few hundred are kept, in memory, for this run. Always
+     * empty on an engine without [Capability.SipTrace].
+     */
+    val trace: StateFlow<List<SipTraceEntry>>
+
+    suspend fun clearTrace()
 }
 
 /** Whether the engine is running. */
@@ -93,11 +115,47 @@ enum class Capability {
     Srtp,
     Zrtp,
     CallStats,
+    SipTrace,
 }
 
-/** What applies to every account. Grows with the settings that reach the engine. */
+/**
+ * What applies to every account, built from the user's settings (`EngineConfigBuilder`). A change
+ * given to [SipEngine.apply] takes effect at once, or on the next call for what a call negotiates.
+ */
 data class EngineConfig(
     val userAgent: String = "Sona",
-    /** The engine's own log, every SIP message included, mirrored to the platform's log. */
-    val verboseLogs: Boolean = false,
+    /** How much of the engine's own log reaches the platform's. */
+    val logLevel: EngineLogLevel = EngineLogLevel.Warnings,
+    /**
+     * The audio codecs to offer, by their SDP names (`opus`, `G722`, `PCMU`), first choice first;
+     * every other codec is off. `null` leaves the engine's own choice.
+     */
+    val codecs: List<String>? = null,
+    val dtmf: DtmfMode = DtmfMode.Rfc4733,
+    val echoCancellation: Boolean = true,
+    /** Register and call only over Wi-Fi (or Ethernet): mobile data counts as no network. */
+    val wifiOnly: Boolean = false,
+    /** Keep the SIP messages in [SipEngine.trace] as they go by. */
+    val captureTrace: Boolean = false,
 )
+
+enum class EngineLogLevel {
+    Errors,
+    Warnings,
+
+    /** Every SIP message included. */
+    Messages,
+    Debug,
+}
+
+/** How DTMF digits are sent. */
+enum class DtmfMode {
+    /** RTP events (RFC 4733). */
+    Rfc4733,
+
+    /** SIP `INFO` requests. */
+    SipInfo,
+
+    /** Tones in the audio. */
+    InBand,
+}

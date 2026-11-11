@@ -4,3 +4,5 @@
 plugins { id("sona.android.feature") }
 
 android { namespace = "com.bobbyesp.sona.feature.settings" }
+
+dependencies { implementation(project(":sip:api")) }

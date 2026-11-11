@@ -8,5 +8,7 @@ android { namespace = "com.bobbyesp.sona.feature.diagnostics" }
 dependencies {
     implementation(project(":accounts:ui"))
     implementation(project(":sip:api"))
+    implementation(libs.androidx.core.ktx)
     testImplementation(project(":sip:fake"))
+    testImplementation(project(":calling:domain"))
 }
