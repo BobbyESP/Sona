@@ -6,27 +6,19 @@ package com.bobbyesp.sona.feature.settings
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.Gavel
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Memory
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -55,24 +47,31 @@ internal class AboutContributor(info: AppInfo, engine: SipEngine, context: Conte
 
     override val items: List<SettingItem> =
         listOf(
-            SettingItem.Info(title = R.string.about_version, text = { info.version }),
+            SettingItem.Info(
+                title = R.string.about_version,
+                text = { info.version },
+                icon = Icons.Rounded.Info,
+            ),
             SettingItem.Info(
                 title = R.string.about_engine,
                 // Read when shown: the engine knows its version once it has started.
                 text = { engine.version },
                 keywords = R.string.about_engine_keywords,
+                icon = Icons.Rounded.Memory,
             ),
             SettingItem.Action(
                 title = R.string.about_source,
                 summary = R.string.about_source_summary,
                 keywords = R.string.about_source_keywords,
                 run = { context.openUrl(info.sourceUrl) },
+                icon = Icons.Rounded.Code,
             ),
             SettingItem.Link(
                 title = R.string.about_licenses,
                 key = Licenses,
                 summary = R.string.about_licenses_summary,
                 keywords = R.string.about_licenses_keywords,
+                icon = Icons.Rounded.Gavel,
             ),
         )
 }
@@ -117,60 +116,38 @@ internal val LicensedWorks: List<LicensedWork> =
     )
 
 /** Sona's own license, then every work it includes; a row opens the work's page. */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun LicensesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    Scaffold(
+    SettingsScaffold(
+        title = stringResource(R.string.about_licenses),
+        onBack = onBack,
         modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.about_licenses)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(R.string.settings_back),
-                        )
-                    }
-                },
+    ) {
+        item(key = "own", contentType = "own") {
+            Text(
+                stringResource(R.string.about_own_license),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp),
             )
-        },
-    ) { padding ->
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-            LazyColumn(
-                Modifier.fillMaxHeight().widthIn(max = 840.dp),
-                contentPadding =
-                    PaddingValues(
-                        top = padding.calculateTopPadding() + 8.dp,
-                        bottom = padding.calculateBottomPadding() + 24.dp,
-                    ),
-            ) {
-                item(key = "own", contentType = "own") {
-                    Text(
-                        stringResource(R.string.about_own_license),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp),
-                    )
-                }
-                segmentedItems(LicensedWorks, key = { it.name }, contentType = { "work" }) {
-                    work,
-                    shapes,
-                    rowModifier ->
-                    SegmentedListItem(
-                        onClick = { context.openUrl(work.url) },
-                        shapes = shapes,
-                        modifier = rowModifier,
-                        colors = segmentedListColors(),
-                        supportingContent = { Text(work.license) },
-                        trailingContent = {
-                            Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null)
-                        },
-                        content = { Text(work.name) },
-                    )
-                }
-            }
+        }
+        segmentedItems(LicensedWorks, key = { it.name }, contentType = { "work" }) {
+            work,
+            shapes,
+            rowModifier ->
+            SegmentedListItem(
+                onClick = { context.openUrl(work.url) },
+                shapes = shapes,
+                modifier = rowModifier,
+                colors = segmentedListColors(),
+                supportingContent = { Text(work.license) },
+                trailingContent = {
+                    Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null)
+                },
+                content = { Text(work.name) },
+            )
         }
     }
 }

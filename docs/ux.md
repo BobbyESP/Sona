@@ -202,6 +202,7 @@ New for Sona:
 | `Avatar` | Initials on one of Material's expressive shapes (cookie, clover, flower…) and a container color, both derived from the name, so the same person is always the same mark |
 | `segmentedItems`, `segmentedListColors` | Lists as segmented groups (`SegmentedListItem`): outer corners round, inner ones square, a gap between, corners morphing under the finger. Recents, Contacts, Settings and Diagnostics are made of them |
 | `SectionHeader` | A group's heading, read as a heading by TalkBack; sticky in Recents and Contacts |
+| `SegmentedChoiceList` | One choice among many as selectable segmented items with a radio mark: the options of a dialog (a setting with more than three values, the DTMF method) |
 | `ConnectedChoice` | One choice among two to four, as a connected group of toggle buttons (Recents' All / Missed, a setting's values) |
 | `ExpressiveSearch` | Material's search: a pill that grows into a full-screen view with the results (Contacts, Settings) |
 | `SwipeToDeleteRow` | Swipe to delete, with a custom TalkBack action; Recents pairs it with a message to undo |
@@ -245,6 +246,11 @@ Material 3 Expressive, friendly but never toy-like. The keypad shows all of it; 
 - **Forms are grouped** under `SectionHeader`s, switches and options are segmented list items, a
   choice of two to four is a `ConnectedChoice`, what has a default waits behind a disclosure row
   that says what is inside, and the one action is a medium button at the foot (the account editor).
+- **Lists are Material's expressive list items** (`SegmentedListItem`, or `ListItem` with `onClick`,
+  `checked` or `selected`), never the `headlineContent` overload, which is deprecated. Settings: an
+  area is a group per contributing feature under its `section`, each row with its icon; a large
+  flexible app bar that collapses as the list scrolls; choices of up to three inline as a
+  `ConnectedChoice`, more in a dialog as a `SegmentedChoiceList`.
 - **One loud thing per screen**: the number, then the call button; everything else a size down.
 
 ## Motion and haptics

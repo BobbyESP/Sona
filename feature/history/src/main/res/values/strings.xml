@@ -50,4 +50,5 @@
         <item quantity="one">Call deleted</item>
         <item quantity="other">%1$d calls deleted</item>
     </plurals>
+    <string name="settings_section_recents">Recents</string>
 </resources>

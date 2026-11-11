@@ -103,7 +103,8 @@ No existing feature should change. If one has to, a contribution point is missin
    accounts may override it. Never rename a released key.
 2. If the engine needs it, map it in `EngineConfigBuilder` (`:calling:domain`) and apply it in
    `LinphoneConfigurer`.
-3. Add its item to the area's `SettingsContributor`, with keywords for search.
+3. Add its item to the area's `SettingsContributor`, with keywords for search and an icon (a
+   contributor sharing an area with another names its `section`).
 4. Add it to the catalogue in [docs/ux.md](docs/ux.md#the-options-catalogue).
 
 ### An engine capability

@@ -93,7 +93,7 @@ object SettingsAreas {
 /**
  * One option, declared as data: the settings screens draw it (and search it) without knowing the
  * feature it belongs to. [keywords] is a string resource of space separated words the search also
- * matches ("ring busy 486").
+ * matches ("ring busy 486"); [icon] marks the row, so a long area is scanned by its shapes.
  */
 sealed interface SettingItem {
     @get:StringRes val title: Int
@@ -102,11 +102,14 @@ sealed interface SettingItem {
 
     @get:StringRes val keywords: Int?
 
+    val icon: ImageVector?
+
     class Switch(
         val setting: Setting.Toggle,
         @StringRes override val title: Int,
         @StringRes override val summary: Int? = null,
         @StringRes override val keywords: Int? = null,
+        override val icon: ImageVector? = null,
     ) : SettingItem
 
     /** One of an enum's values, [label] naming each. */
@@ -116,6 +119,7 @@ sealed interface SettingItem {
         val label: (E) -> Int,
         @StringRes override val summary: Int? = null,
         @StringRes override val keywords: Int? = null,
+        override val icon: ImageVector? = null,
     ) : SettingItem
 
     /**
@@ -128,6 +132,7 @@ sealed interface SettingItem {
         val label: (String) -> String,
         @StringRes override val summary: Int? = null,
         @StringRes override val keywords: Int? = null,
+        override val icon: ImageVector? = null,
     ) : SettingItem
 
     /** Something that is done, not stored (*Clear history*), asked about first when [confirm]. */
@@ -138,6 +143,7 @@ sealed interface SettingItem {
         val destructive: Boolean = false,
         @StringRes val confirm: Int? = null,
         val run: suspend () -> Unit,
+        override val icon: ImageVector? = null,
     ) : SettingItem
 
     /** Something to read, not to change (a version); a touch copies it. */
@@ -145,6 +151,7 @@ sealed interface SettingItem {
         @StringRes override val title: Int,
         val text: () -> String,
         @StringRes override val keywords: Int? = null,
+        override val icon: ImageVector? = null,
     ) : SettingItem {
         override val summary: Int? = null
     }
@@ -155,12 +162,21 @@ sealed interface SettingItem {
         val key: NavKey,
         @StringRes override val summary: Int? = null,
         @StringRes override val keywords: Int? = null,
+        override val icon: ImageVector? = null,
     ) : SettingItem
 }
 
-/** What a feature adds to the settings: items in an [area]. */
+/**
+ * What a feature adds to the settings: items in an [area]. Its items are shown as one group of the
+ * area, under [section] when it names one (two features in *Contacts and history* are two groups).
+ */
 interface SettingsContributor {
     val area: SettingsArea
+
+    /** The heading of this contributor's group in its area; `null` for a group without one. */
+    @get:StringRes
+    val section: Int?
+        get() = null
 
     /** In the order they are shown. */
     val items: List<SettingItem>

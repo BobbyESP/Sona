@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ManageAccounts
 import androidx.compose.material.icons.rounded.Warning
@@ -22,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -129,7 +129,7 @@ internal fun AccountSwitcherSheet(
         Column {
             if (state.readinessProblems > 0) {
                 ListItem(
-                    headlineContent = { Text(stringResource(R.string.accounts_readiness)) },
+                    onClick = onReadiness,
                     supportingContent = {
                         Text(
                             pluralStringResource(
@@ -139,24 +139,26 @@ internal fun AccountSwitcherSheet(
                             ),
                         )
                     },
-                    leadingContent = {
+                    leadingContent = { Icon(Icons.Rounded.Warning, contentDescription = null) },
+                    trailingContent = {
                         Icon(
-                            Icons.Rounded.Warning,
+                            Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
                         )
                     },
+                    shapes = ListItemDefaults.shapes(shape = MaterialTheme.shapes.large),
                     colors =
                         ListItemDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
-                            headlineColor = MaterialTheme.colorScheme.onErrorContainer,
-                            supportingColor = MaterialTheme.colorScheme.onErrorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            leadingContentColor = MaterialTheme.colorScheme.error,
+                            trailingContentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            supportingContentColor = MaterialTheme.colorScheme.onErrorContainer,
                         ),
-                    modifier =
-                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            .clip(MaterialTheme.shapes.large)
-                            .clickable(onClick = onReadiness),
-                )
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Text(stringResource(R.string.accounts_readiness))
+                }
             }
             state.accounts.forEach { status ->
                 val label = status.account.label

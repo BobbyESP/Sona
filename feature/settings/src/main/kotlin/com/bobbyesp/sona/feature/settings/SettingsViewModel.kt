@@ -3,6 +3,7 @@
  */
 package com.bobbyesp.sona.feature.settings
 
+import androidx.annotation.StringRes
 import com.bobbyesp.sona.core.common.StringProvider
 import com.bobbyesp.sona.core.model.settings.Setting
 import com.bobbyesp.sona.core.model.settings.SettingsStore
@@ -11,8 +12,14 @@ import com.bobbyesp.sona.core.ui.contribution.SettingsArea
 import com.bobbyesp.sona.core.ui.contribution.SettingsContributor
 import com.bobbyesp.sona.core.ui.viewmodel.BaseViewModel
 
-/** An area with every item the features contributed to it. */
-internal data class AreaItems(val area: SettingsArea, val items: List<SettingItem>)
+/** One feature's items in an area, under its heading when it has one. */
+internal data class ItemGroup(@StringRes val title: Int?, val items: List<SettingItem>)
+
+/** An area with every item the features contributed to it, a group per feature. */
+internal data class AreaItems(val area: SettingsArea, val groups: List<ItemGroup>) {
+    val items: List<SettingItem>
+        get() = groups.flatMap { it.items }
+}
 
 internal data class SettingsState(
     /** Every area that has items, in order. */
@@ -45,7 +52,17 @@ internal class SettingsViewModel(
         contributors
             .groupBy { it.area.id }
             .values
-            .map { group -> AreaItems(group.first().area, group.flatMap { it.items }) }
+            .map { contributors ->
+                AreaItems(
+                    area = contributors.first().area,
+                    // Groups without a heading lead; the ones with a heading follow, as given.
+                    groups =
+                        contributors
+                            .filter { it.items.isNotEmpty() }
+                            .sortedBy { it.section != null }
+                            .map { ItemGroup(it.section, it.items) },
+                )
+            }
             .filter { it.items.isNotEmpty() }
             .sortedBy { it.area.order }
 
@@ -71,11 +88,18 @@ internal class SettingsViewModel(
         return areas
             .map { entry ->
                 entry.copy(
-                    items =
-                        entry.items.filter { item ->
-                            val haystack = item.searchText().lowercase()
-                            words.all { it in haystack }
-                        },
+                    groups =
+                        entry.groups
+                            .map { group ->
+                                group.copy(
+                                    items =
+                                        group.items.filter { item ->
+                                            val haystack = item.searchText().lowercase()
+                                            words.all { it in haystack }
+                                        },
+                                )
+                            }
+                            .filter { it.items.isNotEmpty() },
                 )
             }
             .filter { it.items.isNotEmpty() }

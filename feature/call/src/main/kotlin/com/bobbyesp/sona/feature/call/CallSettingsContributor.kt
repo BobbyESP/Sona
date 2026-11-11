@@ -3,6 +3,16 @@
  */
 package com.bobbyesp.sona.feature.call
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.CallSplit
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.CallEnd
+import androidx.compose.material.icons.rounded.Dialpad
+import androidx.compose.material.icons.rounded.DoNotDisturbOn
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Hearing
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.SignalCellularAlt
 import com.bobbyesp.sona.core.model.settings.AudioCodec
 import com.bobbyesp.sona.core.model.settings.AudioSettings
 import com.bobbyesp.sona.core.model.settings.CallSettings
@@ -22,24 +32,28 @@ internal object CallSettingsContributor : SettingsContributor {
             SettingItem.Switch(
                 setting = CallSettings.CallWaiting,
                 title = R.string.settings_call_waiting,
+                icon = Icons.AutoMirrored.Rounded.CallSplit,
                 summary = R.string.settings_call_waiting_summary,
                 keywords = R.string.settings_call_waiting_keywords,
             ),
             SettingItem.Switch(
                 setting = CallSettings.AlwaysReachable,
                 title = R.string.settings_always_reachable,
+                icon = Icons.Rounded.NotificationsActive,
                 summary = R.string.settings_always_reachable_summary,
                 keywords = R.string.settings_always_reachable_keywords,
             ),
             SettingItem.Switch(
                 setting = CallSettings.DoNotDisturb,
                 title = R.string.settings_dnd,
+                icon = Icons.Rounded.DoNotDisturbOn,
                 summary = R.string.settings_dnd_summary,
                 keywords = R.string.settings_dnd_keywords,
             ),
             SettingItem.Choice(
                 setting = CallSettings.DeclineWith,
                 title = R.string.settings_decline_with,
+                icon = Icons.Rounded.CallEnd,
                 summary = R.string.settings_decline_with_summary,
                 label = { mode ->
                     when (mode) {
@@ -52,6 +66,7 @@ internal object CallSettingsContributor : SettingsContributor {
             SettingItem.Choice(
                 setting = CallSettings.Dtmf,
                 title = R.string.settings_dtmf,
+                icon = Icons.Rounded.Dialpad,
                 summary = R.string.settings_dtmf_summary,
                 label = { method ->
                     when (method) {
@@ -74,6 +89,7 @@ internal object AudioSettingsContributor : SettingsContributor {
             SettingItem.Ranked(
                 setting = AudioSettings.Codecs,
                 title = R.string.settings_codecs,
+                icon = Icons.Rounded.GraphicEq,
                 summary = R.string.settings_codecs_summary,
                 label = AudioCodec::labelOf,
                 keywords = R.string.settings_codecs_keywords,
@@ -81,12 +97,14 @@ internal object AudioSettingsContributor : SettingsContributor {
             SettingItem.Switch(
                 setting = AudioSettings.EchoCancellation,
                 title = R.string.settings_echo,
+                icon = Icons.Rounded.Hearing,
                 summary = R.string.settings_echo_summary,
                 keywords = R.string.settings_echo_keywords,
             ),
             SettingItem.Switch(
                 setting = AudioSettings.DialpadTones,
                 title = R.string.settings_dialpad_tones,
+                icon = Icons.AutoMirrored.Rounded.VolumeUp,
                 summary = R.string.settings_dialpad_tones_summary,
                 keywords = R.string.settings_dialpad_tones_keywords,
             ),
@@ -102,6 +120,7 @@ internal object NetworkSettingsContributor : SettingsContributor {
             SettingItem.Switch(
                 setting = NetworkSettings.MobileData,
                 title = R.string.settings_mobile_data,
+                icon = Icons.Rounded.SignalCellularAlt,
                 summary = R.string.settings_mobile_data_summary,
                 keywords = R.string.settings_mobile_data_keywords,
             ),

@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -99,6 +100,7 @@ internal object ReadinessSettingsContributor : SettingsContributor {
         listOf(
             SettingItem.Link(
                 title = R.string.readiness_title,
+                icon = Icons.Rounded.Checklist,
                 key = CallReadiness(),
                 summary = R.string.readiness_settings_summary,
                 keywords = R.string.readiness_keywords,

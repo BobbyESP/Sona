@@ -29,8 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -77,7 +75,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.Surface
@@ -102,7 +99,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -122,6 +118,7 @@ import com.bobbyesp.sona.accounts.ui.stateText
 import com.bobbyesp.sona.core.designsystem.components.ConnectedChoice
 import com.bobbyesp.sona.core.designsystem.components.RankedList
 import com.bobbyesp.sona.core.designsystem.components.SectionHeader
+import com.bobbyesp.sona.core.designsystem.components.SegmentedChoiceList
 import com.bobbyesp.sona.core.designsystem.components.SonaTextField
 import com.bobbyesp.sona.core.designsystem.components.SonaTextFieldDefaults
 import com.bobbyesp.sona.core.designsystem.components.SonaTextFieldShapes
@@ -558,22 +555,12 @@ private fun CallOverrides(state: EditorState, edit: (AccountDraft.() -> AccountD
             describe = { stringResource(it.label) },
             onChange = { edit { copy(overrides = overrides.with(CallSettings.Dtmf, it)) } },
         ) { method, change ->
-            DtmfMethod.entries.forEach { option ->
-                Row(
-                    Modifier.fillMaxWidth()
-                        .selectable(
-                            selected = option == method,
-                            role = Role.RadioButton,
-                            onClick = { change(option) },
-                        )
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selected = option == method, onClick = null)
-                    Spacer(Modifier.size(12.dp))
-                    Text(stringResource(option.label))
-                }
-            }
+            SegmentedChoiceList(
+                options = DtmfMethod.entries,
+                selected = method,
+                onSelect = change,
+                label = { stringResource(it.label) },
+            )
         }
     }
 }
@@ -808,19 +795,22 @@ private fun <T> OverrideItem(
 /**
  * A switch inside a dialog, where the dialog is the container: a plain row, all of it the switch.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun DialogSwitchRow(title: Int, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     ListItem(
-        headlineContent = { Text(stringResource(title)) },
+        checked = checked,
+        onCheckedChange = onCheckedChange,
         trailingContent = { ThumbSwitch(checked) },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier =
-            Modifier.toggleable(
-                value = checked,
-                role = Role.Switch,
-                onValueChange = onCheckedChange,
+        shapes = ListItemDefaults.shapes(shape = MaterialTheme.shapes.large),
+        colors =
+            ListItemDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             ),
-    )
+    ) {
+        Text(stringResource(title))
+    }
 }
 
 /** How the account's state looks: a mark on a shape, and the container colors around it. */

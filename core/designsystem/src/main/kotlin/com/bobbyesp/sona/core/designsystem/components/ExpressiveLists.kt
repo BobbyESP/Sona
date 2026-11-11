@@ -6,6 +6,7 @@ package com.bobbyesp.sona.core.designsystem.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ButtonGroupDefaults
@@ -24,6 +26,8 @@ import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.ListItemShapes
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -33,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
@@ -143,6 +148,43 @@ fun <T> ConnectedChoice(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(label(option), maxLines = 1)
+            }
+        }
+    }
+}
+
+/**
+ * One choice among many, as a segmented group of selectable items with a radio mark: for a dialog,
+ * or where a [ConnectedChoice] would not fit. The chosen item takes the list's selected colors and
+ * shape; each morphs as it is pressed. TalkBack reads each as a radio button.
+ *
+ * @param containerColor The items' color at rest: one tone above what the list sits on (a dialog's
+ *   container is `surfaceContainerHigh`, so the default is the tone above it).
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun <T> SegmentedChoiceList(
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    label: @Composable (T) -> String,
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+) {
+    Column(
+        modifier = modifier.selectableGroup(),
+        verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
+    ) {
+        options.forEachIndexed { index, option ->
+            SegmentedListItem(
+                selected = option == selected,
+                onClick = { onSelect(option) },
+                shapes = ListItemDefaults.segmentedShapes(index = index, count = options.size),
+                colors = ListItemDefaults.segmentedColors(containerColor = containerColor),
+                leadingContent = { RadioButton(selected = option == selected, onClick = null) },
+                modifier = Modifier.semantics { role = Role.RadioButton },
+            ) {
+                Text(label(option))
             }
         }
     }

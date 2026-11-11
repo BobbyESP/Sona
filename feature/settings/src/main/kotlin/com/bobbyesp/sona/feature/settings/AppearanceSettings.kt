@@ -3,6 +3,11 @@
  */
 package com.bobbyesp.sona.feature.settings
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Contrast
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Wallpaper
 import com.bobbyesp.sona.core.model.settings.AppearanceSettings
 import com.bobbyesp.sona.core.model.settings.PaletteStyle
 import com.bobbyesp.sona.core.model.settings.ThemeMode
@@ -19,6 +24,7 @@ internal object AppearanceContributor : SettingsContributor {
             SettingItem.Choice(
                 setting = AppearanceSettings.Theme,
                 title = R.string.appearance_theme,
+                icon = Icons.Rounded.DarkMode,
                 label = { mode ->
                     when (mode) {
                         ThemeMode.System -> R.string.appearance_theme_system
@@ -31,18 +37,21 @@ internal object AppearanceContributor : SettingsContributor {
             SettingItem.Switch(
                 setting = AppearanceSettings.DynamicColor,
                 title = R.string.appearance_dynamic,
+                icon = Icons.Rounded.Wallpaper,
                 summary = R.string.appearance_dynamic_summary,
                 keywords = R.string.appearance_dynamic_keywords,
             ),
             SettingItem.Switch(
                 setting = AppearanceSettings.PureBlack,
                 title = R.string.appearance_pure_black,
+                icon = Icons.Rounded.Contrast,
                 summary = R.string.appearance_pure_black_summary,
                 keywords = R.string.appearance_pure_black_keywords,
             ),
             SettingItem.Choice(
                 setting = AppearanceSettings.Palette,
                 title = R.string.appearance_palette,
+                icon = Icons.Rounded.Palette,
                 summary = R.string.appearance_palette_summary,
                 label = { style ->
                     when (style) {
