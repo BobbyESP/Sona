@@ -8,6 +8,7 @@ matrix in [docs/roadmap.md](../docs/roadmap.md#the-call-matrix).
 | [`asterisk/pjsip.conf`](asterisk/pjsip.conf) | Transports (UDP and TCP on 5060) and extensions 101, 102, 103 |
 | [`asterisk/extensions.conf`](asterisk/extensions.conf) | The dial plan: extensions, echo test (600), always busy (486), voicemail (`*97`) |
 | [`asterisk/voicemail.conf`](asterisk/voicemail.conf) | A voicemail box per extension |
+| [`asterisk/modules.conf`](asterisk/modules.conf) | Loads the file-based voicemail, not Ubuntu's IMAP one (without it `*97` hangs up) |
 
 ## Running it in Docker
 
