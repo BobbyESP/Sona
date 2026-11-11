@@ -85,8 +85,8 @@ Each needs its declaration, its item with keywords, and whatever reads it.
 Built on 2026-11-11 and tested on the JVM where that is possible; these still need a phone. The
 rest of that day's work was seen on the Pixel the same evening (see the roadmap).
 
-- [ ] An account's own DTMF method; each DTMF method against `*97` (the lab's voicemail needs a
-      mailbox for 102 first); echo cancellation off and on.
+- [ ] An account's own DTMF method (the default, RFC 4733, was seen working against `*97` on
+      2026-11-12; try SIP INFO and in-band); echo cancellation off and on.
 - [ ] *Use mobile data* off: registration drops on mobile data, returns on Wi-Fi.
 - [ ] An SRTP key redacted in the trace (needs an encrypted call, phase 4).
 - [ ] Call readiness: each check turning to a warning, each fix landing on the right system
