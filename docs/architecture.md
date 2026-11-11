@@ -32,7 +32,7 @@ The calling engine is in [calling.md](calling.md); screens and settings are in [
 | `:core:data` | DataStore settings, Android strings | |
 | `:core:database` | Room: accounts, per-account overrides, call history, local contacts, favorites | Only `:app` and `*:data` see it |
 | `:core:designsystem` | `SonaTheme`, tokens, blur, shared components (dialpad, call buttons, avatars) | No feature knowledge |
-| `:core:ui` | `BaseViewModel`, messages, `PermissionHost`, the contribution point contracts | |
+| `:core:ui` | `BaseViewModel`, messages, the contribution point contracts | |
 | `:core:navigation` | Keys, `Navigator`, scenes, `NavigationMotion` | Every cross-feature `NavKey` lives here |
 | `:core:testing` | Test dispatchers, fixtures | Test-only |
 | `:accounts:domain` / `:accounts:data` / `:accounts:ui` | The user's SIP accounts: model, validation, use cases, `AccountEngineSync`; Room storage; rows, state words, failure sentences | `:domain` plain Kotlin; `:data` only seen by `:app` |
@@ -84,7 +84,7 @@ data           port implementations: Room, DataStore, Linphone, Telecom, Contact
 ```
 
 - **Anything the framework does goes behind a port**: `SipEngine`, `SystemCalls`, `CredentialVault`,
-  `DeviceContacts`, `RingtonePlayer`, `NetworkMonitor`, `BatteryOptimizations`. Tests use fakes.
+  `DeviceContacts`, `RingtonePlayer`, `BatteryOptimizations` (`NetworkMonitor` is planned). Tests use fakes.
 - **A port that needs an `Activity`** (asking for a permission, opening the full-screen-intent
   settings) is called by the screen, after the ViewModel emits an effect.
 
@@ -123,8 +123,8 @@ feature would edit old ones. Instead each such screen declares a contract in `:c
 |---|---|---|---|
 | `NavSection` | the `NavDisplay` | every feature | every feature |
 | `TopLevelDestination` | navigation bar / rail | dialer, history, contacts | messaging, voicemail |
-| `CallActionProvider` | the call screen's controls | call (mute, hold, keypad, audio route) | transfer, add call, record, chat |
-| `PartyActionProvider` | a contact, a history entry, a dialer suggestion | call (audio call), contacts (edit, favorite) | messaging, presence (watch) |
+| `CallActionProvider` (planned) | the call screen's controls | call (mute, hold, keypad, audio route) | transfer, add call, record, chat |
+| `PartyActionProvider` (planned) | a contact, a history entry, a dialer suggestion | call (audio call), contacts (edit, favorite) | messaging, presence (watch) |
 | `SettingsContributor` | settings root and settings search | every feature with options | every feature with options |
 | `ReadinessCheck` | onboarding and *Call readiness* | calling (mic, notifications, full-screen intents, battery, registration) | — |
 

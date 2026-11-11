@@ -8,17 +8,16 @@ Remove a line when it is built **and** seen working, and note where in the roadm
 
 ## Next, in this order
 
-1. **Commit.** Nothing since the phase 3 commit is committed: the four phone fixes of 2026-11-10
-   and everything of 2026-11-11 are in the working tree.
-2. **Finish checking what is built** (the list [below](#built-not-yet-seen-working)). Most needs
-   only the phone and the lab, and ten minutes.
-3. **A remote repository**, then correct `SOURCE_URL` in `app/build.gradle.kts` (About links to
-   it; today it is a guess) and see CI green there.
-4. **The two lint errors** (`MANAGE_OWN_CALLS`), so CI can run lint.
-5. **The MVP options that are one switch each** (see [Options](#options)): they are what the
+1. **Finish checking what is built** (the list [below](#built-not-yet-seen-working)). Most needs
+   only the phone and the lab, and ten minutes. This is the gate to new features.
+2. **The MVP options that are one switch each** (see [Options](#options)): they are what the
    phase 3 "done when" still lacks most visibly.
-6. **The call screen's small things**: *End and answer*, the timer's format, haptics.
-7. **A signed release APK run on a phone**: R8 passes, but Linphone under it was never started.
+3. **The call screen's small things**: *End and answer*, the timer's format, haptics.
+4. **A signed release APK run on a phone**: R8 passes, but Linphone under it was never started.
+5. **Re-register on a network change**: see first what Wi-Fi off and on does.
+
+Done on 2026-11-11: committed; remote at github.com/BobbyESP/Sona; CI green there (format, lint,
+unit tests, both debug builds); `SOURCE_URL` correct.
 
 ## Still to build
 
@@ -79,7 +78,7 @@ Each needs its declaration, its item with keywords, and whatever reads it.
 - [ ] Remote surfaces (headset, watch) answered within 5 seconds; a refused hold told to Telecom.
 - [ ] TLS against the lab: a certificate in `lab/`, and a way for Linphone to accept it.
 - [ ] Linphone plays tones of its own, and asks for a `CoreService` that is not in the app.
-- [ ] `CallMachine` with its table tests, or the docs say the decisions are in `CallCoordinator`.
+- [x] `CallMachine`: the docs now say the decisions are in `CallCoordinator`, scenario-tested.
 
 ## Built, not yet seen working
 
@@ -109,9 +108,6 @@ From phases 1 and 2.
 
 ## Release
 
-- [ ] A remote repository; CI green there, running lint, `testFullDebugUnitTest` and
-      `assembleFullDebug` too.
-- [ ] Lint passes (`MANAGE_OWN_CALLS` declared in one module and used in another).
 - [ ] A signing configuration; the release APK run on a device; `proguard-rules.pro` for Linphone.
 - [ ] Device tests: the Room migrations (1 to 2, 2 to 3), the device contacts query, Core-Telecom.
 - [ ] Screenshots of the screens on the fake engine: light, dark, large font.
@@ -121,9 +117,9 @@ From phases 1 and 2.
 
 ## Docs
 
-- [ ] AGENTS.md, architecture.md and calling.md name as built what is not: `CallMachine`,
-      `NetworkMonitor`, `PermissionHost`, `CallActionProvider`, `PartyActionProvider`,
-      `ForegroundNeed` (it is `CallForeground`), a back stack inside `CallActivity`.
+- [ ] architecture.md and calling.md may still name a back stack inside `CallActivity` as built;
+      check. (`CallMachine`, `PermissionHost`, `ForegroundNeed` fixed 2026-11-11; the two
+      providers and `NetworkMonitor` are marked planned.)
 - [ ] The options catalogue in [ux.md](ux.md#the-options-catalogue) has no row for the SIP trace
       screen's share, nor says which options exist yet.
 

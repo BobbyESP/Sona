@@ -20,12 +20,12 @@ exist yet arrive with the phase that needs them, and are added to `settings.grad
 | `:core:model`, `:core:common` | Ids, `SipAddress`, setting declarations, dispatchers, `StringProvider` | Plain Kotlin |
 | `:core:data`, `:core:database` | DataStore settings; Room (accounts, overrides, history, contacts) | Seen only by `:app` and `*:data` |
 | `:core:designsystem` | `SonaTheme`, tokens, blur, shared components | No feature knowledge |
-| `:core:ui` | `BaseViewModel`, messages, `PermissionHost`, contribution point contracts | |
+| `:core:ui` | `BaseViewModel`, messages, contribution point contracts (`NavSection`, `TopLevelDestination`, `SettingsContributor`, `ReadinessCheck`) | |
 | `:core:navigation` | Keys, `Navigator`, scenes, `NavigationMotion` | Cross-feature keys live here, uuids and ids at most |
 | `:accounts:domain` / `:data` / `:ui` | SIP accounts on the user's own server: model, validation, use cases, the engine sync; Room storage; rows, state words, failure sentences | `:domain` plain Kotlin; `:data` only seen by `:app` |
-| `:calling:domain` | `CallCoordinator`, `CallMachine`, call use cases, `AddressResolver`, `EndReason` | Plain Kotlin |
+| `:calling:domain` | `CallCoordinator` (the call decisions, tested by scenarios), call use cases, `AddressResolver`, `EndReason` | Plain Kotlin |
 | `:calling:ui` | What the calling domain says in words: why nothing was dialed (more arrives with the quality badge) | |
-| `:calling:platform` | `CallService`, `KeepAliveService`, notifications, boot receiver, `NetworkMonitor` | Only `:app` depends on it |
+| `:calling:platform` | `CallService`, `KeepAliveService`, notifications, boot receiver | Only `:app` depends on it |
 | `:directory:domain` / `:data` / `:ui` | History, contacts, favorites, T9 matching | `:data` only seen by `:app` |
 | `:sip:api` / `:sip:linphone` / `:sip:fake` | The SIP engine contract and its implementations | No `org.linphone` type leaves `:sip:linphone` |
 | `:telecom:api` / `:telecom:jetpack` | Android Telecom (Core-Telecom) | No `androidx.core.telecom` type leaves `:telecom:jetpack` |
@@ -88,8 +88,8 @@ compileSdk 37, targetSdk 37, Java 17). Versions are in `gradle/libs.versions.tom
 3. Register its destinations in a `<name>Section` object (`NavSection`), bound in its Koin module
    (`single { HistorySection } bind NavSection::class`). The shell collects every section and tab;
    there is no list to edit.
-4. Contribute what it adds to other screens: `TopLevelDestination`, `CallActionProvider`,
-   `PartyActionProvider`, `SettingsContributor`, `ReadinessCheck`.
+4. Contribute what it adds to other screens: `TopLevelDestination`, `SettingsContributor`, `ReadinessCheck`
+   (`CallActionProvider` and `PartyActionProvider` are planned, see docs/todo.md).
 5. Bind its ViewModels and contributions in its Koin module; add the module to `App.kt`.
 6. If it needs the engine to do something new, add a capability (below) first.
 
@@ -110,7 +110,7 @@ No existing feature should change. If one has to, a contribution point is missin
 
 1. Add the `Capability` and the port functions to `:sip:api`.
 2. Implement them in `:sip:linphone` (mapper first, tested) and `:sip:fake` (scriptable).
-3. Add the events and commands to `CallMachine` if calls are involved, with their table rows.
+3. Add the events and decisions to `CallCoordinator` if calls are involved, with a scenario test in `CallCoordinatorTest`.
 4. Contributions read the capability in their `Availability`.
 
 ## 4. Build and test

@@ -8,8 +8,8 @@ part of the app where a mistake means a missed call, so its rules are stricter t
             ┌────────────── :calling:domain (plain Kotlin, application scope) ──────────────┐
  screens ──>│ PlaceCall, Answer, Decline, HangUp, Hold, Mute, SendDtmf, SelectAudioRoute    │
  (intents)  │                         │                                                     │
-            │                   CallCoordinator ── CallMachine (pure: state + event          │
-            │                    │    │    │                    -> state + commands)        │
+            │                   CallCoordinator (decisions, scenario-tested)                   │
+            │                    │    │    │                                                │
             └────────────────────┼────┼────┼──────────────────────────────────────────────┘
                      SipEngine   │    │    │ SystemCalls              CallHistory, Settings
                      (:sip:api)  │    │    │ (:telecom:api)           (ports)
@@ -17,7 +17,7 @@ part of the app where a mistake means a missed call, so its rules are stricter t
                   :sip:linphone       │   :telecom:jetpack ──> Core-Telecom CallsManager
                   (Core thread)       │
                                       ▼
-                       ForegroundNeed (StateFlow) ──> :calling:platform: KeepAliveService,
+                       CallForeground (StateFlow) ──> :calling:platform: KeepAliveService,
                                                       CallService, CallNotifications
 ```
 
@@ -104,8 +104,8 @@ that changes a call, and the only thing screens talk to about calls.
   `forget`; the coordinator shows it for three seconds (the call screen says how it ended), then
   forgets it. A call that fails before it is first seen (busy, no such extension) is still shown
   with its reason: found by a test, it was being dropped unexplained.
-- **It publishes `calls: StateFlow<List<Call>>`** and `foregroundNeed: StateFlow<ForegroundNeed>`
-  (`None`, `KeepAlive`, `Call(needsMicrophone)`), which `:calling:platform` turns into
+- **It publishes `calls: StateFlow<List<Call>>`** and `CallForeground` flow
+  (see `CallCoordinator.kt` for its cases), which `:calling:platform` turns into
   services. The domain never starts a service itself.
 
 ```kotlin
@@ -152,7 +152,7 @@ data class Call(
 
 Telecom calls `onAnswerCall`, `onSetCallActive`, `onSetCallInactive` and `onSetCallDisconnected`
 when a headset, a watch or a car acts on the call, and **gives the app 5 seconds** to carry it out,
-or it may tear the call down. The coordinator answers them through the same `CallMachine`, with the
+or it may tear the call down. The coordinator answers them through the same decision path, with the
 engine call bounded to 4 seconds. A call that cannot be held (the remote side refused the
 re-INVITE) throws back to Telecom, which is what Telecom expects.
 
@@ -237,8 +237,8 @@ Android means a foreground service. There are two services, for two needs:
   and nothing else.
 - **Keeping the registration up** is the engine's work: the registration is refreshed before it
   expires, NAT keep-alives (UDP) or TCP/TLS connection keep-alives are sent on the interval set,
-  and a network change (`NetworkMonitor`, from `ConnectivityManager`) refreshes registrations
-  immediately.
+  and a network change should refresh registrations immediately (planned: `NetworkMonitor`; first
+  see whether Linphone already does it, docs/todo.md).
 - **The user decides.** *Always reachable* is on by default with an enabled account, explained in
   onboarding; off, Sona registers while open and unregisters a minute after leaving.
 
