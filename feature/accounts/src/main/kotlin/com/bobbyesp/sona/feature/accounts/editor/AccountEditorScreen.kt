@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -540,8 +541,15 @@ private fun SwitchRow(
     ListItem(
         headlineContent = { Text(stringResource(title)) },
         supportingContent = description?.let { { Text(stringResource(it)) } },
-        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        // The whole row is the switch: seen on a phone, where a touch on the words did nothing.
+        modifier =
+            Modifier.toggleable(
+                value = checked,
+                role = Role.Switch,
+                onValueChange = onCheckedChange,
+            ),
     )
 }
 

@@ -83,18 +83,16 @@ Each needs its declaration, its item with keywords, and whatever reads it.
 
 ## Built, not yet seen working
 
-Built on 2026-11-11 and tested on the JVM where that is possible; these still need a phone.
+Built on 2026-11-11 and tested on the JVM where that is possible; these still need a phone. The
+rest of that day's work was seen on the Pixel the same evening (see the roadmap).
 
-- [ ] An account's own codecs and DTMF method: that an offer **and** an answer follow them.
-- [ ] Each DTMF method against `*97`; echo cancellation off and on.
+- [ ] An account's own DTMF method; each DTMF method against `*97` (the lab's voicemail needs a
+      mailbox for 102 first); echo cancellation off and on.
 - [ ] *Use mobile data* off: registration drops on mobile data, returns on Wi-Fi.
-- [ ] Sharing the whole trace as a file; an SRTP key redacted (needs an encrypted call).
-- [ ] The keypad: pasting by long press, long press on 1 for voicemail, the phone on a suggestion.
-- [ ] A call refused by do not disturb, and one refused as busy with call waiting off, in Recents.
-- [ ] The missed-calls badge on the Recents tab.
+- [ ] An SRTP key redacted in the trace (needs an encrypted call, phase 4).
 - [ ] Call readiness: each check turning to a warning, each fix landing on the right system
-      screen, a permission refused for good, the step after a first account, the rows' look.
-- [ ] The licenses screen and the source link.
+      screen (only the battery one was pressed), a permission refused for good, the step after a
+      first account, the rows' look.
 
 ## Never checked on a phone
 

@@ -364,7 +364,8 @@ Pixel 9 Pro XL, Android 17, the Docker lab on the same Wi-Fi, 2026-11-10.
 - [ ] The keypad's hint says *Extension, number or SIP address*; only digits can be typed.
       **Built 2026-11-11** (see *Keypad*); to see on the phone.
 - [x] Every call negotiated PCMU at 8 kHz, though the lab offers G.722 first. With the codec
-      order applied (2026-11-11) the offer is `opus, G722, PCMU, PCMA` and 600 settles on G.722.
+      G.722 was off in Linphone: with the codec setting applied (2026-11-11) the offer is
+      `opus, G722, PCMU, PCMA` and 600 uses G.722.
 
 #### Seen on the phone, 2026-11-11
 
@@ -386,9 +387,26 @@ Docker lab on the same Wi-Fi. Of what was built that day:
 - [x] About says `liblinphone 5.5.39`; the keep-alive notification is there after the app comes
       back.
 
-Not tried there: an account's own codecs and DTMF method, sharing the trace as a file, pasting,
-the long press on 1, a call refused by do not disturb, the badge, the readiness step after a first
-account.
+Later the same evening, by hand (pasting by long press, the long press on 1 calling `*97`, the
+licenses and the source link) and against the lab:
+
+- [x] A call refused by do not disturb is in Recents as *Missed* with `486 Busy Here`, and
+      nothing rings or notifies. One refused as busy during a call, with call waiting off, also
+      posts the missed-call notification, and the Recents tab shows its badge.
+- [x] The phone on a suggestion calls at once. Sharing the whole trace writes the file (67 kB,
+      too much for an intent's text) and opens the system's share sheet; in it only the server's
+      challenges keep a nonce, every `Authorization` is redacted.
+- [x] An account's own codecs: PCMA put first, the offer is `8 96 9 0`; with G.722 off for the
+      account, the answer to an incoming call uses PCMU. Two things learned: **the order of an
+      offer does not decide the codec with this Asterisk**, which answers in its own order (G.722
+      first), so the calls to 600 use G.722 because it is now on, not because of its place; and
+      **an answer follows the caller's order**, as Linphone does and SIP recommends, so an
+      account's order only matters for the calls it makes, and what it turns off for all of them.
+- [x] In the account editor only the switch itself answered a touch, not its row: fixed, and
+      seen fixed.
+
+Not tried there: an account's own DTMF method, the readiness step after a first account, the
+other readiness fixes, *Use mobile data* off.
 
 ### 3 · Release
 
