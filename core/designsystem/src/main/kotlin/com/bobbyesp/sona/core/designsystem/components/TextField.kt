@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -40,6 +42,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -52,7 +55,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,6 +71,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bobbyesp.sona.core.designsystem.R
@@ -90,6 +97,10 @@ import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
  * @param leadingIcon A mark for what the field holds, which takes the field's focused color.
  * @param trailingContent What acts on the value (a password's eye). Without it, the field offers a
  *   clear button while it is focused and holds text, when [clearable].
+ * @param shapes Its shape at rest and focused. [SonaTextFieldDefaults.segmentedShapes] joins fields
+ *   into one group, as a segmented list joins its items.
+ * @param supportingOnFocus Whether [supportingText] shows only while the field is focused: in a
+ *   group, so the group stays one piece at rest. An [error] always shows.
  */
 @Composable
 fun SonaTextField(
@@ -109,13 +120,14 @@ fun SonaTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     colors: SonaTextFieldColors = SonaTextFieldDefaults.colors(),
+    shapes: SonaTextFieldShapes = SonaTextFieldDefaults.shapes(),
+    supportingOnFocus: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
 ) {
     val interactions = interactionSource ?: remember { MutableInteractionSource() }
     val focused by interactions.collectIsFocusedAsState()
     val isError = error != null
     val motion = MaterialTheme.motionScheme
-    val shapes = MaterialTheme.shapes
 
     // What the field looks like now; each value animates to it.
     val container =
@@ -136,16 +148,15 @@ fun SonaTextField(
             animationSpec = motion.defaultEffectsSpec(),
             label = "FieldAccent",
         )
-    // 0 at rest (the theme's extra large corners), 1 focused (its large ones), on the spatial
-    // spring: the corners give a little past their mark and settle, as a key does under the finger.
-    val squared =
+    // 0 at rest, 1 focused, on the spatial spring: the corners give a little past their mark and
+    // settle, as a key does under the finger. Each corner goes its own way (in a group the outer
+    // ones and the inner ones meet in the middle).
+    val focus =
         animateFloatAsState(
             targetValue = if (focused) 1f else 0f,
             animationSpec = motion.fastSpatialSpec(),
             label = "FieldCorner",
         )
-    val restingCorner = shapes.extraLarge.topStart
-    val focusedCorner = shapes.large.topStart
     // 0 with the label in the field, 1 with it above the text. Effects, not spatial: a label that
     // overshoots its place reads as a glitch, not as play.
     val raised =
@@ -175,10 +186,7 @@ fun SonaTextField(
                     modifier =
                         Modifier.fillMaxWidth()
                             .graphicsLayer {
-                                val resting = restingCorner.toPx(size, this)
-                                val focusedPx = focusedCorner.toPx(size, this)
-                                val radius = lerp(resting, focusedPx, squared.value)
-                                shape = RoundedCornerShape(radius.coerceAtLeast(0f))
+                                shape = shapes.at(focus.value, size, this)
                                 clip = true
                             }
                             .drawBehind { drawRect(container.value) }
@@ -202,7 +210,8 @@ fun SonaTextField(
                         Text(
                             text = label,
                             style = textStyle,
-                            color = if (value.isEmpty() && !focused) content else accent,
+                            // In the empty field it is a prompt, a step quieter than what is typed.
+                            color = accent,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier =
@@ -240,7 +249,11 @@ fun SonaTextField(
                         }
                     }
                 }
-                SupportingLine(supportingText = supportingText, error = error, colors = colors)
+                SupportingLine(
+                    supportingText = supportingText?.takeIf { focused || !supportingOnFocus },
+                    error = error,
+                    colors = colors,
+                )
             }
         },
     )
@@ -371,7 +384,62 @@ data class SonaTextFieldColors(
     internal fun cursor(error: Boolean): Color = if (error) errorCursor else cursor
 }
 
+/**
+ * A [SonaTextField]'s shape at rest and while focused. Between the two each corner moves on its
+ * own, so any two rounded shapes morph into each other.
+ */
+@Immutable
+class SonaTextFieldShapes(val shape: CornerBasedShape, val focusedShape: CornerBasedShape) {
+    /** The shape [progress] of the way from [shape] to [focusedShape], for a field of [size]. */
+    internal fun at(progress: Float, size: Size, density: Density): Shape {
+        fun corner(rest: CornerSize, focused: CornerSize): Float =
+            lerp(rest.toPx(size, density), focused.toPx(size, density), progress).coerceAtLeast(0f)
+        return RoundedCornerShape(
+            topStart = corner(shape.topStart, focusedShape.topStart),
+            topEnd = corner(shape.topEnd, focusedShape.topEnd),
+            bottomEnd = corner(shape.bottomEnd, focusedShape.bottomEnd),
+            bottomStart = corner(shape.bottomStart, focusedShape.bottomStart),
+        )
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is SonaTextFieldShapes && shape == other.shape && focusedShape == other.focusedShape
+
+    override fun hashCode(): Int = 31 * shape.hashCode() + focusedShape.hashCode()
+}
+
 object SonaTextFieldDefaults {
+    /** The room between the fields of a group: a segmented list's gap. */
+    val SegmentedGap: Dp = ListItemDefaults.SegmentedGap
+
+    /** A field on its own: round at rest, a little squarer focused. */
+    @Composable
+    fun shapes(): SonaTextFieldShapes =
+        SonaTextFieldShapes(MaterialTheme.shapes.extraLarge, MaterialTheme.shapes.large)
+
+    /**
+     * The field at [index] of [count] joined into one group: the group's outer corners round, the
+     * ones between fields small, as Sona's segmented lists are. Focused, a field rounds all its
+     * corners alike, so the one being typed in stands out from its group as it morphs.
+     */
+    @Composable
+    fun segmentedShapes(index: Int, count: Int): SonaTextFieldShapes {
+        val outer = MaterialTheme.shapes.largeIncreased
+        val inner = MaterialTheme.shapes.extraSmall
+        val top = if (index == 0) outer else inner
+        val bottom = if (index == count - 1) outer else inner
+        return SonaTextFieldShapes(
+            shape =
+                RoundedCornerShape(
+                    topStart = top.topStart,
+                    topEnd = top.topEnd,
+                    bottomEnd = bottom.bottomEnd,
+                    bottomStart = bottom.bottomStart,
+                ),
+            focusedShape = MaterialTheme.shapes.large,
+        )
+    }
+
     /**
      * At rest, the surface container one tone above a grouped list's, so a field reads as a place
      * to type among list items; focused, the primary container; wrong, the error container.

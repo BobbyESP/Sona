@@ -123,6 +123,8 @@ import com.bobbyesp.sona.core.designsystem.components.ConnectedChoice
 import com.bobbyesp.sona.core.designsystem.components.RankedList
 import com.bobbyesp.sona.core.designsystem.components.SectionHeader
 import com.bobbyesp.sona.core.designsystem.components.SonaTextField
+import com.bobbyesp.sona.core.designsystem.components.SonaTextFieldDefaults
+import com.bobbyesp.sona.core.designsystem.components.SonaTextFieldShapes
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.model.settings.AudioCodec
@@ -259,24 +261,28 @@ private fun EditorForm(
             }
 
             Header(R.string.editor_section_sign_in)
-            EditorField(
-                value = draft.server,
-                onValueChange = { edit { copy(server = it) } },
-                label = R.string.field_server,
-                icon = Icons.Rounded.Dns,
-                placeholder = stringResource(R.string.field_server_hint),
-                problem = state.problems[DraftField.Server],
-                keyboardType = KeyboardType.Uri,
-            )
-            EditorField(
-                value = draft.username,
-                onValueChange = { edit { copy(username = it) } },
-                label = R.string.field_username,
-                icon = Icons.Rounded.Dialpad,
-                problem = state.problems[DraftField.Username],
-                keyboardType = KeyboardType.Ascii,
-            )
-            PasswordField(state, onIntent)
+            FieldGroup {
+                EditorField(
+                    shapes = SonaTextFieldDefaults.segmentedShapes(0, 3),
+                    value = draft.server,
+                    onValueChange = { edit { copy(server = it) } },
+                    label = R.string.field_server,
+                    icon = Icons.Rounded.Dns,
+                    placeholder = stringResource(R.string.field_server_hint),
+                    problem = state.problems[DraftField.Server],
+                    keyboardType = KeyboardType.Uri,
+                )
+                EditorField(
+                    shapes = SonaTextFieldDefaults.segmentedShapes(1, 3),
+                    value = draft.username,
+                    onValueChange = { edit { copy(username = it) } },
+                    label = R.string.field_username,
+                    icon = Icons.Rounded.Dialpad,
+                    problem = state.problems[DraftField.Username],
+                    keyboardType = KeyboardType.Ascii,
+                )
+                PasswordField(state, onIntent, SonaTextFieldDefaults.segmentedShapes(2, 3))
+            }
 
             Header(R.string.editor_section_account)
             AccountSwitches(state, ::edit, onIntent)
@@ -384,78 +390,90 @@ private fun MoreOptions(state: EditorState, edit: (AccountDraft.() -> AccountDra
     Column(verticalArrangement = Arrangement.spacedBy(FieldGap)) {
         Header(R.string.editor_section_connection)
         TransportChoice(selected = draft.transport, onSelect = { edit { copy(transport = it) } })
-        EditorField(
-            value = draft.port,
-            onValueChange = { edit { copy(port = it.filter(Char::isDigit)) } },
-            label = R.string.field_port,
-            icon = Icons.Rounded.Tag,
-            placeholder = if (draft.transport == Transport.Tls) "5061" else "5060",
-            supporting = R.string.field_port_supporting,
-            problem = state.problems[DraftField.Port],
-            keyboardType = KeyboardType.Number,
-        )
-        EditorField(
-            value = draft.domain,
-            onValueChange = { edit { copy(domain = it) } },
-            label = R.string.field_domain,
-            icon = Icons.Rounded.Language,
-            supporting = R.string.field_domain_hint,
-            problem = state.problems[DraftField.Domain],
-            keyboardType = KeyboardType.Uri,
-        )
-        EditorField(
-            value = draft.outboundProxy,
-            onValueChange = { edit { copy(outboundProxy = it) } },
-            label = R.string.field_outbound_proxy,
-            icon = Icons.Rounded.Router,
-            problem = state.problems[DraftField.OutboundProxy],
-            keyboardType = KeyboardType.Uri,
-        )
-        EditorField(
-            value = draft.expirySeconds,
-            onValueChange = { edit { copy(expirySeconds = it.filter(Char::isDigit)) } },
-            label = R.string.field_expiry,
-            icon = Icons.Rounded.Timer,
-            placeholder = "600",
-            supporting = R.string.field_expiry_supporting,
-            problem = state.problems[DraftField.Expiry],
-            keyboardType = KeyboardType.Number,
-        )
+        FieldGroup {
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(0, 4),
+                value = draft.port,
+                onValueChange = { edit { copy(port = it.filter(Char::isDigit)) } },
+                label = R.string.field_port,
+                icon = Icons.Rounded.Tag,
+                placeholder = if (draft.transport == Transport.Tls) "5061" else "5060",
+                supporting = R.string.field_port_supporting,
+                problem = state.problems[DraftField.Port],
+                keyboardType = KeyboardType.Number,
+            )
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(1, 4),
+                value = draft.domain,
+                onValueChange = { edit { copy(domain = it) } },
+                label = R.string.field_domain,
+                icon = Icons.Rounded.Language,
+                supporting = R.string.field_domain_hint,
+                problem = state.problems[DraftField.Domain],
+                keyboardType = KeyboardType.Uri,
+            )
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(2, 4),
+                value = draft.outboundProxy,
+                onValueChange = { edit { copy(outboundProxy = it) } },
+                label = R.string.field_outbound_proxy,
+                icon = Icons.Rounded.Router,
+                problem = state.problems[DraftField.OutboundProxy],
+                keyboardType = KeyboardType.Uri,
+            )
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(3, 4),
+                value = draft.expirySeconds,
+                onValueChange = { edit { copy(expirySeconds = it.filter(Char::isDigit)) } },
+                label = R.string.field_expiry,
+                icon = Icons.Rounded.Timer,
+                placeholder = "600",
+                supporting = R.string.field_expiry_supporting,
+                problem = state.problems[DraftField.Expiry],
+                keyboardType = KeyboardType.Number,
+            )
+        }
 
         Header(R.string.editor_section_identity)
-        EditorField(
-            value = draft.label,
-            onValueChange = { edit { copy(label = it) } },
-            label = R.string.field_label,
-            icon = Icons.AutoMirrored.Rounded.Label,
-            placeholder = draft.suggestedLabel,
-            capitalization = KeyboardCapitalization.Sentences,
-        )
-        EditorField(
-            value = draft.displayName,
-            onValueChange = { edit { copy(displayName = it) } },
-            label = R.string.field_display_name,
-            icon = Icons.Rounded.Person,
-            capitalization = KeyboardCapitalization.Words,
-        )
-        EditorField(
-            value = draft.authUsername,
-            onValueChange = { edit { copy(authUsername = it) } },
-            label = R.string.field_auth_username,
-            icon = Icons.Rounded.Badge,
-            supporting = R.string.field_auth_username_hint,
-            problem = state.problems[DraftField.AuthUsername],
-            keyboardType = KeyboardType.Ascii,
-        )
-        EditorField(
-            value = draft.voicemailNumber,
-            onValueChange = { edit { copy(voicemailNumber = it) } },
-            label = R.string.field_voicemail,
-            icon = Icons.Rounded.Voicemail,
-            placeholder = "*97",
-            keyboardType = KeyboardType.Phone,
-            imeAction = ImeAction.Done,
-        )
+        FieldGroup {
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(0, 4),
+                value = draft.label,
+                onValueChange = { edit { copy(label = it) } },
+                label = R.string.field_label,
+                icon = Icons.AutoMirrored.Rounded.Label,
+                placeholder = draft.suggestedLabel,
+                capitalization = KeyboardCapitalization.Sentences,
+            )
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(1, 4),
+                value = draft.displayName,
+                onValueChange = { edit { copy(displayName = it) } },
+                label = R.string.field_display_name,
+                icon = Icons.Rounded.Person,
+                capitalization = KeyboardCapitalization.Words,
+            )
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(2, 4),
+                value = draft.authUsername,
+                onValueChange = { edit { copy(authUsername = it) } },
+                label = R.string.field_auth_username,
+                icon = Icons.Rounded.Badge,
+                supporting = R.string.field_auth_username_hint,
+                problem = state.problems[DraftField.AuthUsername],
+                keyboardType = KeyboardType.Ascii,
+            )
+            EditorField(
+                shapes = SonaTextFieldDefaults.segmentedShapes(3, 4),
+                value = draft.voicemailNumber,
+                onValueChange = { edit { copy(voicemailNumber = it) } },
+                label = R.string.field_voicemail,
+                icon = Icons.Rounded.Voicemail,
+                placeholder = "*97",
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Done,
+            )
+        }
 
         Header(R.string.overrides_title)
         CallOverrides(state, edit)
@@ -560,13 +578,28 @@ private fun CallOverrides(state: EditorState, edit: (AccountDraft.() -> AccountD
     }
 }
 
-/** A field of the form: [SonaTextField] with the editor's words, icon and keyboard. */
+/**
+ * Fields that belong together as one segmented group: the segmented gap between them, and each with
+ * its place's shapes ([SonaTextFieldDefaults.segmentedShapes]).
+ */
+@Composable
+private fun FieldGroup(content: @Composable () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(SonaTextFieldDefaults.SegmentedGap)) {
+        content()
+    }
+}
+
+/**
+ * A field of the form: [SonaTextField] with the editor's words, icon and keyboard. Its supporting
+ * line opens only while it is focused, so its group stays one piece at rest.
+ */
 @Composable
 private fun EditorField(
     value: String,
     onValueChange: (String) -> Unit,
     label: Int,
     icon: ImageVector,
+    shapes: SonaTextFieldShapes,
     placeholder: String? = null,
     supporting: Int? = null,
     problem: DraftProblem? = null,
@@ -581,7 +614,9 @@ private fun EditorField(
         leadingIcon = icon,
         placeholder = placeholder,
         supportingText = supporting?.let { stringResource(it) },
+        supportingOnFocus = true,
         error = problem?.let { stringResource(it.text) },
+        shapes = shapes,
         keyboardOptions =
             KeyboardOptions(
                 capitalization = capitalization,
@@ -594,7 +629,11 @@ private fun EditorField(
 
 /** The password, hidden unless asked; for an existing account, empty keeps the one in the vault. */
 @Composable
-private fun PasswordField(state: EditorState, onIntent: (EditorIntent) -> Unit) {
+private fun PasswordField(
+    state: EditorState,
+    onIntent: (EditorIntent) -> Unit,
+    shapes: SonaTextFieldShapes,
+) {
     val visible = state.passwordVisible
     SonaTextField(
         value = state.password,
@@ -605,6 +644,7 @@ private fun PasswordField(state: EditorState, onIntent: (EditorIntent) -> Unit) 
                 else R.string.field_password_keep,
             ),
         leadingIcon = Icons.Rounded.Key,
+        shapes = shapes,
         error =
             if (state.passwordMissing) stringResource(R.string.problem_password_required) else null,
         visualTransformation =

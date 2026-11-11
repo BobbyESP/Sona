@@ -234,9 +234,14 @@ Material 3 Expressive, friendly but never toy-like. The keypad shows all of it; 
   for what is different in kind (`*`, `#`, side actions), primary for the one action that matters,
   the error container for failures. A disabled main action stays itself, faded, not grey.
 - **Fields are `SonaTextField`**, never Material's outlined or filled fields: a tonal shape with no
-  border, which takes the primary container and squares up when focused, as a key does when held.
-  Each has a leading icon for what it holds; an explanation of a default goes in its supporting
-  line (always visible), an example in its placeholder (shown only while typing).
+  border, which takes the primary container and morphs when focused, as a key does when held. Each
+  has a leading icon for what it holds; its label, while the field is empty, is a step quieter than
+  what is typed. An example goes in the placeholder (shown only while typing).
+- **Fields that belong together are one group** (`SonaTextFieldDefaults.segmentedShapes`): the
+  segmented gap between them, the group's outer corners round and the inner ones small, as
+  segmented lists are; the focused field rounds all its corners and stands out. In a group, an
+  explanation of a default opens under its field while it is focused (`supportingOnFocus`), so the
+  group stays one piece at rest; an error always shows.
 - **Forms are grouped** under `SectionHeader`s, switches and options are segmented list items, a
   choice of two to four is a `ConnectedChoice`, what has a default waits behind a disclosure row
   that says what is inside, and the one action is a medium button at the foot (the account editor).
