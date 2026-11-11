@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Core-Telecom's self-managed calls: declared where they are registered and added. -->
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
+
+</manifest>
