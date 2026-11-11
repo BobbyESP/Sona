@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import com.bobbyesp.sona.core.model.settings.PaletteStyle
 import com.bobbyesp.sona.core.model.settings.SONA_SEED_COLOR
@@ -53,6 +54,23 @@ data class SonaThemeConfig(
 data class SonaTypography(
     /** SIP addresses, traces and logs: text read character by character. */
     val monospace: FontFamily = FontFamily.Monospace,
+    /** Numbers shown for themselves: what is typed on the keypad, its keys, durations. */
+    val numerals: SonaNumerals = SonaNumerals(),
+)
+
+/**
+ * The numeral roles: round, a little wide, with figures of one width so a number keeps its place as
+ * it grows. Read as `SonaTheme.typography.numerals.large`.
+ *
+ * @property large The number being dialed: the loudest text on its screen.
+ * @property medium A dialpad key's digit.
+ * @property small A number inside other text's line: a call's timer, a duration.
+ */
+@Immutable
+data class SonaNumerals(
+    val large: TextStyle = TextStyle.Default,
+    val medium: TextStyle = TextStyle.Default,
+    val small: TextStyle = TextStyle.Default,
 )
 
 private val LocalSonaTypography = staticCompositionLocalOf { SonaTypography() }
@@ -100,8 +118,13 @@ fun SonaTheme(
     // One object for the theme's lifetime: a new one would recompose everything under it.
     val themeColors = remember(cache) { ThemeColors(built, cache) }.apply { this.built = built }
 
-    val typography = remember { createTypography(BundledFonts.DMSans) }
-    val sonaTypography = remember { SonaTypography(monospace = BundledFonts.JetBrainsMono) }
+    val typography = remember { createTypography() }
+    val sonaTypography = remember {
+        SonaTypography(
+            monospace = BundledFonts.JetBrainsMono,
+            numerals = createNumerals(typography),
+        )
+    }
 
     CompositionLocalProvider(
         LocalSonaTypography provides sonaTypography,

@@ -9,4 +9,6 @@
     <string name="dialer_use_keyboard">Type with the keyboard</string>
     <string name="dialer_use_keypad">Back to the keypad</string>
     <string name="dialer_paste">Paste</string>
+    <string name="dialer_voicemail">Call voicemail</string>
+    <string name="dialer_suggestion_recent">Recent call</string>
 </resources>

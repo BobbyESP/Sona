@@ -110,7 +110,7 @@ internal val LicensedWorks: List<LicensedWork> =
         LicensedWork("Haze", "Apache License 2.0", "https://github.com/chrisbanes/haze"),
         LicensedWork("MaterialKolor", "MIT License", "https://github.com/jordond/MaterialKolor"),
         LicensedWork(
-            "DM Sans, JetBrains Mono",
+            "Google Sans Flex, JetBrains Mono",
             "SIL Open Font License 1.1",
             "https://openfontlicense.org",
         ),

@@ -87,10 +87,32 @@ letters. ContactDetail lists each address with its call action and the account i
 
 ### Keypad
 
-- **The dialpad** (`Dialpad`): 12 keys with letters (optional), each a shape that morphs on press on
-  the theme's spring, with a DTMF tone and a haptic tick (both optional). Long press `0` for `+`,
-  `1` for voicemail, `*` and `#` as themselves. The field above accepts paste and full SIP URIs, and
-  shows the resolved address under it ("sip:102@lab.local") as it changes.
+The reference screen for the app's look (see [The expressive language](#the-expressive-language)).
+
+```
+┌──────────────────────────────┐
+│ Keypad                       │
+│                              │
+│            102               │  numerals.large, a spring at each key
+│     ( @ sip:102@lab.local )  │  tonal pill; the failure in an error pill
+│   ( (A) Ana · 102  (📞) )     │  suggestion pills
+│   (  1  ) (  2  ) (  3  )    │
+│   (  4  ) (  5  ) (  6  )    │  pills that squash and square when held
+│   (  7  ) (  8  ) (  9  )    │
+│   (  *  ) (  0  ) (  #  )    │  * and # on the secondary container
+│   [⌨]   (    📞    )   [⌫]   │  tonal, primary, tonal
+└──────────────────────────────┘
+```
+
+- **The dialpad** (`Dialpad`): 12 keys with letters (optional), each a pill that squashes into a
+  rounded square under the finger and springs back, with a DTMF tone and a haptic tick (both
+  optional). Long press `0` for `+`, `1` for voicemail (marked under the 1 when there is one), `*`
+  and `#` as themselves. Keys too short for two lines (landscape) show the digit alone.
+- **The number** is the loudest text on the screen; under it, the resolved address in a pill
+  ("sip:102@lab.local"), or why the last call failed, in an error pill read by TalkBack. A long press
+  on the number pastes, and full SIP URIs are kept.
+- **The action row**: the keyboard switch (a toggle, square when on), the call button, delete (long
+  press clears). The keyboard switch swaps the dialpad, which springs out, for the system keyboard.
 - **Suggestions while typing**: T9 and plain matches over contacts and recents, best first, so
   typing `5646` finds "John". Tap one to fill, the call icon on it to call.
 - **The call button is a split button** (M3 Expressive): the main part calls on the default
@@ -191,6 +213,26 @@ New for Sona:
 
 Every component takes a `Modifier`, reads tokens from `MaterialTheme`, has previews in light, dark,
 large font and right-to-left, and has no knowledge of a feature.
+
+## The expressive language
+
+Material 3 Expressive, friendly but never toy-like. The keypad shows all of it; every screen follows.
+
+- **Type is Google Sans Flex**, bundled (no font provider: nothing leaves the phone), one variable
+  font set per role in `Type.kt`: display and headline fully round (`ROND` 100), titles and labels
+  rounded (60), body text a hint of it (20), so the app is warm where it speaks up and plain where it
+  explains. Each role's optical size is its own size. The emphasized roles
+  (`titleMediumEmphasized`…) are a weight step heavier, for what the eye should land on first.
+- **Numbers have their own roles**: `SonaTheme.typography.numerals` (`large`, `medium`, `small`):
+  round, a little wide, tabular figures. Monospace stays for what is read character by character
+  (addresses, traces).
+- **Shapes are pills at rest and square up under the finger**, on `MaterialTheme.motionScheme`'s
+  spatial springs; fades and colors on its effects springs. An animated shape, color or scale is
+  read in the draw phase (`graphicsLayer`, `drawBehind`), so a frame never recomposes.
+- **Color comes in container pairs**: surface containers for most things, the secondary container
+  for what is different in kind (`*`, `#`, side actions), primary for the one action that matters,
+  the error container for failures. A disabled main action stays itself, faded, not grey.
+- **One loud thing per screen**: the number, then the call button; everything else a size down.
 
 ## Motion and haptics
 

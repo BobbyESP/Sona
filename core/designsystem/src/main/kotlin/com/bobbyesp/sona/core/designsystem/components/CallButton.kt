@@ -10,6 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,10 +30,21 @@ fun CallButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val colors = MaterialTheme.colorScheme
     FilledIconButton(
         onClick = onClick,
         enabled = enabled,
         shapes = IconButtonDefaults.shapes(),
+        // Disabled, it is still the call button, faded: Material's grey would read as something
+        // else on a screen that is about calling.
+        colors =
+            IconButtonDefaults.filledIconButtonColors(
+                // Both named: left out, the content color would follow the surrounding content.
+                containerColor = colors.primary,
+                contentColor = colors.onPrimary,
+                disabledContainerColor = colors.primary.copy(alpha = DisabledContainerAlpha),
+                disabledContentColor = colors.onPrimary.copy(alpha = DisabledContentAlpha),
+            ),
         modifier =
             modifier.size(
                 IconButtonDefaults.largeContainerSize(
@@ -47,6 +59,10 @@ fun CallButton(
         )
     }
 }
+
+/** Material's disabled opacities for a container and its content. */
+private const val DisabledContainerAlpha = 0.38f
+private const val DisabledContentAlpha = 0.7f
 
 @PreviewLightDark
 @Composable
