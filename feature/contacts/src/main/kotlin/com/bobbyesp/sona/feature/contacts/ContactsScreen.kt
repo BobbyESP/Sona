@@ -50,12 +50,13 @@ import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -178,7 +179,6 @@ internal fun ContactsScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ContactList(
     state: ContactsState,
@@ -245,7 +245,6 @@ private fun ContactList(
 }
 
 /** The people behind the search: the same rows, filtered by what was typed. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SearchResults(contacts: List<Contact>, onIntent: (ContactsIntent) -> Unit) {
     LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 8.dp)) {
@@ -287,7 +286,6 @@ private fun Heading(text: String, modifier: Modifier = Modifier) {
 }
 
 /** Favorites, one swipe from each other: tap one to call it, or to choose among its numbers. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FavoritesCarousel(favorites: List<Contact>, onIntent: (ContactsIntent) -> Unit) {
     HorizontalUncontainedCarousel(
@@ -371,7 +369,6 @@ private fun PhoneContactsCard(onAllow: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ContactRow(
     contact: Contact,
@@ -423,7 +420,7 @@ private fun ContactRow(
  * A contact: who, each number with its own call button, and the contact's actions in one button
  * group that moves what does not fit into a menu.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ContactSheet(
     contact: Contact,
@@ -434,7 +431,12 @@ private fun ContactSheet(
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     ModalBottomSheet(
         onDismissRequest = { onIntent(ContactsIntent.Close) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState =
+            rememberBottomSheetState(
+                initialValue = SheetValue.Hidden,
+                // No half-open state: it opens at its content's height and back closes it.
+                enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
+            ),
     ) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp),
