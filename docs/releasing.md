@@ -41,7 +41,11 @@ SIGNING_KEY_ALIAS=sona SIGNING_KEY_PASSWORD=… ./gradlew :app:assembleFullRelea
 
 ## Making a release
 
-1. Raise `versionCode` and `versionName` in `app/build.gradle.kts` and merge it into `main`.
+1. Set `currentVersion` in the root `build.gradle.kts` and merge it into `main`. It is the only
+   place: `versionName` and `versionCode` come from it. The code packs the stage in
+   (`MMMmmPPsBB`: major, minor, patch, stage, build), so an alpha, a beta, a release candidate and
+   the release of one version are ordered. `Version.Beta(1, 0, 0, build = 2)` is `1.0.0-beta.2`,
+   code 10000102; `Version.Stable(1, 0, 0)` is `1.0.0`, code 10000300.
 2. Run the Release workflow on `main` (or on a tag).
 3. Download `sona-release` from the run: the APK is for GitHub Releases and F-Droid-style
    distribution, the bundle for Google Play.

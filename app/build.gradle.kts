@@ -16,8 +16,8 @@ android {
 
     defaultConfig {
         applicationId = "com.bobbyesp.sona"
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = rootProject.extra["versionCode"] as Int
+        versionName = rootProject.extra["versionName"] as String
         // Phones and the emulator. Linphone ships native code for four ABIs; the two 32-bit ones
         // only add size for devices no lab has.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
