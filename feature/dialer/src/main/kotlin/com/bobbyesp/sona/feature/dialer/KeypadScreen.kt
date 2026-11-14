@@ -45,9 +45,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.placeCursorAtEnd
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Backspace
 import androidx.compose.material.icons.rounded.AlternateEmail
@@ -72,6 +77,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -104,7 +111,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -137,7 +143,7 @@ internal fun KeypadRoute(viewModel: KeypadViewModel = koinViewModel()) {
             KeypadEffect.OpenCall -> openCall()
         }
     }
-    // A call needs the microphone, and notifications to show it: asked for at the first call.
+
     val callStarter = rememberCallStarter()
     KeypadScreen(
         state = state,
@@ -177,8 +183,7 @@ internal fun KeypadScreen(
     val paste: () -> Unit = {
         scope.launch { clipboard.text()?.let { onIntent(KeypadIntent.Paste(it)) } }
     }
-    // Keys of a hardware keyboard reach the screen while it holds the focus; with the system's
-    // keyboard up, the text field has it and takes them itself.
+
     val keys = remember { FocusRequester() }
     LaunchedEffect(typing) { if (!typing) runCatching { keys.requestFocus() } }
 
@@ -335,7 +340,6 @@ private suspend fun Clipboard.text(): String? {
  * numerals, shrinking to fit rather than scroll, that gives a small spring at each new key; a long
  * press pastes. With the keyboard it is a text field, whose action calls.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DialDisplay(
     state: KeypadState,
@@ -522,41 +526,41 @@ private fun AddressPill(line: AddressLineContent) {
 private fun TypedField(input: String, onIntent: (KeypadIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val focus = remember { FocusRequester() }
-    var value by remember { mutableStateOf(TextFieldValue(input, TextRange(input.length))) }
-    // What this field sent and has not yet seen come back. The state answers a moment after each
-    // key: an answer to an earlier key must not replace what was typed since (seen on a phone,
-    // where fast typing lost characters). Only text this field did not send is taken from the
-    // state: the delete button, a suggestion, a paste.
+    val state = rememberTextFieldState(input, TextRange(input.length))
+    val latestInput by rememberUpdatedState(input)
+
+    // What the state sent that has not come back yet: its echo is not a change from outside.
     val sent = remember { ArrayDeque<String>() }
     LaunchedEffect(input) {
         val echo = sent.indexOf(input)
         if (echo >= 0) {
             repeat(echo + 1) { sent.removeFirst() }
-        } else if (input != value.text) {
+        } else if (input != state.text.toString()) {
             sent.clear()
-            value = TextFieldValue(input, TextRange(input.length))
+            state.setTextAndPlaceCursorAtEnd(input)
         }
+    }
+    LaunchedEffect(state) {
+        snapshotFlow { state.text.toString() }
+            .collect { text ->
+                if (text != latestInput) {
+                    sent.addLast(text)
+                    onIntent(KeypadIntent.Edit(text))
+                }
+            }
     }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     BasicTextField(
-        value = value,
-        onValueChange = { typed ->
-            // The field's rules are applied here, at once, so what shows is what is kept.
-            val kept = DialInput.typed(typed.text)
-            val changed = kept != value.text
-            value = if (kept == typed.text) typed else TextFieldValue(kept, TextRange(kept.length))
-            if (changed) {
-                sent.addLast(kept)
-                onIntent(KeypadIntent.Edit(kept))
-            }
-        },
+        state = state,
         modifier = Modifier.fillMaxWidth().focusRequester(focus),
+        // The field's rules are applied as it is typed, so what shows is what is kept.
+        inputTransformation = DialInputTransformation,
         textStyle =
             MaterialTheme.typography.headlineMediumEmphasized.copy(
                 color = colors.onSurface,
                 textAlign = TextAlign.Center,
             ),
-        singleLine = true,
+        lineLimits = TextFieldLineLimits.SingleLine,
         cursorBrush = SolidColor(colors.primary),
         keyboardOptions =
             KeyboardOptions(
@@ -565,10 +569,10 @@ private fun TypedField(input: String, onIntent: (KeypadIntent) -> Unit) {
                 keyboardType = KeyboardType.Email,
                 imeAction = ImeAction.Go,
             ),
-        keyboardActions = KeyboardActions(onGo = { onIntent(KeypadIntent.Call) }),
-        decorationBox = { inner ->
+        onKeyboardAction = KeyboardActionHandler { onIntent(KeypadIntent.Call) },
+        decorator = { inner ->
             Box(contentAlignment = Alignment.Center) {
-                if (value.text.isEmpty()) {
+                if (state.text.isEmpty()) {
                     Text(
                         text = stringResource(R.string.dialer_hint),
                         style = MaterialTheme.typography.titleMedium,
@@ -582,12 +586,20 @@ private fun TypedField(input: String, onIntent: (KeypadIntent) -> Unit) {
     )
 }
 
+/** Keeps what [DialInput] allows, with the cursor at the end of what was kept. */
+private val DialInputTransformation = InputTransformation {
+    val kept = DialInput.typed(asCharSequence().toString())
+    if (kept != asCharSequence().toString()) {
+        replace(0, length, kept)
+        placeCursorAtEnd()
+    }
+}
+
 /**
  * The action row: the keyboard switch, the call button, delete. The call button is the largest
  * thing on the screen after the number; the two beside it are tonal and a size down, so it is never
  * in doubt which one calls. Delete keeps its room while hidden, so the call button stays centered.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun KeypadActions(
     typing: Boolean,
@@ -647,7 +659,6 @@ private fun KeypadActions(
  * Delete, and clear on a long press: Material's tonal icon button has no long press, so this is one
  * made the same way, round at rest and squaring under the finger on the spatial spring.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DeleteButton(onDelete: () -> Unit, onClear: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
