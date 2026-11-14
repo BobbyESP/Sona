@@ -1,0 +1,86 @@
+name: Release
+
+# Builds the signed release of the chosen branch or tag, the APK and the app bundle of the full
+# flavor (Linphone), and keeps them as an artifact. The demo flavor is never released.
+# Needs the secrets SIGNING_KEY_STORE_BASE64, SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS and
+# SIGNING_KEY_PASSWORD. See docs/releasing.md.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Not named after the workflow: the checks it calls take that group, and would wait on this one.
+concurrency:
+  group: signed-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Signed release
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SIGNING_KEY_STORE_BASE64: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+      SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+      SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+      SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+    steps:
+      # Without a keystore the build succeeds and leaves them unsigned: stop before that.
+      - name: Check the signing secrets
+        run: |
+          missing=0
+          for name in SIGNING_KEY_STORE_BASE64 SIGNING_STORE_PASSWORD SIGNING_KEY_ALIAS SIGNING_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::The secret $name is not set."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # A release never writes the cache the checks read.
+      - uses: ./.github/actions/setup-build
+        with:
+          cache-read-only: 'true'
+
+      - name: Decode the keystore
+        run: |
+          base64 -d <<< "$SIGNING_KEY_STORE_BASE64" > "$RUNNER_TEMP/keystore.jks"
+          echo "SIGNING_KEY_STORE_PATH=$RUNNER_TEMP/keystore.jks" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: ./gradlew :app:assembleFullRelease :app:bundleFullRelease
+
+      # An unsigned bundle keeps its name, so it is told apart by its missing signature file.
+      - name: Check that the APK and the bundle are signed
+        run: |
+          unsigned=$(find app/build/outputs/apk -name '*-unsigned.apk')
+          while IFS= read -r bundle; do
+            if ! unzip -Z1 "$bundle" | grep -qE '^META-INF/.+\.(RSA|DSA|EC)$'; then
+              unsigned="$unsigned $bundle"
+            fi
+          done < <(find app/build/outputs/bundle -name '*.aab')
+          if [ -n "$unsigned" ]; then
+            echo "::error::Unsigned: $unsigned"
+            exit 1
+          fi
+
+      - name: Remove the keystore
+        if: ${{ always() }}
+        run: rm -f "$RUNNER_TEMP/keystore.jks"
+
+      - name: Upload the APK and the bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sona-release
+          path: |
+            app/build/outputs/apk/full/release/*.apk
+            app/build/outputs/bundle/fullRelease/*.aab
+          if-no-files-found: error

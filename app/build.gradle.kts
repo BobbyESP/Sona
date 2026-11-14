@@ -7,6 +7,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+// The release keystore comes from the environment: the release workflow decodes it, and a local
+// release build without it is left unsigned. The key is never in the repository.
+val signingStorePath: String? = System.getenv("SIGNING_KEY_STORE_PATH")
+
 android {
     namespace = "com.bobbyesp.sona"
 
@@ -24,6 +28,15 @@ android {
 
     buildFeatures { buildConfig = true }
 
+    // The app's languages, for Android's per-app language setting.
+    androidResources { generateLocaleConfig = true }
+
+    dependenciesInfo {
+        // F-Droid cannot read the signed blob Google adds.
+        includeInApk = false
+        includeInBundle = false
+    }
+
     // Which SIP engine the app runs on. `full` is Linphone, for real servers. `demo` is the fake
     // engine, which accepts any account after a moment: the app runs with no server at all.
     flavorDimensions += "engine"
@@ -36,6 +49,17 @@ android {
         }
     }
 
+    signingConfigs {
+        if (signingStorePath != null) {
+            create("release") {
+                storeFile = file(signingStorePath)
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -44,6 +68,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            if (signingStorePath != null) signingConfig = signingConfigs.getByName("release")
         }
         debug { applicationIdSuffix = ".debug" }
     }

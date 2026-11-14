@@ -6,6 +6,7 @@
 | [calling.md](calling.md) | The SIP engine contract and Linphone, the call coordinator and its state machine, Telecom, audio routing, services, readiness, notifications, the call activity |
 | [ux.md](ux.md) | Principles, the map of destinations, every screen, components, motion, accessibility, and the full catalogue of options |
 | [roadmap.md](roadmap.md) | Phases with what "done" means, the Asterisk lab and its call matrix, testing, risks |
+| [releasing.md](releasing.md) | The CI and release workflows, the signing key and its secrets, how to make a release |
 | [todo.md](todo.md) | What is left, in short: what comes next, what is still to build, what is built but not yet seen working |
 
 The rules and the "how to add" checklists are in [AGENTS.md](../AGENTS.md).

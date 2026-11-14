@@ -130,4 +130,4 @@ docker compose -f lab/compose.yaml up -d --build # the lab Asterisk; the emulato
 ## 5. Docs
 
 [architecture.md](docs/architecture.md) · [calling.md](docs/calling.md) · [ux.md](docs/ux.md) ·
-[roadmap.md](docs/roadmap.md) · [todo.md](docs/todo.md) · [blur.md](docs/blur.md) · [lab/](lab/README.md)
+[roadmap.md](docs/roadmap.md) · [todo.md](docs/todo.md) · [blur.md](docs/blur.md) · [releasing.md](docs/releasing.md) · [lab/](lab/README.md)
