@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="contacts_title">Contactos</string>
+    <string name="contacts_empty_title">Aún no hay contactos</string>
+    <string name="contacts_empty_description">Guarda las extensiones y números a los que llamas, y los de tu teléfono también aparecerán aquí.</string>
+    <string name="contacts_search">Buscar contactos</string>
+    <string name="contacts_search_close">Cerrar búsqueda</string>
+    <string name="contacts_search_clear">Borrar</string>
+    <string name="contacts_more">Más acciones</string>
+    <string name="contacts_no_results">Nadie coincide con eso</string>
+    <string name="contacts_favorites">Favoritos</string>
+    <string name="contacts_favorite">Favorito</string>
+    <string name="contacts_new">Nuevo contacto</string>
+    <string name="contacts_call">Llamar</string>
+    <string name="contacts_call_name">Llamar a %1$s</string>
+    <string name="contacts_favorite_add">Añadir a favoritos</string>
+    <string name="contacts_favorite_remove">Quitar de favoritos</string>
+    <string name="contacts_edit">Editar</string>
+    <string name="contacts_delete">Eliminar</string>
+    <string name="contacts_delete_title">¿Eliminar a %1$s?</string>
+    <string name="contacts_delete_text">El contacto se elimina; las llamadas con esa persona siguen en Recientes.</string>
+    <string name="contacts_cancel">Cancelar</string>
+    <string name="contacts_phone_title">Mostrar los contactos de tu teléfono</string>
+    <string name="contacts_phone_text">Sona solo los lee, para poner nombre a los números a los que llamas. Nunca salen de este teléfono.</string>
+    <string name="contacts_phone_allow">Permitir</string>
+    <string name="contacts_from_phone">De tu teléfono</string>
+
+    <string name="contact_editor_new">Nuevo contacto</string>
+    <string name="contact_editor_edit">Editar contacto</string>
+    <string name="contact_editor_back">Atrás</string>
+    <string name="contact_editor_name">Nombre</string>
+    <string name="contact_editor_label">Etiqueta</string>
+    <string name="contact_editor_label_hint">Extensión, Móvil…</string>
+    <string name="contact_editor_number">Número o dirección</string>
+    <string name="contact_editor_numbers">Números</string>
+    <string name="contact_editor_favorite_hint">Los favoritos están a un toque en Contactos</string>
+    <string name="contact_label_extension">Extensión</string>
+    <string name="contact_label_mobile">Móvil</string>
+    <string name="contact_label_home">Casa</string>
+    <string name="contact_label_work">Trabajo</string>
+    <string name="contact_editor_add_number">Añadir un número</string>
+    <string name="contact_editor_remove_number">Quitar este número</string>
+    <string name="contact_editor_favorite">Favorito</string>
+    <string name="contact_editor_save">Guardar</string>
+    <string name="contact_editor_need_name">Hace falta un nombre</string>
+    <string name="contact_editor_need_number">Hace falta al menos un número</string>
+
+    <string name="settings_device_contacts">Usar los contactos del teléfono</string>
+    <string name="settings_device_contacts_summary">Muestra los contactos de este teléfono junto a los tuyos. Solo se leen</string>
+    <string name="settings_device_contacts_keywords">agenda libreta permiso address book permission</string>
+    <string name="settings_section_contacts">Contactos</string>
+</resources>

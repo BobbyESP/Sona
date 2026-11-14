@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="diagnostics_title">Diagnóstico</string>
+    <string name="diagnostics_back">Atrás</string>
+    <string name="diagnostics_engine">Motor</string>
+    <string name="diagnostics_engine_running">En marcha</string>
+    <string name="diagnostics_engine_starting">Iniciando…</string>
+    <string name="diagnostics_engine_stopped">Detenido</string>
+    <string name="diagnostics_engine_failed">No pudo iniciarse</string>
+    <string name="diagnostics_accounts">Cuentas</string>
+    <string name="diagnostics_no_accounts">Aún no hay cuentas. Añade una desde el chip de cuenta.</string>
+    <string name="diagnostics_server">Servidor</string>
+    <string name="diagnostics_identity">Identidad</string>
+    <string name="diagnostics_expiry">Caducidad del registro</string>
+    <string name="diagnostics_expiry_value">%1$d s</string>
+    <string name="diagnostics_registration">Registro</string>
+    <string name="diagnostics_copied">Copiado</string>
+    <string name="diagnostics_copy">Copiar %1$s</string>
+    <string name="diagnostics_registration_sip">Última respuesta</string>
+    <string name="diagnostics_proxy">Proxy de salida</string>
+    <string name="diagnostics_capabilities">El motor puede</string>
+
+    <string name="settings_diagnostics_open">Resumen</string>
+    <string name="settings_diagnostics_open_summary">El motor y el registro de cada cuenta, con el SIP que hay detrás</string>
+    <string name="settings_diagnostics_keywords">registro servidor estado depurar traza resumen sip registration server status debug trace asterisk</string>
+    <string name="settings_trace_open">Traza SIP</string>
+    <string name="settings_trace_open_summary">Cada mensaje SIP que Sona envió y recibió, para leer, copiar o compartir</string>
+    <string name="settings_trace_keywords">traza mensajes captura sip trace messages capture register invite sdp wireshark ladder debug</string>
+    <string name="trace_title">Traza SIP</string>
+    <string name="trace_capture">Capturar mensajes SIP</string>
+    <string name="trace_capture_summary">Guarda los últimos 500 mensajes en memoria, hasta que se cierre Sona</string>
+    <string name="trace_off">Activa la captura y luego registra o llama: cada mensaje SIP aparece aquí al enviarse o recibirse.</string>
+    <string name="trace_waiting">Aún no hay nada. Registra una cuenta o haz una llamada.</string>
+    <string name="trace_privacy">Se eliminan los resúmenes de contraseña y las claves de cifrado, así que una traza se puede compartir. Aun así muestra tu servidor, tus extensiones y a quién llamaste.</string>
+    <string name="trace_unsupported">Este motor no puede mostrar sus mensajes SIP.</string>
+    <string name="trace_sent">Enviado</string>
+    <string name="trace_received">Recibido</string>
+    <string name="trace_sent_to">Enviado a %1$s a las %2$s</string>
+    <string name="trace_received_from">Recibido de %1$s a las %2$s</string>
+    <string name="trace_row_detail">%1$s · %2$s · %3$s</string>
+    <string name="trace_copy">Copiar</string>
+    <string name="trace_share">Compartir</string>
+    <string name="trace_share_all">Compartir la traza</string>
+    <string name="trace_share_title">Traza SIP de Sona</string>
+    <string name="trace_clear">Borrar la traza</string>
+    <string name="settings_log_level">Nivel de registro</string>
+    <string name="settings_log_level_summary">Cuánto escribe el motor SIP en el registro del sistema (logcat, etiqueta SonaSip)</string>
+    <string name="settings_log_errors">Solo errores</string>
+    <string name="settings_log_warnings">Advertencias</string>
+    <string name="settings_log_messages">Cada mensaje SIP</string>
+    <string name="settings_log_debug">Todo (depuración)</string>
+    <string name="settings_log_level_keywords">registros logcat detallado depuración sip mensajes traza logs verbose debug messages trace</string>
+</resources>

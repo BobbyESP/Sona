@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accounts_title">Cuentas</string>
+    <string name="accounts_description">Tus extensiones. Se quedan en este teléfono.</string>
+    <string name="accounts_add">Añadir cuenta</string>
+    <string name="accounts_default">Predeterminada para llamadas</string>
+    <string name="accounts_readiness">Puede que las llamadas no funcionen</string>
+    <plurals name="accounts_readiness_problems">
+        <item quantity="one">%1$d cosa que arreglar en Preparación para llamadas</item>
+        <item quantity="many">%1$d cosas que arreglar en Preparación para llamadas</item>
+        <item quantity="other">%1$d cosas que arreglar en Preparación para llamadas</item>
+    </plurals>
+    <string name="accounts_enabled_description">%1$s activada</string>
+
+    <string name="editor_title_new">Añadir cuenta</string>
+    <string name="editor_title_edit">Editar cuenta</string>
+    <string name="editor_back">Atrás</string>
+    <string name="editor_delete">Eliminar cuenta</string>
+    <string name="editor_intro">El servidor y la extensión que te dio tu administrador. Todo lo demás tiene un valor por defecto.</string>
+
+    <string name="field_server">Servidor</string>
+    <string name="field_server_hint">192.168.1.10 o lab.example.org</string>
+    <string name="field_username">Extensión</string>
+    <string name="field_password">Contraseña</string>
+    <string name="field_password_keep">Contraseña (déjala vacía para conservarla)</string>
+    <string name="field_password_show">Mostrar contraseña</string>
+    <string name="field_password_hide">Ocultar contraseña</string>
+    <string name="field_label">Nombre en Sona</string>
+    <string name="field_transport">Transporte</string>
+    <string name="field_port">Puerto</string>
+    <string name="field_domain">Dominio SIP</string>
+    <string name="field_domain_hint">El servidor, si está vacío</string>
+    <string name="field_display_name">Tu nombre, como lo ven los demás</string>
+    <string name="field_auth_username">Usuario de autenticación</string>
+    <string name="field_auth_username_hint">La extensión, si está vacío</string>
+    <string name="field_outbound_proxy">Proxy de salida</string>
+    <string name="field_expiry">Intervalo de registro (segundos)</string>
+    <string name="field_voicemail">Número del buzón de voz</string>
+    <string name="field_enabled">Usar esta cuenta</string>
+    <string name="field_enabled_description">Desactivada, no se registra ni puede llamar, pero conserva todo.</string>
+    <string name="field_default">Predeterminada para llamadas</string>
+
+    <string name="overrides_title">Llamadas con esta cuenta</string>
+    <string name="override_codecs">Códecs</string>
+    <string name="override_dtmf">Los tonos del teclado se envían como</string>
+    <string name="override_inherit">Usa el ajuste de la app (%1$s)</string>
+    <string name="override_own">%1$s, solo para esta cuenta</string>
+    <string name="override_use_app">Usar el ajuste de la app</string>
+    <string name="override_none">Ninguno</string>
+    <string name="dtmf_rfc4733">Eventos RTP</string>
+    <string name="dtmf_info">SIP INFO</string>
+    <string name="dtmf_inband">En el audio</string>
+
+    <string name="more_options">Más opciones</string>
+    <string name="fewer_options">Menos opciones</string>
+    <string name="more_options_summary">Transporte, puerto, dominio, tu nombre y cómo funcionan las llamadas</string>
+
+    <string name="editor_section_sign_in">Iniciar sesión</string>
+    <string name="editor_section_account">Esta cuenta</string>
+    <string name="editor_section_connection">Conexión</string>
+    <string name="editor_section_identity">Identidad</string>
+    <string name="field_port_supporting">El propio del transporte, si está vacío</string>
+    <string name="field_expiry_supporting">Cada cuánto Sona le dice al servidor que sigue aquí</string>
+
+    <string name="problem_required">Obligatorio</string>
+    <string name="problem_not_a_host">No es una dirección de servidor</string>
+    <string name="problem_not_a_username">Sin espacios, @, : ni ;</string>
+    <string name="problem_out_of_range">Fuera de rango</string>
+    <string name="problem_password_required">Una cuenta nueva necesita su contraseña</string>
+
+    <string name="check_and_save">Comprobar y guardar</string>
+    <string name="save">Guardar</string>
+    <string name="checking">Registrando como %1$s en %2$s…</string>
+    <string name="checked_ok">Registrada como %1$s en %2$s</string>
+    <string name="checked_ok_description">Esta cuenta puede hacer y recibir llamadas.</string>
+    <string name="checked_slow">Aún intentando registrar. Sona sigue intentándolo en segundo plano.</string>
+    <string name="checked_off">Guardada. La cuenta está desactivada.</string>
+    <string name="checked_failed">Guardada, pero no registrada</string>
+    <string name="done">Listo</string>
+    <string name="local_network_needed">Android no deja que Sona acceda a servidores de tu red local, como el Asterisk del laboratorio, hasta que lo permitas.</string>
+    <string name="local_network_allow">Permitir acceso a la red local</string>
+    <string name="edit_again">Editar</string>
+
+    <string name="delete_title">¿Eliminar %1$s?</string>
+    <string name="delete_description">Su contraseña también se elimina. Las llamadas que ya están en el historial se conservan.</string>
+    <string name="delete_confirm">Eliminar</string>
+</resources>

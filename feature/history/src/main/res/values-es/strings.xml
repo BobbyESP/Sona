@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_title">Recientes</string>
+    <string name="history_empty_title">Aún no hay llamadas</string>
+    <string name="history_empty_description">Las llamadas que haces y recibes aparecen aquí, con cómo terminó cada una.</string>
+    <string name="history_empty_missed_title">No hay llamadas perdidas</string>
+    <string name="history_empty_missed_description">Las llamadas que sonaron aquí y nadie contestó aparecen aquí.</string>
+    <string name="history_filter_all">Todas</string>
+    <string name="history_filter_missed">Perdidas</string>
+    <string name="history_call">Llamar</string>
+    <string name="history_call_name">Llamar a %1$s</string>
+    <string name="history_more">Más acciones</string>
+    <string name="history_undo">Deshacer</string>
+    <string name="history_title_count">%1$s (%2$d)</string>
+    <string name="history_call_confirm_title">¿Llamar a %1$s?</string>
+    <string name="history_call_confirm">Llamar</string>
+    <string name="history_cancel">Cancelar</string>
+    <string name="history_details_calls">Llamadas</string>
+    <string name="history_details_sip">SIP</string>
+    <string name="history_details_account">Cuenta</string>
+    <string name="history_add_contact">Añadir a contactos</string>
+    <string name="history_delete">Eliminar del historial</string>
+    <string name="history_delete_one">Eliminar esta llamada</string>
+    <string name="history_close">Cerrar</string>
+
+    <string name="settings_group">Agrupar llamadas seguidas</string>
+    <string name="settings_group_summary">Varias llamadas seguidas con la misma persona son una sola entrada</string>
+    <string name="settings_group_keywords">recientes consecutivas recents consecutive</string>
+    <string name="settings_tap">Al tocar un reciente</string>
+    <string name="settings_tap_summary">Qué pasa al tocar una entrada de Recientes</string>
+    <string name="settings_tap_details">Abrir sus detalles</string>
+    <string name="settings_tap_call_back">Devolver la llamada</string>
+    <string name="settings_tap_keywords">recientes devolver llamada detalles recents call back details</string>
+    <string name="settings_confirm_calls">Confirmar antes de devolver la llamada</string>
+    <string name="settings_confirm_summary">Preguntar primero cuando llamas desde Recientes</string>
+    <string name="settings_confirm_keywords">recientes accidental recents</string>
+    <string name="settings_retention">Conservar el historial durante</string>
+    <string name="settings_retention_summary">Las llamadas más antiguas se eliminan al iniciar Sona</string>
+    <string name="settings_retention_forever">Siempre</string>
+    <string name="settings_retention_year">Un año</string>
+    <string name="settings_retention_90">90 días</string>
+    <string name="settings_retention_30">30 días</string>
+    <string name="settings_retention_keywords">eliminar antiguas privacidad borrar delete old privacy</string>
+    <string name="settings_clear">Borrar historial</string>
+    <string name="settings_clear_summary">Elimina todas las llamadas de Recientes</string>
+    <string name="settings_clear_keywords">eliminar quitar borrar llamadas recientes delete remove erase calls recents</string>
+    <string name="settings_clear_confirm">Todas las llamadas se eliminan de este teléfono. No se puede deshacer.</string>
+
+    <plurals name="history_deleted">
+        <item quantity="one">Llamada eliminada</item>
+        <item quantity="many">%1$d llamadas eliminadas</item>
+        <item quantity="other">%1$d llamadas eliminadas</item>
+    </plurals>
+    <string name="settings_section_recents">Recientes</string>
+</resources>

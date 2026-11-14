@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_back">Atrás</string>
+    <string name="settings_search">Buscar en ajustes</string>
+    <string name="settings_search_close">Cerrar búsqueda</string>
+    <string name="settings_search_clear">Borrar</string>
+    <string name="settings_no_results">Nada coincide con eso</string>
+    <string name="settings_cancel">Cancelar</string>
+    <string name="settings_confirm">Confirmar</string>
+    <string name="settings_choose">Elegir</string>
+    <string name="settings_done">Listo</string>
+
+    <string name="about_version">Versión</string>
+    <string name="about_engine">Motor SIP</string>
+    <string name="about_engine_keywords">linphone liblinphone librería biblioteca versión library version</string>
+    <string name="about_source">Código fuente</string>
+    <string name="about_source_summary">Sona es software libre bajo la GNU GPL v3: su código es tuyo para leer, cambiar y compartir</string>
+    <string name="about_source_keywords">github repositorio gpl código abierto software libre repository open source free software code</string>
+    <string name="about_licenses">Licencias</string>
+    <string name="about_licenses_summary">El software con el que está hecha Sona</string>
+    <string name="about_licenses_keywords">licencia gpl apache mit código abierto librerías terceros license open source libraries third party linphone</string>
+    <string name="about_own_license">Sona es software libre: puedes redistribuirlo y modificarlo bajo los términos de la Licencia Pública General de GNU, versión 3 o posterior. No tiene ninguna garantía. Está construida sobre las obras de abajo, cada una bajo su propia licencia.</string>
+    <string name="settings_ranked_none">Ninguno</string>
+
+    <string name="appearance_theme">Tema</string>
+    <string name="appearance_theme_keywords">oscuro claro noche modo dark light night mode</string>
+    <string name="appearance_theme_system">Sistema</string>
+    <string name="appearance_theme_light">Claro</string>
+    <string name="appearance_theme_dark">Oscuro</string>
+    <string name="appearance_dynamic">Color dinámico</string>
+    <string name="appearance_dynamic_summary">Usa los colores de tu fondo de pantalla (Android 12 y posteriores)</string>
+    <string name="appearance_dynamic_keywords">material you fondo de pantalla acento wallpaper accent</string>
+    <string name="appearance_pure_black">Negro puro</string>
+    <string name="appearance_pure_black_summary">Superficies negras en el tema oscuro, mejor para pantallas OLED</string>
+    <string name="appearance_pure_black_keywords">amoled oled</string>
+    <string name="appearance_palette">Estilo de paleta</string>
+    <string name="appearance_palette_summary">Cómo se reparte el color por la app</string>
+    <string name="appearance_palette_tonal_spot">Tonal</string>
+    <string name="appearance_palette_vibrant">Vibrante</string>
+    <string name="appearance_palette_expressive">Expresivo</string>
+    <string name="appearance_palette_fruit_salad">Macedonia</string>
+    <string name="appearance_palette_rainbow">Arcoíris</string>
+    <string name="appearance_palette_monochrome">Monocromo</string>
+    <string name="appearance_blur">Desenfoque</string>
+    <string name="appearance_blur_summary">Barras esmeriladas y la pantalla detrás de una hoja desenfocada. El teléfono desenfoca menos por sí solo con el ahorro de batería o cuando está caliente</string>
+    <string name="appearance_blur_keywords">esmerilado cristal transparencia efectos rendimiento batería fluidez frosted glass transparency effects performance battery smooth</string>
+    <string name="appearance_blur_automatic">Automático</string>
+    <string name="appearance_blur_light">Ligero</string>
+    <string name="appearance_blur_off">Desactivado</string>
+</resources>

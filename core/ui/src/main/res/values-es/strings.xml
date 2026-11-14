@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_open">Ajustes</string>
+    <string name="settings_area_calls">Llamadas</string>
+    <string name="settings_area_calls_summary">Llamada en espera, no molestar, seguir localizable</string>
+    <string name="settings_area_audio">Audio</string>
+    <string name="settings_area_audio_summary">Códecs y eco</string>
+    <string name="settings_area_network">Red</string>
+    <string name="settings_area_network_summary">Datos móviles o solo Wi-Fi</string>
+    <string name="settings_area_directory">Contactos e historial</string>
+    <string name="settings_area_directory_summary">Recientes, contactos, cuánto se guardan las llamadas</string>
+    <string name="settings_area_appearance">Apariencia</string>
+    <string name="settings_area_appearance_summary">Tema y colores</string>
+    <string name="settings_area_diagnostics">Diagnóstico</string>
+    <string name="settings_area_diagnostics_summary">Lo que Sona ve de tu servidor</string>
+    <string name="settings_area_about">Acerca de</string>
+    <string name="settings_area_about_summary">Versión, código fuente y licencias</string>
+</resources>

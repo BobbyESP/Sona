@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cancel">Cancelar</string>
+    <string name="text_field_clear">Borrar</string>
+
+    <!-- A list whose order is chosen: "Move G.722 up" -->
+    <string name="ranked_move_up">Subir %1$s</string>
+    <string name="ranked_move_down">Bajar %1$s</string>
+
+    <!-- The account chip: "Lab Asterisk · 102, registered" -->
+    <string name="account_chip_description">Cuenta %1$s, %2$s</string>
+    <string name="account_chip_warning">Puede que las llamadas no funcionen</string>
+    <string name="registration_registered">Registrada</string>
+    <string name="registration_registering">Registrando…</string>
+    <string name="registration_offline">Sin conexión</string>
+    <string name="registration_failed">Fallida</string>
+</resources>

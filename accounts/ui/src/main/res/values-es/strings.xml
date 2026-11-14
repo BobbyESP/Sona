@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- An account's state, in a word -->
+    <string name="account_state_registered">Registrada</string>
+    <string name="account_state_registering">Registrando…</string>
+    <string name="account_state_offline">Sin conexión</string>
+    <string name="account_state_failed">No registrada</string>
+    <string name="account_state_off">Desactivada</string>
+
+    <!-- Why a registration failed: a sentence for anyone -->
+    <string name="problem_wrong_credentials">El servidor no aceptó esta extensión y contraseña.</string>
+    <string name="problem_refused">El servidor rechaza esta cuenta, sea cual sea la contraseña.</string>
+    <string name="problem_unknown_extension">No existe la extensión %1$s en este servidor.</string>
+    <string name="problem_no_answer">%1$s no respondió. Revisa la dirección, el puerto y el transporte, y que el servidor esté en marcha.</string>
+    <string name="problem_server_error">El servidor tuvo un problema y no pudo registrar la cuenta.</string>
+    <string name="problem_other">El servidor rechazó el registro.</string>
+    <string name="problem_offline">No hay conexión de red.</string>
+
+    <string name="add_account">Añadir cuenta</string>
+</resources>

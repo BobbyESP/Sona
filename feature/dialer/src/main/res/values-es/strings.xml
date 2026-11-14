@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dialer_title">Teclado</string>
+    <string name="dialer_hint">Extensión, número o dirección SIP</string>
+    <string name="dialer_delete">Borrar</string>
+    <string name="dialer_clear">Limpiar</string>
+    <string name="dialer_call">Llamar</string>
+    <string name="dialer_call_suggestion">Llamar a %1$s</string>
+    <string name="dialer_use_keyboard">Escribir con el teclado</string>
+    <string name="dialer_use_keypad">Volver al teclado numérico</string>
+    <string name="dialer_paste">Pegar</string>
+    <string name="dialer_voicemail">Llamar al buzón de voz</string>
+    <string name="dialer_suggestion_recent">Llamada reciente</string>
+</resources>

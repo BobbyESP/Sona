@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dial_no_account">Añade una cuenta desde la que llamar</string>
+    <string name="dial_account_off">%1$s está desactivada</string>
+    <string name="dial_not_registered">%1$s no está registrada, así que aún no puede llamar</string>
+    <string name="dial_invalid">No es un número, una extensión ni una dirección SIP</string>
+    <string name="dial_failed">No se pudo llamar (%1$s)</string>
+</resources>

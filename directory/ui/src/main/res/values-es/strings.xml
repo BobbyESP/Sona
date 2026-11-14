@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="outcome_answered_incoming">Entrante</string>
+    <string name="outcome_answered_outgoing">Saliente</string>
+    <string name="outcome_missed">Perdida</string>
+    <string name="outcome_declined">Rechazada</string>
+    <string name="outcome_cancelled">Cancelada</string>
+    <string name="outcome_busy">Ocupado</string>
+    <string name="outcome_no_answer">Sin respuesta</string>
+    <string name="outcome_unavailable">No disponible</string>
+    <string name="outcome_not_found">No encontrado</string>
+    <string name="outcome_failed">No se pudo conectar</string>
+
+    <string name="record_title_count">%1$s (%2$d)</string>
+    <string name="record_unknown">Desconocido</string>
+    <string name="record_call_back">Llamar a %1$s</string>
+    <string name="record_today">Hoy</string>
+    <string name="record_yesterday">Ayer</string>
+    <string name="record_duration_hms">%1$d:%2$02d:%3$02d</string>
+    <string name="record_duration_ms">%1$d:%2$02d</string>
+
+    <string name="contact_favorite">Favorito</string>
+    <string name="contact_from_phone">De tu teléfono</string>
+    <string name="contact_no_number">Sin número</string>
+</resources>

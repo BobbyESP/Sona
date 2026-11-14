@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="channel_incoming">Llamadas entrantes</string>
+    <string name="channel_incoming_description">Suena con las llamadas a tus cuentas</string>
+    <string name="channel_ongoing">Llamadas en curso</string>
+    <string name="channel_reachable">Seguir localizable</string>
+    <string name="channel_reachable_description">Se muestra mientras Sona mantiene tus cuentas registradas para que las llamadas suenen</string>
+
+    <string name="readiness_account">Una cuenta activada</string>
+    <string name="readiness_account_problem">Sin una cuenta activada, nadie puede llamarte y tú no puedes llamar</string>
+    <string name="readiness_account_fix">Abrir cuentas</string>
+    <string name="readiness_microphone">Micrófono</string>
+    <string name="readiness_microphone_problem">Sin él, la otra persona no te oye</string>
+    <string name="readiness_notifications">Notificaciones</string>
+    <string name="readiness_notifications_problem">Una llamada suena a través de su notificación, y una llamada perdida se avisa con otra. Sin ellas, puede que nunca sepas que alguien llamó</string>
+    <string name="readiness_channel">Las llamadas entrantes suenan</string>
+    <string name="readiness_channel_problem">Las notificaciones de Llamadas entrantes están silenciadas, así que las llamadas llegan sin sonar</string>
+    <string name="readiness_full_screen">Llamadas sobre la pantalla de bloqueo</string>
+    <string name="readiness_full_screen_problem">Con el teléfono bloqueado, una llamada aparece como una notificación pequeña en lugar de la pantalla de llamada</string>
+    <string name="readiness_battery">Sin detenerse para ahorrar batería</string>
+    <string name="readiness_battery_problem">Android puede detener Sona un tiempo después de salir de ella, y las llamadas dejan de sonar hasta que la abras de nuevo</string>
+    <string name="readiness_allow">Permitir</string>
+    <string name="readiness_open_settings">Abrir sus ajustes</string>
+
+    <string name="notification_incoming">Llamada entrante</string>
+    <string name="notification_incoming_on">Llamada entrante en %1$s</string>
+    <string name="notification_calling">Llamando…</string>
+    <string name="notification_ringing">Sonando…</string>
+    <string name="notification_active">En llamada</string>
+    <string name="notification_on_hold">En espera</string>
+    <string name="notification_ended">Llamada finalizada</string>
+    <string name="notification_reachable">Localizable en %1$s</string>
+    <string name="notification_reachable_many">Localizable en %1$d cuentas</string>
+    <string name="notification_reachable_text">Las llamadas a tu extensión suenan aquí</string>
+
+    <string name="channel_missed">Llamadas perdidas</string>
+    <string name="channel_missed_description">Llamadas que sonaron aquí y nadie contestó</string>
+    <string name="notification_missed">Llamada perdida</string>
+    <string name="notification_missed_many">%1$d llamadas perdidas</string>
+    <string name="notification_missed_call_back">Devolver llamada</string>
+</resources>

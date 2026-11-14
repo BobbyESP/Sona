@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="call_incoming">Llamada entrante</string>
+    <string name="call_calling">Llamando…</string>
+    <string name="call_ringing">Sonando…</string>
+    <string name="call_on_hold">En espera</string>
+    <string name="call_held_by">%1$s te puso en espera</string>
+
+    <string name="call_answer">Contestar</string>
+    <string name="call_decline">Rechazar</string>
+    <string name="call_hold_and_answer">Poner en espera y contestar</string>
+    <string name="call_end">Finalizar llamada</string>
+
+    <string name="call_mute">Silenciar</string>
+    <string name="call_keypad">Teclado</string>
+    <string name="call_hide_keypad">Ocultar teclado</string>
+    <string name="call_hold">En espera</string>
+    <string name="call_speaker">Altavoz</string>
+    <string name="call_audio">Audio</string>
+    <string name="call_other_on_hold">%1$s en espera · toca para cambiar</string>
+
+    <string name="call_back_to">En llamada con %1$s</string>
+    <string name="call_return">Volver a la llamada</string>
+
+    <!-- How a call ended: a sentence for anyone -->
+    <string name="end_hung_up">Llamada finalizada</string>
+    <string name="end_at_once">%1$s contestó y colgó enseguida. Puede que el servidor no esté configurado para atender este número</string>
+    <string name="end_missed">Llamada perdida</string>
+    <string name="end_cancelled">Llamada cancelada</string>
+    <string name="end_busy">%1$s está ocupado</string>
+    <string name="end_declined">%1$s rechazó la llamada</string>
+    <string name="end_unavailable">%1$s no está conectado ahora mismo</string>
+    <string name="end_not_found">No existe la extensión %1$s en este servidor</string>
+    <string name="end_no_answer">Sin respuesta</string>
+    <string name="end_unauthorized">El servidor rechazó la llamada. Revisa el usuario y la contraseña de esta cuenta</string>
+    <string name="end_no_common_media">No hay un formato de audio que ambos lados admitan. Activa PCMU o PCMA, u Opus en el servidor</string>
+    <string name="end_server_unavailable">El servidor no respondió</string>
+    <string name="end_media_lost">La llamada perdió su conexión de audio</string>
+    <string name="end_failed">La llamada falló</string>
+
+    <string name="settings_call_waiting">Llamada en espera</string>
+    <string name="settings_call_waiting_summary">Una segunda llamada suena durante otra, en lugar de rechazarse como ocupado</string>
+    <string name="settings_call_waiting_keywords">segunda llamada espera ocupado second call hold busy 486</string>
+    <string name="settings_always_reachable">Siempre localizable</string>
+    <string name="settings_always_reachable_summary">Sigue registrada con una notificación discreta, para que las llamadas suenen con la app cerrada</string>
+    <string name="settings_always_reachable_keywords">segundo plano servicio notificación batería keep alive background service notification battery</string>
+    <string name="settings_dnd">No molestar</string>
+    <string name="settings_dnd_summary">Las llamadas entrantes no suenan: se rechazan al instante</string>
+    <string name="settings_dnd_keywords">silenciar silencio rechazar silence quiet refuse reject</string>
+    <string name="settings_decline_with">Las llamadas rechazadas dicen</string>
+    <string name="settings_decline_with_summary">Lo que se le dice a quien llama cuando una llamada se rechaza sin sonar</string>
+    <string name="settings_decline_busy">Ocupado (486)</string>
+    <string name="settings_decline_declined">Rechazada (603)</string>
+    <string name="settings_decline_keywords">ocupado rechazada busy declined 486 603 sip</string>
+    <string name="settings_dtmf">Los tonos del teclado se envían como</string>
+    <string name="settings_dtmf_summary">Cómo llegan al servidor las teclas pulsadas durante una llamada. Cámbialo si un menú no las oye</string>
+    <string name="settings_dtmf_rfc4733">Eventos RTP</string>
+    <string name="settings_dtmf_info">SIP INFO</string>
+    <string name="settings_dtmf_inband">En el audio</string>
+    <string name="settings_dtmf_keywords">dtmf rfc 4733 2833 info inband dígitos menú ivr buzón de voz digits menu voicemail</string>
+    <string name="settings_codecs">Códecs</string>
+    <string name="settings_codecs_summary">Sona ofrece los códecs marcados en este orden, y la llamada usa el primero que el otro lado también tenga. Se aplica desde la próxima llamada.</string>
+    <string name="settings_codecs_keywords">códec codec orden opus g722 g711 pcmu pcma ulaw alaw gsm speex calidad quality hd</string>
+    <string name="settings_echo">Cancelación de eco</string>
+    <string name="settings_echo_summary">Evita que lo que reproduce el altavoz entre en el micrófono, para que el otro lado no se oiga a sí mismo</string>
+    <string name="settings_echo_keywords">eco aec acoplamiento altavoz echo feedback speaker</string>
+    <string name="settings_dialpad_tones">Tonos del teclado</string>
+    <string name="settings_dialpad_tones_summary">Reproduce un tono al pulsar una tecla, en el teclado y durante una llamada</string>
+    <string name="settings_dialpad_tones_keywords">teclado dtmf sonido pitido táctil teclas keypad sound beep touch tones keys</string>
+    <string name="settings_mobile_data">Usar datos móviles</string>
+    <string name="settings_mobile_data_summary">Desactivado, Sona se registra y llama solo por Wi-Fi</string>
+    <string name="settings_mobile_data_keywords">wifi solo móvil celular 4g 5g lte datos red cellular data network</string>
+</resources>

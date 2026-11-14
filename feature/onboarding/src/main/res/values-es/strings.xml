@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_title">Llamadas en tu propio servidor</string>
+    <string name="onboarding_body">Sona es un teléfono para tu Asterisk, o cualquier servidor SIP: añade la extensión que te dieron y llama a cualquier otra.</string>
+    <string name="onboarding_point_extension">Tu extensión y su contraseña es todo lo que necesita</string>
+    <string name="onboarding_point_local">Todo se queda en este teléfono: sin cuenta con nosotros, sin nube</string>
+    <string name="onboarding_point_why">Cuando algo falla, Sona dice por qué y muestra el SIP que hay detrás</string>
+    <string name="onboarding_add">Añadir mi extensión</string>
+    <string name="onboarding_skip">Ahora no</string>
+
+    <string name="readiness_title">Preparación para llamadas</string>
+    <string name="readiness_back">Atrás</string>
+    <string name="readiness_settings_summary">Lo que Android debe permitir para que las llamadas suenen y se oigan</string>
+    <string name="readiness_keywords">permisos micrófono notificaciones batería pantalla de bloqueo sonar silencio no suena lista permissions microphone notifications battery lock screen ring silent not ringing checklist</string>
+    <string name="readiness_all_good">Todo está listo: las llamadas sonarán y se oirán.</string>
+    <plurals name="readiness_problems">
+        <item quantity="one">%1$d cosa puede impedir que las llamadas funcionen. Se arregla en un momento.</item>
+        <item quantity="many">%1$d cosas pueden impedir que las llamadas funcionen. Cada una se arregla en un momento.</item>
+        <item quantity="other">%1$d cosas pueden impedir que las llamadas funcionen. Cada una se arregla en un momento.</item>
+    </plurals>
+    <string name="readiness_state_ready">Listo</string>
+    <string name="readiness_state_problem">Requiere atención</string>
+    <string name="readiness_reachable_note">Tu servidor no despierta el teléfono para una llamada, así que Sona sigue registrada mientras está cerrada, con una notificación discreta que lo indica. Puedes desactivarlo en Ajustes, en Llamadas: entonces las llamadas solo suenan mientras Sona está abierta.</string>
+    <string name="readiness_done">Listo</string>
+    <string name="readiness_later">Más tarde</string>
+</resources>
