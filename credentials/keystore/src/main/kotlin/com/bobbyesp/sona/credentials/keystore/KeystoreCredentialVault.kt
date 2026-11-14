@@ -45,8 +45,7 @@ internal class KeystoreCredentialVault(context: Context) : CredentialVault {
             cipher.init(Cipher.ENCRYPT_MODE, key())
             val sealed = cipher.doFinal(secret.reveal().toByteArray(Charsets.UTF_8))
             val value = cipher.iv.encode() + SEPARATOR + sealed.encode()
-            prefs.edit().putString(account.value, value).commit()
-            Unit
+            prefs.edit().putString(account.value, value).apply()
         }
     }
 
@@ -70,8 +69,7 @@ internal class KeystoreCredentialVault(context: Context) : CredentialVault {
 
     override suspend fun remove(account: AccountId) = lock.withLock {
         withContext(Dispatchers.IO) {
-            prefs.edit().remove(account.value).commit()
-            Unit
+            prefs.edit().remove(account.value).apply()
         }
     }
 
