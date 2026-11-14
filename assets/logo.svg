@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="256" height="256" role="img" aria-label="Sona">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0A8F92"/>
+      <stop offset="1" stop-color="#00555A"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="32" fill="url(#bg)"/>
+  <g stroke-width="10" stroke-linecap="round" fill="none">
+    <path d="M32 54V74M48 44V84M64 30V98M80 48V80M96 56V72" stroke="#fff"/>
+    <path d="M64 30V98" stroke="#FF9E7A"/>
+  </g>
+</svg>

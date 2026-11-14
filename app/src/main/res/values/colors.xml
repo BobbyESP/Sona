@@ -2,4 +2,6 @@
 <resources>
     <!-- The seed of the default theme (SONA_SEED_COLOR), for what the system draws before the app. -->
     <color name="sona_brand">#00696B</color>
+    <!-- The one warm note of the mark: the loudest bar of the voice. -->
+    <color name="sona_brand_accent">#FF9E7A</color>
 </resources>

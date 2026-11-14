@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360" role="img" aria-label="Sona">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0A8F92"/>
+      <stop offset="1" stop-color="#003F44"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".35"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="360" fill="url(#bg)"/>
+
+  <!-- a voice, fading in from the right -->
+  <g stroke="url(#fade)" stroke-width="10" stroke-linecap="round" fill="none">
+    <path d="M985 170V190M1010 150V210M1035 128V232M1060 140V220M1085 104V256M1110 126V234M1135 84V276M1160 120V240M1185 64V296M1210 114V246M1235 146V214M1260 168V192"/>
+  </g>
+
+  <!-- the mark -->
+  <g transform="translate(110 92)">
+    <rect width="176" height="176" rx="44" fill="#fff" fill-opacity=".14"/>
+    <g stroke-width="14" stroke-linecap="round" fill="none" transform="scale(1.375)">
+      <path d="M32 54V74M48 44V84M64 30V98M80 48V80M96 56V72" stroke="#fff"/>
+      <path d="M64 30V98" stroke="#FF9E7A"/>
+    </g>
+  </g>
+
+  <!-- the wordmark, drawn with the same round stroke as the mark -->
+  <g transform="translate(345 124) scale(2.1)" stroke="#fff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M38 12C30 2 6 2 6 18C6 32 38 30 38 46C38 62 12 62 2 52"/>
+    <circle cx="90" cy="32" r="28" stroke="#FF9E7A"/>
+    <path d="M140 2V62M140 28C140 2 186 2 186 28V62"/>
+    <circle cx="236" cy="32" r="28"/>
+    <path d="M264 4V62"/>
+  </g>
+</svg>
