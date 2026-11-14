@@ -160,18 +160,18 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
                 Factory.instance().loggingService.addListener(logListener)
                 val created = Factory.instance().createCore(null, null, context)
                 coreVersion = created.version
-                created.setAutoIterateEnabled(false)
-                created.setPushNotificationEnabled(false)
+                created.isAutoIterateEnabled = false
+                created.isPushNotificationEnabled = false
                 // Random local ports: a fixed 5060 collides with anything else on the phone.
                 val transports = created.transports
                 transports.udpPort = RANDOM_PORT
                 transports.tcpPort = RANDOM_PORT
                 transports.tlsPort = RANDOM_PORT
-                created.setTransports(transports)
+                created.transports = transports
                 // Sona rings through its notification channel, so Do not disturb and the ringer
-                // volume apply; Linphone keeps only the ringback heard while calling out.
-                created.setNativeRingingEnabled(false)
-                created.setRing(null)
+                // volume apply. Linphone keeps only the ringback heard while calling out.
+                created.isNativeRingingEnabled = false
+                created.ring = null
                 configurer.apply(created, config)
                 created.addListener(coreListener)
                 created.start()
@@ -239,7 +239,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
             val params =
                 current.createCallParams(null)
                     ?: return@withContext DialResult.Failed("No call parameters")
-            params.setAccount(from.account)
+            params.account = from.account
             val call =
                 current.inviteAddressWithParams(address, params)
                     ?: return@withContext DialResult.Failed("Linphone refused to call $to")
@@ -250,7 +250,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
 
     override suspend fun answer(call: CallId) =
         onCall(call) {
-            core?.let { useOptionsOf(it, accountOf(call)) }
+            useOptionsOf(core, accountOf(call))
             accept()
         }
 
@@ -278,10 +278,9 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     override suspend fun sendDtmf(call: CallId, digit: Char) =
         onCall(call) {
             // With two calls on two accounts, the way of the call the digit is for.
-            core?.let { core ->
-                val spec = accountOf(call)?.let { bound[it]?.spec }
-                configurer.dtmf(core, spec?.dtmf ?: config.dtmf)
-            }
+            val spec = accountOf(call)?.let { bound[it]?.spec }
+            configurer.dtmf(core, spec?.dtmf ?: config.dtmf)
+
             sendDtmf(digit)
         }
 
@@ -370,8 +369,6 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
             else copy(state = mapped, media = if (ended) media else call.mediaInfo() ?: media)
         }
         if (ended) live.remove(id)
-        // Streams that just started (the answer, a resume) open where Linphone likes: put them
-        // back on the device the system chose.
         if (state == Call.State.StreamsRunning) devices[id]?.let { follow(call, it) }
     }
 
@@ -408,7 +405,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
 
     /** The account a call came to: the one Linphone matched, or the one with its address. */
     private fun accountOf(call: Call): AccountId? {
-        val account = call.params?.account
+        val account = call.params.account
         bound.entries
             .firstOrNull { it.value.account == account }
             ?.let {
@@ -427,7 +424,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     private fun Call.sonaId(): CallId = CallId(callLog.callId ?: hashCode().toString())
 
     private fun Call.mediaInfo(): MediaInfo? {
-        val params = currentParams ?: return null
+        val params = currentParams
         val payload = params.usedAudioPayloadType ?: return null
         val encryption = params.mediaEncryption.takeIf { it != MediaEncryption.None }?.name
         return MediaInfo(payload.mimeType, payload.clockRate, encryption)
@@ -467,21 +464,21 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
         val server =
             factory.createAddress(spec.registrar.toSipUri())
                 ?: return setRegistration(spec.id, invalid("Not a server: ${spec.registrar}"))
-        server.setTransport(spec.registrar.transport.toLinphone())
+        server.transport = spec.registrar.transport.toLinphone()
 
         val params = core.createAccountParams()
-        params.setIdentityAddress(identity)
-        params.setServerAddress(server)
-        params.setRegisterEnabled(spec.enabled)
-        params.setExpires(spec.expiry.inWholeSeconds.toInt())
-        params.setPublishEnabled(false)
-        params.setPushNotificationAllowed(false)
-        params.setRemotePushNotificationAllowed(false)
+        params.identityAddress = identity
+        params.serverAddress = server
+        params.isRegisterEnabled = spec.enabled
+        params.expires = spec.expiry.inWholeSeconds.toInt()
+        params.isPublishEnabled = false
+        params.pushNotificationAllowed = false
+        params.remotePushNotificationAllowed = false
         spec.outboundProxy?.let { proxy ->
             factory.createAddress(proxy.toSipUri())?.let { params.setRoutesAddresses(arrayOf(it)) }
         }
 
-        // Username is the identity's user; the auth username, when different, is Linphone's
+        // Username is the identity's user. The auth username, when different, is Linphone's
         // userid. No realm or domain: Asterisk's realm need not match the account's domain.
         val auth =
             factory.createAuthInfo(

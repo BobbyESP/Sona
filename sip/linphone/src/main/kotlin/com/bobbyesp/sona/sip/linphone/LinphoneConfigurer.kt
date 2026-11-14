@@ -34,8 +34,8 @@ internal class LinphoneConfigurer(private val appVersion: String) {
         logging(config)
         core.setUserAgent(config.userAgent, appVersion)
 
-        core.setEchoCancellationEnabled(config.echoCancellation)
-        core.setWifiOnlyEnabled(config.wifiOnly)
+        core.isEchoCancellationEnabled = config.echoCancellation
+        core.isWifiOnlyEnabled = config.wifiOnly
         dtmf(core, config.dtmf)
         config.codecs?.let { codecs(core, it) }
     }
@@ -47,8 +47,8 @@ internal class LinphoneConfigurer(private val appVersion: String) {
     fun dtmf(core: Core, mode: DtmfMode) {
         // In-band is what Linphone does when neither signalling way is on: the tone is played into
         // the audio it sends.
-        core.setUseRfc2833ForDtmf(mode == DtmfMode.Rfc4733)
-        core.setUseInfoForDtmf(mode == DtmfMode.SipInfo)
+        core.useRfc2833ForDtmf = mode == DtmfMode.Rfc4733
+        core.useInfoForDtmf = mode == DtmfMode.SipInfo
     }
 
     /**
