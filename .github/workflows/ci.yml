@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-build
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-build
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
@@ -47,7 +47,7 @@ jobs:
         run: ./gradlew testDebugUnitTest testDemoDebugUnitTest testFullDebugUnitTest --continue
       - name: Upload the test reports
         if: ${{ failure() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: |
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-build
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
@@ -68,7 +68,7 @@ jobs:
       - name: Build the demo and full APKs
         run: ./gradlew :app:assembleDemoDebug :app:assembleFullDebug
       - name: Upload the demo APK
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7
         with:
           name: sona-demo-debug
           path: app/build/outputs/apk/demo/debug/*.apk
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-build
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
@@ -89,7 +89,7 @@ jobs:
         run: ./gradlew lintDebug :app:lintFullDebug :app:lintDemoDebug --continue
       - name: Upload the lint reports
         if: ${{ failure() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7
         with:
           name: lint-reports
           path: "**/build/reports/lint-results-*.html"

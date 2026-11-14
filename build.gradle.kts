@@ -39,7 +39,7 @@ allprojects {
 
 /**
  * The app's version. The code packs the stage in, so an alpha, a beta, a release candidate and the
- * release of one version are ordered: MMMmmPPsBB (major, minor, patch, stage 0-3, build).
+ * release of one version are ordered: MmmPPsBB (major, minor, patch, stage 0-3, build).
  */
 sealed class Version(val major: Int, val minor: Int, val patch: Int, val build: Int) {
     abstract val stageCode: Int
