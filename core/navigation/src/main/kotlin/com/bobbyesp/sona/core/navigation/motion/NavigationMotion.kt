@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.bobbyesp.sona.core.designsystem.blur.BlurLevel
-import com.bobbyesp.sona.core.designsystem.blur.SonaBlurDefaults
+import com.bobbyesp.sona.core.designsystem.blur.BlurDefaults
 import com.bobbyesp.sona.core.designsystem.blur.outOfFocus
 import com.bobbyesp.sona.core.navigation.SonaNavDisplay
 
@@ -236,7 +236,7 @@ fun Modifier.sharedBoundsAcrossDestinations(key: Any, shape: Shape): Modifier {
 fun Modifier.outOfFocusBehindOverlay(overlayShowing: Boolean): Modifier {
     val blurRadius =
         animateDpAsState(
-            targetValue = if (overlayShowing) SonaBlurDefaults.BehindOverlayRadius else 0.dp,
+            targetValue = if (overlayShowing) BlurDefaults.BehindOverlayRadius else 0.dp,
             animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
             label = "OutOfFocusBehindOverlay",
         )

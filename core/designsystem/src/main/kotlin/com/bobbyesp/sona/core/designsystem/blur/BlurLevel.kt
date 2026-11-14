@@ -32,9 +32,8 @@ import java.util.function.Consumer
 
 /**
  * How much this device blurs, right now. Every blur in the app reads it, so none decides alone
- * whether it can afford to: [SonaTheme][com.bobbyesp.sona.core.designsystem.theme.SonaTheme]
- * provides it from [rememberDeviceBlurLevel], and it changes while the app runs (battery saver, a
- * hot phone).
+ * whether it can afford to: the app's theme provides it once, from [rememberBlurLevel], and it
+ * changes while the app runs (battery saver, a hot phone, the user's choice).
  *
  * Ordered from least to most blur, so `minOf` of two levels is the stricter one.
  */
@@ -69,7 +68,7 @@ val LocalBlurLevel = compositionLocalOf {
 /**
  * Provides [level] to [content], and to Haze: at [BlurLevel.Off] its blur is disabled everywhere
  * below, at [BlurLevel.Reduced] it samples at its lowest resolution. A `hazeBlur` written without
- * Sona's modifiers still follows the level.
+ * the modifiers in this package still follows the level.
  */
 @Composable
 fun ProvideBlurLevel(level: BlurLevel, content: @Composable () -> Unit) {
@@ -96,6 +95,16 @@ private val BlurLevel.hazeStyle: HazeBlurStyle
     get() = if (this == BlurLevel.Off) BlurDisabled else HazeBlurStyle
 
 /**
+ * The level to provide with [ProvideBlurLevel]: what the device can afford
+ * ([rememberDeviceBlurLevel]), and never more than [preferred], the user's choice. A user can ask
+ * for less blur than the device allows, never for more: a phone in battery saver or too hot still
+ * stops blurring.
+ */
+@Composable
+fun rememberBlurLevel(preferred: BlurLevel = BlurLevel.Full): BlurLevel =
+    minOf(rememberDeviceBlurLevel(), preferred)
+
+/**
  * The [BlurLevel] this device can afford, kept up to date as battery saver, the phone's temperature
  * and the system's own window blur setting change. Full in a preview.
  */
@@ -120,7 +129,7 @@ fun rememberDeviceBlurLevel(): BlurLevel {
  * @param thermalStatus One of `PowerManager.THERMAL_STATUS_*`.
  * @param isWindowBlurEnabled `WindowManager.isCrossWindowBlurEnabled`: false where the GPU cannot
  *   afford the compositor's blur, in battery saver, while video tunnels, or when turned off in the
- *   developer options. Sona's blur is drawn by the app, not the compositor, but the reasons are the
+ *   developer options. This blur is drawn by the app, not the compositor, but the reasons are the
  *   same.
  */
 internal fun blurLevelOf(

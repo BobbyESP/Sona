@@ -39,8 +39,8 @@ import kotlin.math.roundToInt
  * its layout. In a popup, whose window ends at its content, pass [reserveSpace]: the halo then
  * takes room around the element, and whoever places the popup must make up for it.
  *
- * Only where [SonaBlurDefaults.isHaloAvailable]: at [BlurLevel.Full], from Android 13, where Haze
- * can vary the radius. Elsewhere this does nothing: check it, and keep the element's shadow there.
+ * Only where [BlurDefaults.isHaloAvailable]: at [BlurLevel.Full], from Android 13, where Haze can
+ * vary the radius. Elsewhere this does nothing: check it, and keep the element's shadow there.
  *
  * Keep it out of the element's own enter and exit animation, and animate [strength] instead: in a
  * scaled or fading layer the halo would spring with the element and be cut to its bounds.
@@ -54,15 +54,15 @@ import kotlin.math.roundToInt
 fun Modifier.blurHalo(
     source: BlurSource,
     shape: Shape,
-    spread: Dp = SonaBlurDefaults.HaloSpread,
+    spread: Dp = BlurDefaults.HaloSpread,
     strength: () -> Float = { 1f },
     reserveSpace: Boolean = false,
 ): Modifier {
-    if (!SonaBlurDefaults.isHaloAvailable) return this
+    if (!BlurDefaults.isHaloAvailable) return this
 
     val density = LocalDensity.current
     val spreadPx = with(density) { spread.roundToPx() }
-    val dropPx = with(density) { SonaBlurDefaults.haloDrop(spread).roundToPx() }
+    val dropPx = with(density) { BlurDefaults.haloDrop(spread).roundToPx() }
     // The halo's room on every side: its spread, plus the drop it reaches further by below.
     val marginPx = spreadPx + dropPx
     val geometry = remember { HaloGeometry() }
@@ -224,11 +224,11 @@ private fun haloStyle(
     progressive: HazeProgressive,
     strength: () -> Float,
 ): HazeBlurStyle {
-    val veil = listOf(HazeColorEffect.tint(surface.copy(alpha = SonaBlurDefaults.HaloVeilOpacity)))
+    val veil = listOf(HazeColorEffect.tint(surface.copy(alpha = BlurDefaults.HaloVeilOpacity)))
     return HazeBlurStyle {
         val amount = strength().coerceIn(0f, 1f)
-        blurRadius((SonaBlurDefaults.HaloRadius.value * amount).roundToInt().dp)
-        noiseFactor(SonaBlurDefaults.HaloNoiseFactor)
+        blurRadius((BlurDefaults.HaloRadius.value * amount).roundToInt().dp)
+        noiseFactor(BlurDefaults.HaloNoiseFactor)
         backgroundColor(surface)
         colorEffects(veil)
         progressive(progressive)

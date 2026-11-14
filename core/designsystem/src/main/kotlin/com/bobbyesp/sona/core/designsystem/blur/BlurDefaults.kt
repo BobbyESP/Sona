@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Where Sona blurs, and how much. Material has no blur tokens, so these stand in for elevation
+ * Where the app blurs, and how much. Material has no blur tokens, so these stand in for elevation
  * where a surface floats over content that moves beneath it: frosting what is behind the surface
  * tells the two apart better than a shadow, and keeps the content's colors in view. The surface
  * keeps its Material color role, only translucent.
@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
  *
  * How much of it a device gets is its [BlurLevel]; every modifier falls back on its own.
  */
-object SonaBlurDefaults {
+object BlurDefaults {
 
     /**
      * Behind a frosted surface: enough that text beneath cannot be read, not so much that its

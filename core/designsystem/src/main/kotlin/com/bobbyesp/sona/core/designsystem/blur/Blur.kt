@@ -30,7 +30,7 @@ import dev.chrisbanes.haze.blur.hazeBlur
 import dev.chrisbanes.haze.hazeSource
 
 /*
- * Sona's blur, in four calls. Haze stays behind them: no other module names it.
+ * The app's blur, in four calls. Haze stays behind them: no other module names it.
  *
  *   val behind = rememberBlurSource()
  *   List(Modifier.blurSource(behind))                                  // what passes beneath
@@ -86,7 +86,7 @@ fun Modifier.frosted(
     source: BlurSource,
     containerColor: Color,
     shape: Shape = RectangleShape,
-    radius: Dp = SonaBlurDefaults.SurfaceRadius,
+    radius: Dp = BlurDefaults.SurfaceRadius,
     amount: () -> Float = FullAmount,
 ): Modifier {
     val style =
@@ -99,15 +99,14 @@ private val FullAmount = { 1f }
 
 private fun frostStyle(containerColor: Color, radius: Dp, amount: () -> Float): HazeBlurStyle {
     val opacity =
-        if (containerColor.luminance() >= 0.5f) SonaBlurDefaults.LightContainerOpacity
-        else SonaBlurDefaults.DarkContainerOpacity
+        if (containerColor.luminance() >= 0.5f) BlurDefaults.LightContainerOpacity
+        else BlurDefaults.DarkContainerOpacity
     // Built once here, not in the block: Haze runs it on every frame the amount moves.
     val tint = listOf(HazeColorEffect.tint(containerColor.copy(alpha = opacity)))
-    val fallback =
-        HazeColorEffect.tint(containerColor.copy(alpha = SonaBlurDefaults.FallbackOpacity))
+    val fallback = HazeColorEffect.tint(containerColor.copy(alpha = BlurDefaults.FallbackOpacity))
     return HazeBlurStyle {
         blurRadius(radius)
-        noiseFactor(SonaBlurDefaults.NoiseFactor)
+        noiseFactor(BlurDefaults.NoiseFactor)
         backgroundColor(containerColor)
         colorEffects(tint)
         fallbackColorEffect(fallback)
