@@ -20,6 +20,8 @@ env:
   # Only main writes the Gradle cache; a pull request reads its base branch's.
   GRADLE_CACHE_READ_ONLY: ${{ github.event_name != 'push' }}
 
+# Format goes first and is quick: a badly formatted change stops here, before the three jobs that
+# each take minutes. Tests, lint and the APKs then run side by side.
 jobs:
   format:
     name: Format
@@ -35,6 +37,7 @@ jobs:
 
   test:
     name: Unit tests
+    needs: format
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -56,7 +59,8 @@ jobs:
           retention-days: 7
 
   build:
-    name: Debug build
+    name: Debug APKs
+    needs: format
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -77,6 +81,7 @@ jobs:
 
   lint:
     name: Lint
+    needs: format
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

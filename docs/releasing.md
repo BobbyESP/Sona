@@ -6,7 +6,7 @@ Sona is free software (GPLv3), and its releases are built in the open by GitHub 
 
 | Workflow | When | What |
 |---|---|---|
-| `ci.yml` | every pull request and push to `main` | format (`spotlessCheck`), unit tests, lint, and the debug APKs of both engines. The `CI` job is the one check to require in branch protection |
+| `ci.yml` | every pull request and push to `main` | format (`spotlessCheck`), unit tests, lint, and the debug APKs of both engines (format first; the rest run in parallel after it). The `CI` job is the one check to require in branch protection |
 | `release.yml` | run by hand (Actions → Release → Run workflow), on a branch or tag | runs `ci.yml`, then builds the signed `full` APK and app bundle, checks that both are signed, and keeps them as the artifact `sona-release` |
 | `dependabot.yml` | weekly | keeps the actions, the version catalog and the Gradle wrapper current |
 
