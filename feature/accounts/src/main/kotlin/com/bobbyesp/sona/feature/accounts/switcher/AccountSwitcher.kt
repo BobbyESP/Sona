@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ManageAccounts
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -118,8 +119,8 @@ internal fun AccountSwitcherSheet(
         footer = {
             Button(
                 onClick = onAdd,
-                modifier =
-                    Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp),
+                shapes = ButtonDefaults.shapes(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(top = 8.dp),
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = null)
                 Text(stringResource(R.string.accounts_add), Modifier.padding(start = 8.dp))
