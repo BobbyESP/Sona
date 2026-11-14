@@ -225,8 +225,9 @@ What is new:
 
 `SonaTheme` is `MaterialExpressiveTheme` with one `MotionScheme.expressive()` instance and a scheme
 from the wallpaper or a seed through MaterialKolor, built off the main thread and cached. Theme
-transitions in steps, Haze frosted surfaces, blur halos and out-of-focus backgrounds come from
-Docucraft and Metadator unchanged. The rules in their architecture docs apply as written.
+transitions in steps, frosted surfaces, blur halos and out-of-focus backgrounds come from
+Docucraft and Metadator. The rules in their architecture docs apply as written, except for blur's
+API, below.
 
 What is new:
 
@@ -235,6 +236,19 @@ What is new:
   accounts (the lab's Asterisk and a home PBX) the user always knows which line rings.
 - **The call screen is its own theme context**: always dark-surfaced over the lock screen, tinted
   with the account's color, so it reads as "a call" at a glance.
+- **Blur follows the device.** `SonaTheme` provides a `BlurLevel` (`Off`, `Reduced`, `Full`),
+  worked out from the Android version, Android Go, the phone's memory, battery saver, its
+  temperature and whether the system allows window blur, and updated as those change. Haze is
+  configured from it (disabled at `Off`, its lowest input resolution at `Reduced`), so no screen
+  checks the device. `Off` is below Android 12, on Android Go, in battery saver and when the phone
+  is hot; `Reduced` keeps frosted surfaces only.
+- **Blur has four calls, in `:core:designsystem/blur`**, and no other module names Haze:
+  `rememberBlurSource()` and `Modifier.blurSource()` on the content that scrolls,
+  `Modifier.frosted(source, containerColor, shape, amount = { … })` on the surface over it,
+  `Modifier.outOfFocus { radius }` on content itself, and `Modifier.blurHalo` around a floating
+  element. What animates is a lambda read while drawing: an animation redraws, never recomposes.
+  Animate a frost's `amount`, not its color or radius: Haze builds its blur again for a new color or
+  radius, and only fades it for a new amount.
 
 **Sona copies the design system of the other two apps.** It is the third copy of `ThemeTransition`,
 the blur defaults and the settings components. Extracting them into one library shared by the three

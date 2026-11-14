@@ -75,6 +75,8 @@ compileSdk 37, targetSdk 37, Java 17). Versions are in `gradle/libs.versions.tom
 - Every screen's ViewModel extends `BaseViewModel`; it never holds a `Context` and never owns a call.
 - Colors, type, shapes and motion come from `MaterialTheme`; no `Color(0x…)` outside the theme.
 - A destination never measures the window; it reads `LocalPaneContext` / `LocalOverlayContext`.
+- Blur only through `:core:designsystem`'s `blur` modifiers (`frosted`, `blurSource`, `outOfFocus`,
+  `blurHalo`), which follow the device's `BlurLevel`; no other module names Haze.
 - One destination, one entry, one back press. No `NavDisplay` inside a sheet or a dialog.
 - Every string is a resource. Every failure shown has its technical line for *Show SIP details*.
 - A screen never names another feature: it shows contributions.

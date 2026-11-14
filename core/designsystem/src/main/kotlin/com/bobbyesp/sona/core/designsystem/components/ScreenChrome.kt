@@ -17,18 +17,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bobbyesp.sona.core.designsystem.theme.SonaBlurDefaults
-import com.bobbyesp.sona.core.designsystem.theme.frosted
-import dev.chrisbanes.haze.HazeState
+import com.bobbyesp.sona.core.designsystem.blur.BlurSource
+import com.bobbyesp.sona.core.designsystem.blur.frosted
 
 /*
  * What every screen with a scrolling list has around it: Home, a folder, the bin, settings. Sharing
@@ -41,31 +39,30 @@ import dev.chrisbanes.haze.HazeState
  * under it stays in view, blurred. Until then nothing is beneath it, and it is the page's own
  * surface.
  *
- * @param hazeState Where the content that scrolls beneath it is recorded.
+ * The frost fades in over the page's surface rather than its tone changing: a fade redraws the blur
+ * it has, a new tone would build it again on every frame, and recompose the bar with it.
+ *
+ * @param blurSource Where the content that scrolls beneath it is recorded.
  */
 @Composable
 fun FrostedLargeTopAppBar(
     title: String,
     isContentScrolled: Boolean,
     scrollBehavior: TopAppBarScrollBehavior,
-    hazeState: HazeState,
+    blurSource: BlurSource,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val scrolledFraction by
+    // Read only while drawing: the animation redraws the bar, and never recomposes it.
+    val scrolledFraction =
         animateFloatAsState(
             targetValue = if (isContentScrolled) 1f else 0f,
             animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
             label = "TopBarScrolled",
         )
-    val containerColor =
-        lerp(
-            MaterialTheme.colorScheme.surface,
-            MaterialTheme.colorScheme.surfaceContainer,
-            scrolledFraction,
-        )
+    val surface = MaterialTheme.colorScheme.surface
 
     LargeFlexibleTopAppBar(
         title = { Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -74,10 +71,13 @@ fun FrostedLargeTopAppBar(
                 { Text(text = it, maxLines = 1, overflow = TextOverflow.StartEllipsis) }
             },
         modifier =
-            modifier.frosted(
-                state = hazeState,
-                style = SonaBlurDefaults.surfaceStyle(containerColor),
-            ),
+            modifier
+                .drawBehind { drawRect(surface) }
+                .frosted(
+                    source = blurSource,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    amount = { scrolledFraction.value },
+                ),
         navigationIcon = navigationIcon,
         actions = actions,
         colors =

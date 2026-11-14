@@ -27,11 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.bobbyesp.sona.core.designsystem.blur.blurSource
+import com.bobbyesp.sona.core.designsystem.blur.rememberBlurSource
 import com.bobbyesp.sona.core.designsystem.components.FrostedLargeTopAppBar
 import com.bobbyesp.sona.core.ui.contribution.LocalAccountChip
 import com.bobbyesp.sona.core.ui.contribution.LocalOpenSettings
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.rememberHazeState
 
 /**
  * The frame of a top-level destination (Recents, Contacts, Keypad): Material's large flexible app
@@ -56,7 +56,7 @@ fun TopLevelScaffold(
     content: @Composable (padding: PaddingValues, contentModifier: Modifier) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val hazeState = rememberHazeState()
+    val behindBar = rememberBlurSource()
     val isContentScrolled by remember {
         derivedStateOf { scrollBehavior.state.overlappedFraction > 0f }
     }
@@ -97,13 +97,13 @@ fun TopLevelScaffold(
                         title = title,
                         isContentScrolled = isContentScrolled,
                         scrollBehavior = scrollBehavior,
-                        hazeState = hazeState,
+                        blurSource = behindBar,
                         actions = actions,
                     )
                 }
             },
         ) { padding ->
-            content(padding, Modifier.fillMaxSize().hazeSource(hazeState))
+            content(padding, Modifier.fillMaxSize().blurSource(behindBar))
         }
     }
 }

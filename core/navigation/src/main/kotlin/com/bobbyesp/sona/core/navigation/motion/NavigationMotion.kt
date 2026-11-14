@@ -23,19 +23,17 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.blur.BlurRadiusSpec
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import com.bobbyesp.sona.core.designsystem.theme.SonaBlurDefaults
+import com.bobbyesp.sona.core.designsystem.blur.BlurLevel
+import com.bobbyesp.sona.core.designsystem.blur.SonaBlurDefaults
+import com.bobbyesp.sona.core.designsystem.blur.outOfFocus
 import com.bobbyesp.sona.core.navigation.SonaNavDisplay
 
 /**
@@ -91,7 +89,7 @@ class NavigationMotion internal constructor() {
 
 /**
  * Moving between two destinations *through* an element they share, such as Home's search bar
- * growing into the search screen: the element carries the motion, and the destinations around it
+ * growing into the search screen: the element carries the motion, and the surrounding destinations
  * only cross-fade.
  *
  * The door slide above would fight the element, dragging the whole screen sideways while the bar
@@ -230,13 +228,12 @@ fun Modifier.sharedBoundsAcrossDestinations(key: Any, shape: Shape): Modifier {
  * arrives and sharpens as it leaves, together with the scrim its container dims it with.
  *
  * A blur of this window's content, not a frosted overlay: the overlay is a window of its own, which
- * nothing drawn here reaches, and it stays a solid Material surface. Below Android 12 it does
- * nothing, and the scrim alone sets the overlay apart, as it always did.
+ * nothing drawn here reaches, and it stays a solid Material surface. Where the device cannot afford
+ * a whole screen blurred (below [BlurLevel.Full]) it does nothing, and the scrim alone sets the
+ * overlay apart, as it always did.
  */
 @Composable
 fun Modifier.outOfFocusBehindOverlay(overlayShowing: Boolean): Modifier {
-    // An effect, not a movement: the scheme's effects spec, which never overshoots. A radius that
-    // bounced would sharpen the screen again for a moment.
     val blurRadius =
         animateDpAsState(
             targetValue = if (overlayShowing) SonaBlurDefaults.BehindOverlayRadius else 0.dp,
@@ -244,10 +241,5 @@ fun Modifier.outOfFocusBehindOverlay(overlayShowing: Boolean): Modifier {
             label = "OutOfFocusBehindOverlay",
         )
 
-    // Only while there is a blur to draw: it puts everything under it in a layer of its own, which
-    // nothing needs otherwise. Read in the blur's own block, the radius animates without
-    // recomposing.
-    val blurring by remember { derivedStateOf { blurRadius.value > 0.dp } }
-    return if (blurring) blur { blurRadiusSpec = BlurRadiusSpec.uniform(blurRadius.value) }
-    else this
+    return outOfFocus { blurRadius.value }
 }
