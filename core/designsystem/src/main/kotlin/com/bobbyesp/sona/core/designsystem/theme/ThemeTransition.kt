@@ -79,7 +79,7 @@ internal class ThemeTransitionState(initialScheme: ColorScheme) {
                 }
             }
             colorScheme = target
-            // The last scheme is composed after this frame's callbacks: until it has been, the
+            // The last scheme is composed after this frame's callbacks. Until it has been, the
             // change is not over for what recomposes with it.
             withFrameNanos {}
         } finally {

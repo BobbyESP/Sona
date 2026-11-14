@@ -25,7 +25,7 @@ class AccountEngineSync(
     private val vault: CredentialVault,
     private val engine: SipEngine,
 ) {
-    /** Runs until cancelled; start it once, in the application's scope. */
+    /** Runs until canceled; start it once, in the application's scope. */
     suspend fun run() {
         repository.accounts.distinctUntilChanged().collect { accounts ->
             engine.setAccounts(accounts.map { it.toSpec(vault.read(it.id)) })

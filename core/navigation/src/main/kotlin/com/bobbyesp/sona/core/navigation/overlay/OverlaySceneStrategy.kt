@@ -134,10 +134,10 @@ class OverlaySceneStrategy<T : Any>(
 }
 
 /**
- * Two facts, not one written twice — and neither is the list-detail breakpoint. Room for one
- * centred dialog ([WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND]) is a different question from room
- * for a list beside a detail, which `calculatePaneScaffoldDirective` only grants at expanded.
- * Between them an overlay is a dialog over a single pane, deliberately.
+ * Two facts, not one written twice, and neither is the list-detail breakpoint. Room for one centred
+ * dialog ([WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND]) is a different question from room for a
+ * list beside a detail, which `calculatePaneScaffoldDirective` only grants at expanded. Between
+ * them an overlay is a dialog over a single pane, deliberately.
  */
 private object OverlayBreakpoints {
 
@@ -176,7 +176,7 @@ private data class SheetScene<T : Any>(
     override val previousEntries: List<NavEntry<T>> = overlaidEntries
 
     /**
-     * Held so the sheet can be slid away before it leaves composition — see [onRemove]. Assigned
+     * Held so the sheet can be slid away before it leaves composition (see [onRemove]). Assigned
      * from the composition because a `SheetState` must be remembered and a scene is built outside
      * one; `lateinit` is what the platform's own `AnimatedBottomSheetSample` does here.
      */
@@ -200,8 +200,8 @@ private data class SheetScene<T : Any>(
     /**
      * Slides the sheet away before it leaves composition; `NavDisplay` keeps a popped overlay
      * composed until this returns. Without it only a drag animated, because that is
-     * `ModalBottomSheet` animating itself — a button or system back took it off screen in one
-     * frame. Guarded because a scene can be popped before it ever composed.
+     * `ModalBottomSheet` animating itself (a button or system back took it off-screen in one
+     * frame). Guarded because a scene can be popped before it ever composed.
      */
     override suspend fun onRemove() {
         if (::sheetState.isInitialized) sheetState.hide()
@@ -212,7 +212,7 @@ private data class SheetScene<T : Any>(
         /**
          * No half-open state: the sheet opens at the height of its content and back closes it.
          * `ModalBottomSheet` otherwise treats back as "collapse, then dismiss", costing two presses
-         * to leave one destination — and the first hides content that did not fit collapsed anyway.
+         * to leave one destination (and the first hides content that did not fit collapsed anyway).
          * An overlay is one entry, so back has one job.
          */
         val SheetHeights = setOf(SheetValue.Hidden, SheetValue.Expanded)
@@ -241,8 +241,8 @@ private data class DialogScene<T : Any>(
 }
 
 /**
- * Keeps one destination's containers from being mistaken for each other — the whole context, not
- * just the container: `NavDisplay` keeps the first overlay scene it sees for a key, so a window
+ * Keeps one destination's containers from being mistaken for each other (the whole context, not
+ * just the container): `NavDisplay` keeps the first overlay scene it sees for a key, so a window
  * that changed shape mid-overlay would go on rendering what it was told before.
  */
 private data class OverlaySceneKey(val contentKey: Any, val overlayContext: OverlayContext)

@@ -25,10 +25,10 @@ data class Suggestion(
  * knows there are two sources; the screens ask it and never name where a contact came from.
  */
 class Directory(
-    private val local: LocalContacts,
+    local: LocalContacts,
     private val device: DeviceContacts,
     private val history: CallHistory,
-    private val settings: SettingsStore,
+    settings: SettingsStore,
 ) {
     /** Every contact, Sona's and the phone's, A to Z. */
     val contacts: Flow<List<Contact>> =

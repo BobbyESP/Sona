@@ -6,11 +6,6 @@ package com.bobbyesp.sona.core.navigation.keys
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-/*
- * Keys of destinations other features open: the shell opens the switcher from the account chip
- * and onboarding on first start, and onboarding opens the editor. Ids, never objects.
- */
-
 /** The accounts, as a sheet over what was open: choose the default, turn one off, add one. */
 @Serializable data object AccountSwitcher : NavKey
 

@@ -4,7 +4,6 @@
 package com.bobbyesp.sona.feature.history
 
 import android.app.KeyguardManager
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

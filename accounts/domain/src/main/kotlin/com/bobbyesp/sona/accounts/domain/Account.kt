@@ -49,7 +49,7 @@ data class Account(
     }
 }
 
-/** The port a transport uses when none is given. */
+/** The port transport uses when none is given. */
 val Transport.defaultPort: Int
     get() = if (this == Transport.Tls) Account.DEFAULT_TLS_PORT else Account.DEFAULT_PORT
 

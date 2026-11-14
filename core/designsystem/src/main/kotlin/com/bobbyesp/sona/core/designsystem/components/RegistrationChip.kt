@@ -90,8 +90,7 @@ fun RegistrationChip(
             animationSpec = motion.defaultEffectsSpec(),
             label = "RegistrationDotColor",
         )
-    // Registered is a full dot; anything short of it a smaller one, so the state reads by shape
-    // too.
+
     val dotSize by
         animateDpAsState(
             targetValue = if (indicator == RegistrationIndicator.Registered) 10.dp else 8.dp,

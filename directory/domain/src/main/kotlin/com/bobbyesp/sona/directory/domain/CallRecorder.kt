@@ -36,8 +36,6 @@ class CallRecorder(
 
     /** Follows the calls; once, at start. */
     fun start(): Job = scope.launch {
-        // A call refused before it rang (do not disturb, busy without call waiting) never was in
-        // the list below: it is written as it is told, or nobody would learn who called.
         launch {
             refused.collect { call ->
                 history.add(call.toRecord(names(call.remote) ?: call.remoteName))
@@ -57,7 +55,6 @@ class CallRecorder(
                     history.add(record)
                 }
             }
-            // Gone from the list, gone for good: nothing to remember about it.
             val present = list.map { it.id }.toSet()
             firstSeen.keys.retainAll(present)
             recorded.retainAll(present)

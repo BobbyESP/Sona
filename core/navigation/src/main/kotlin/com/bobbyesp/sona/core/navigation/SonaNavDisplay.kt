@@ -45,16 +45,11 @@ fun SonaNavDisplay(
 ) {
     val motion = rememberNavigationMotion()
 
-    // Asked of the entry, as the overlay strategy asks: building it is cheap, and its content is
-    // not composed here.
     val top = backStack.lastOrNull()
     val topEntry = remember(top, entryProvider) { top?.let(entryProvider) }
     val overlayShowing =
         topEntry != null && OverlaySceneStrategy.isShownAsOverlay(topEntry, backStack.size)
 
-    // Handed out through a local rather than to `NavDisplay`: given the scope, the display wraps
-    // every entry in a shared element of its own, and each destination would start gliding between
-    // panes. Only the elements that ask should travel.
     SharedTransitionLayout(
         modifier = modifier.fillMaxSize().outOfFocusBehindOverlay(overlayShowing),
     ) {

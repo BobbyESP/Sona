@@ -107,22 +107,23 @@ sealed interface EndReason {
             answered: Boolean,
             connectedForMs: Long? = null,
         ): EndReason {
-            val status = ended.status
-            if (status == null) {
-                return when {
-                    ended.detail != null && answered -> MediaLost(ended.detail)
-                    ended.detail != null -> ServerUnavailable(null, ended.detail)
-                    answered &&
-                        ended.byRemote &&
-                        direction == CallDirection.Outgoing &&
-                        connectedForMs != null &&
-                        connectedForMs < AT_ONCE_MS -> EndedAtOnce
-                    answered -> HungUp(byMe = !ended.byRemote)
-                    direction == CallDirection.Incoming ->
-                        if (ended.byRemote) Missed else HungUp(byMe = true)
-                    else -> if (ended.byRemote) HungUp(byMe = false) else Cancelled
-                }
-            }
+            val status =
+                ended.status
+                    ?: return when {
+                        ended.detail != null && answered -> MediaLost(ended.detail)
+                        ended.detail != null -> ServerUnavailable(null, ended.detail)
+                        answered &&
+                            ended.byRemote &&
+                            direction == CallDirection.Outgoing &&
+                            connectedForMs != null &&
+                            connectedForMs < AT_ONCE_MS -> EndedAtOnce
+
+                        answered -> HungUp(byMe = !ended.byRemote)
+                        direction == CallDirection.Incoming ->
+                            if (ended.byRemote) Missed else HungUp(byMe = true)
+
+                        else -> if (ended.byRemote) HungUp(byMe = false) else Cancelled
+                    }
             return when (status.code) {
                 486,
                 600 -> Busy(status)

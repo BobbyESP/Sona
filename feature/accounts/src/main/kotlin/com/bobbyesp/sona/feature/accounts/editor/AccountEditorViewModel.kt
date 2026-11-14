@@ -210,9 +210,6 @@ internal class AccountEditorViewModel(
     }
 
     private suspend fun awaitAnswer(id: AccountId, enabled: Boolean) {
-        // The answer to *this* save: an edited account first goes back to Registering, and what it
-        // was before (Registered, with the old password) is no answer. A save that changed nothing
-        // the engine uses never re-registers, so that wait is short.
         if (enabled) {
             withTimeoutOrNull(RestartWindow) {
                 engine.registrations.first { it[id] == RegistrationState.Registering }

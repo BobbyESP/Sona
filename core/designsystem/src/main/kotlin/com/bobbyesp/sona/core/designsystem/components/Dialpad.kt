@@ -5,7 +5,6 @@ package com.bobbyesp.sona.core.designsystem.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -156,7 +155,6 @@ fun Dialpad(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun DialpadKeyButton(
     key: DialpadKey,
@@ -173,8 +171,6 @@ private fun DialpadKeyButton(
     val colors = MaterialTheme.colorScheme
     val symbol = !key.symbol.isDigit()
 
-    // Read only in the draw phase below: a frame of the spring redraws the key, never recomposes
-    // it.
     val corner =
         animateFloatAsState(
             targetValue = if (pressed) PressedCornerPercent else RestingCornerPercent,
@@ -242,8 +238,6 @@ private fun DialpadKeyButton(
                 },
         contentAlignment = Alignment.Center,
     ) {
-        // Where a key is too short for two lines (a phone in landscape), it shows its digit alone;
-        // TalkBack still reads its letters.
         val roomy = maxHeight >= KeyHeightForSecondLine
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(

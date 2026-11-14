@@ -53,6 +53,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
     private fun Project.checkDependencyRules() {
         val forbidden =
             configurations
+                .asSequence()
                 .flatMap { configuration ->
                     configuration.dependencies.withType(ProjectDependency::class.java).map {
                         configuration.name to it.path
@@ -68,6 +69,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 .filterNot { it.isAllowedInFeature() }
                 .distinct()
                 .sorted()
+                .toList()
         if (forbidden.isNotEmpty()) {
             throw GradleException(
                 "$path depends on $forbidden. A feature sees :core:* (never :core:data or " +

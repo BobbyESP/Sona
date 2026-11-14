@@ -25,7 +25,7 @@
 
     <string name="appearance_theme">Theme</string>
     <string name="appearance_theme_keywords">dark light night mode</string>
-    <string name="appearance_theme_system">Same as the system</string>
+    <string name="appearance_theme_system">System</string>
     <string name="appearance_theme_light">Light</string>
     <string name="appearance_theme_dark">Dark</string>
     <string name="appearance_dynamic">Dynamic color</string>

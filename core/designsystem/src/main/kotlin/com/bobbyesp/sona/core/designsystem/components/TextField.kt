@@ -148,17 +148,14 @@ fun SonaTextField(
             animationSpec = motion.defaultEffectsSpec(),
             label = "FieldAccent",
         )
-    // 0 at rest, 1 focused, on the spatial spring: the corners give a little past their mark and
-    // settle, as a key does under the finger. Each corner goes its own way (in a group the outer
-    // ones and the inner ones meet in the middle).
+
     val focus =
         animateFloatAsState(
             targetValue = if (focused) 1f else 0f,
             animationSpec = motion.fastSpatialSpec(),
             label = "FieldCorner",
         )
-    // 0 with the label in the field, 1 with it above the text. Effects, not spatial: a label that
-    // overshoots its place reads as a glitch, not as play.
+
     val raised =
         animateFloatAsState(
             targetValue = if (focused || value.isNotEmpty()) 1f else 0f,
@@ -210,7 +207,6 @@ fun SonaTextField(
                         Text(
                             text = label,
                             style = textStyle,
-                            // In the empty field it is a prompt, a step quieter than what is typed.
                             color = accent,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,

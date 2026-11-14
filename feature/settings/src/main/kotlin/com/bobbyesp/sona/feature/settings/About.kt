@@ -5,7 +5,6 @@ package com.bobbyesp.sona.feature.settings
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
@@ -13,7 +12,6 @@ import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.Gavel
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Memory
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedListItem
@@ -23,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.common.AppInfo
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
@@ -79,7 +78,7 @@ internal class AboutContributor(info: AppInfo, engine: SipEngine, context: Conte
 private fun Context.openUrl(url: String) {
     runCatching {
         startActivity(
-            Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            Intent(Intent.ACTION_VIEW, url.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }
 }
@@ -116,7 +115,6 @@ internal val LicensedWorks: List<LicensedWork> =
     )
 
 /** Sona's own license, then every work it includes; a row opens the work's page. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun LicensesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current

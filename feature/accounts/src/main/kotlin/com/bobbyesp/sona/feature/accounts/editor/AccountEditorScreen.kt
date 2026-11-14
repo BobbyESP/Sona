@@ -63,7 +63,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -161,7 +160,6 @@ internal fun AccountEditorRoute(
  * segmented list items for what is chosen or switched, a connected group for a choice of three,
  * section headers that TalkBack reads as headings, and one primary action at the bottom.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AccountEditorScreen(
     state: EditorState,
@@ -227,7 +225,6 @@ internal fun AccountEditorScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun EditorForm(
     state: EditorState,
@@ -323,7 +320,6 @@ private fun Header(text: Int) {
  * The one action of the form, at its foot and above the keyboard: a medium button that squares
  * under the finger, saying what saving does (it checks the account with the server when it is on).
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SaveButton(enabled: Boolean, onClick: () -> Unit) {
     val height = ButtonDefaults.MediumContainerHeight

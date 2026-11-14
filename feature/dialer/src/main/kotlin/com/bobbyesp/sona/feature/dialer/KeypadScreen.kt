@@ -18,7 +18,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -61,7 +60,6 @@ import androidx.compose.material.icons.rounded.Dialpad
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Keyboard
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
@@ -78,9 +76,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -728,8 +726,7 @@ private fun SuggestionRow(
     onCall: (String) -> Unit,
 ) {
     val motion = MaterialTheme.motionScheme
-    // The row keeps what it showed while it leaves, rather than emptying before it shrinks. A plain
-    // holder, not state: it is only read by the composition that writes it.
+
     val lastShown = remember { LastShown(suggestions) }
     if (suggestions.isNotEmpty()) lastShown.value = suggestions
     val shown = lastShown.value
@@ -757,7 +754,6 @@ private fun SuggestionRow(
 
 private class LastShown(var value: List<Suggestion>)
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SuggestionPill(
     suggestion: Suggestion,

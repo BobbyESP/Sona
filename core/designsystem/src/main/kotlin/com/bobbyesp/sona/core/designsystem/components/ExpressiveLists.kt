@@ -98,7 +98,6 @@ fun <T> LazyListScope.segmentedItems(
  * @param contentPadding Its room around it. The default lines it up with the text of items laid out
  *   by [segmentedItems]; a column that pads its content already passes less.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SectionHeader(
     text: String,

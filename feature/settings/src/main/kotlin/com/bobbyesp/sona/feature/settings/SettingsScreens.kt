@@ -24,7 +24,6 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -79,7 +78,6 @@ import kotlinx.coroutines.launch
  * controls, so a setting is found and changed without knowing where it lives; then every area as
  * one segmented group, each on a shape of its own.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsRootScreen(
     state: SettingsState,
@@ -145,7 +143,6 @@ private fun SearchResults(
  * One area: a segmented group per feature that contributed to it, each under its heading, so an
  * area two features share reads as two groups and not one long list.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsAreaScreen(
     entry: AreaItems?,
@@ -169,7 +166,6 @@ internal fun SettingsAreaScreen(
  * The settings screens' frame: Material's large flexible app bar, which collapses into a small one
  * as the list scrolls under it, and the list, at most a readable width.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SettingsScaffold(
     title: String,
@@ -198,7 +194,6 @@ internal fun SettingsScaffold(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SettingsTopBar(
     title: String,
@@ -323,8 +318,6 @@ private fun rowIcon(
     tint: Color = Color.Unspecified,
 ): (@Composable () -> Unit)? = icon?.let {
     {
-        // Unspecified is no tint at all for an Icon (the vector's own black): the list item's
-        // leading color, unless the row asks for another.
         Icon(
             it,
             contentDescription = null,
@@ -334,7 +327,6 @@ private fun rowIcon(
 }
 
 /** Something to read: its name and its value in the face versions are read in; a touch copies. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun InfoRow(item: SettingItem.Info, shapes: ListItemShapes, modifier: Modifier) {
     val clipboard = LocalClipboard.current
@@ -360,7 +352,6 @@ private fun InfoRow(item: SettingItem.Info, shapes: ListItemShapes, modifier: Mo
     )
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun LinkRow(
     item: SettingItem.Link,
@@ -383,7 +374,6 @@ private fun LinkRow(
 }
 
 /** A switch: the whole row toggles, and the thumb shows a check when it is on. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SwitchRow(
     item: SettingItem.Switch,
@@ -445,7 +435,6 @@ private fun <E : Enum<E>> ChoiceRow(
  * A row that is not itself pressed: a list item of the group (its shape, color and icon), with the
  * buttons that are pressed under its text.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun <E : Enum<E>> InlineChoice(
     item: SettingItem.Choice<E>,
@@ -477,7 +466,6 @@ private fun <E : Enum<E>> InlineChoice(
 }
 
 /** More values than fit in a row: the row says which is chosen, and opens them as a list. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun <E : Enum<E>> DialogChoice(
     item: SettingItem.Choice<E>,
@@ -529,7 +517,6 @@ private fun <E : Enum<E>> DialogChoice(
  * Things in an order, each on or off: the row says which are on, first choice first, and opens the
  * list where each is switched and moved up or down. Every touch is written at once, as a switch is.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RankedRow(
     item: SettingItem.Ranked,
@@ -583,7 +570,6 @@ private fun RankedRow(
 }
 
 /** Something done, not stored; a destructive one is in the error color, icon and words alike. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ActionRow(
     item: SettingItem.Action,

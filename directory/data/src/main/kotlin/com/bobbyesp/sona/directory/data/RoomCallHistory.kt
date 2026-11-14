@@ -38,7 +38,7 @@ internal class RoomCallHistory(private val dao: CallRecordDao) : CallHistory {
     override suspend fun deleteBefore(epochMillis: Long) = dao.deleteBefore(epochMillis)
 }
 
-/** `null` for a row that means nothing any more (an address that does not parse). */
+/** `null` for a row that means nothing anymore (an address that does not parse). */
 internal fun CallRecordEntity.toRecord(): CallRecord? {
     val address = SipAddress.parse(uri) ?: return null
     return CallRecord(

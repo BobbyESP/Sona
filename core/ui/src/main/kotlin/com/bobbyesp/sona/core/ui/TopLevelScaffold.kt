@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +45,6 @@ import com.bobbyesp.sona.core.ui.contribution.LocalOpenSettings
  * @param content Given the padding to lay out with, and the modifier its scrolling container takes
  *   (it records what passes under the bar, and collapses the bar as it scrolls).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopLevelScaffold(
     title: String,

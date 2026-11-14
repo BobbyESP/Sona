@@ -30,6 +30,7 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Troubleshoot
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialShapes
@@ -193,6 +194,7 @@ internal fun OnboardingScreen(onIntent: (OnboardingIntent) -> Unit, modifier: Mo
             Spacer(Modifier.weight(1f).heightIn(min = 32.dp))
             Button(
                 onClick = { onIntent(OnboardingIntent.AddAccount) },
+                shapes = ButtonDefaults.shapes(),
                 modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp).heightIn(min = 56.dp),
             ) {
                 Text(

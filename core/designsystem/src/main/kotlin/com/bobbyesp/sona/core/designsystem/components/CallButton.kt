@@ -6,7 +6,6 @@ package com.bobbyesp.sona.core.designsystem.components
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Call
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
@@ -22,7 +21,6 @@ import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
  * finger, as Material 3 Expressive's icon buttons do. The account picker beside it, when there is
  * more than one account, comes with the dialer.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CallButton(
     onClick: () -> Unit,
@@ -35,11 +33,8 @@ fun CallButton(
         onClick = onClick,
         enabled = enabled,
         shapes = IconButtonDefaults.shapes(),
-        // Disabled, it is still the call button, faded: Material's grey would read as something
-        // else on a screen that is about calling.
         colors =
             IconButtonDefaults.filledIconButtonColors(
-                // Both named: left out, the content color would follow the surrounding content.
                 containerColor = colors.primary,
                 contentColor = colors.onPrimary,
                 disabledContainerColor = colors.primary.copy(alpha = DisabledContainerAlpha),

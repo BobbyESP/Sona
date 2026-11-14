@@ -93,6 +93,7 @@ import com.bobbyesp.sona.core.designsystem.components.Dialpad
 import com.bobbyesp.sona.core.designsystem.theme.SonaAccentTheme
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.telecom.api.AudioRouteKind
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -320,7 +321,7 @@ private fun Timer(connectedAt: Long?) {
         produceState(0L, connectedAt) {
             while (connectedAt != null) {
                 value = (System.currentTimeMillis() - connectedAt) / 1000
-                delay(1000)
+                delay(1000.milliseconds)
             }
         }
     Text(
@@ -330,7 +331,6 @@ private fun Timer(connectedAt: Long?) {
     )
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun IncomingActions(otherInProgress: Boolean, onAnswer: () -> Unit, onDecline: () -> Unit) {
     Row(
@@ -357,7 +357,6 @@ private fun IncomingActions(otherInProgress: Boolean, onAnswer: () -> Unit, onDe
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BigAction(
     icon: ImageVector,
@@ -521,7 +520,6 @@ private fun AudioRouteKind?.icon(): ImageVector =
     }
 
 /** A control of the call: a toggle whose shape squares when on, so its state reads from afar. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CallControl(
     icon: ImageVector,

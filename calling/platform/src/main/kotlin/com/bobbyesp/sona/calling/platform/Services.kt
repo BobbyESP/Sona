@@ -74,7 +74,6 @@ class CallService : LifecycleService(), KoinComponent {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        // Android requires startForeground soon after the start; the first call is there already.
         val call = coordinator.calls.value.mostImportant()
         if (call == null) stop() else show(call, null, microphone = false)
         return START_NOT_STICKY

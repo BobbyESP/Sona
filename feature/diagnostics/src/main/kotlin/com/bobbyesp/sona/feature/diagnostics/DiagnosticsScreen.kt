@@ -24,7 +24,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,7 +77,7 @@ internal fun DiagnosticsRoute(
  * read in. Any value is one touch from the clipboard, to paste into an `asterisk -rx` session or a
  * message to the administrator.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun DiagnosticsScreen(
     state: DiagnosticsState,
@@ -199,7 +198,6 @@ private fun EngineCard(state: DiagnosticsState) {
 }
 
 /** An account: who and how it stands, and its registration as rows to read and to copy. */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AccountCard(status: AccountStatus, copy: (String) -> Unit) {
     val account = status.account

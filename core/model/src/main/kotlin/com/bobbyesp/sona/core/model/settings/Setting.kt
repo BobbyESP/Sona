@@ -23,9 +23,9 @@ sealed class Setting<T : Any>(val key: String, val default: T, val overridable: 
     abstract fun encode(value: T): StoredValue
 
     /**
-     * The value [stored] means, or `null` when it means nothing any more: a choice that was
-     * removed, a number out of today's range, another kind of value under the same key. A `null`
-     * reads as [default], so an old or damaged value never breaks a screen.
+     * The value [stored] means, or `null` when it means nothing anymore: a choice that was removed,
+     * a number out of today's range, another kind of value under the same key. A `null` reads as
+     * [default], so an old or damaged value never breaks a screen.
      */
     abstract fun decode(stored: StoredValue): T?
 
@@ -131,11 +131,13 @@ sealed class Setting<T : Any>(val key: String, val default: T, val overridable: 
             val read =
                 text
                     .split(',')
+                    .asSequence()
                     .map { it.trim() }
                     .filter { it.isNotEmpty() }
                     .map { Ranking.Entry(it.removePrefix("-"), enabled = !it.startsWith('-')) }
                     .filter { it.id in names }
                     .distinctBy { it.id }
+                    .toList()
             val missing = default.entries.filter { known -> read.none { it.id == known.id } }
             return Ranking(read + missing)
         }

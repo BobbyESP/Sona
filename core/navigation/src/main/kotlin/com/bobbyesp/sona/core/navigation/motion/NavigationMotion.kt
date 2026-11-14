@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import com.bobbyesp.sona.core.designsystem.blur.BlurLevel
 import com.bobbyesp.sona.core.designsystem.blur.BlurDefaults
+import com.bobbyesp.sona.core.designsystem.blur.BlurLevel
 import com.bobbyesp.sona.core.designsystem.blur.outOfFocus
 import com.bobbyesp.sona.core.navigation.SonaNavDisplay
 

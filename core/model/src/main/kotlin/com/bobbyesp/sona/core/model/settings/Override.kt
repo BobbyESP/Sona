@@ -23,7 +23,7 @@ fun <T> Override<T>.over(app: T): T =
 /**
  * An account's own values, for the options declared `overridable`. Kept as a storage keeps them (by
  * key, as a [StoredValue]), so they are read with the same rule as the app's: a value that means
- * nothing any more is no override.
+ * nothing anymore is no override.
  */
 data class Overrides(val stored: Map<String, StoredValue> = emptyMap()) {
 
