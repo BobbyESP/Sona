@@ -241,7 +241,9 @@ What is new:
   temperature and whether the system allows window blur, and updated as those change. Haze is
   configured from it (disabled at `Off`, its lowest input resolution at `Reduced`), so no screen
   checks the device. `Off` is below Android 12, on Android Go, in battery saver and when the phone
-  is hot; `Reduced` keeps frosted surfaces only.
+  is hot; `Reduced` keeps frosted surfaces only. The *Blur* setting (Appearance, from Android 12)
+  can lower the level, never raise it. [blur.md](blur.md) has the details, and how to take the
+  package to Docucraft and Metadator.
 - **Blur has four calls, in `:core:designsystem/blur`**, and no other module names Haze:
   `rememberBlurSource()` and `Modifier.blurSource()` on the content that scrolls,
   `Modifier.frosted(source, containerColor, shape, amount = { … })` on the surface over it,

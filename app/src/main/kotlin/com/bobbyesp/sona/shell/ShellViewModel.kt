@@ -44,13 +44,18 @@ class ShellViewModel(
 
     private val theme =
         combine(
-            settings.observe(AppearanceSettings.Theme),
-            settings.observe(AppearanceSettings.DynamicColor),
-            settings.observe(AppearanceSettings.SeedColor),
-            settings.observe(AppearanceSettings.Palette),
-            settings.observe(AppearanceSettings.PureBlack),
-        ) { mode, dynamic, seed, palette, black ->
-            SonaThemeConfig(mode, dynamic, seed, palette, black)
+            combine(
+                settings.observe(AppearanceSettings.Theme),
+                settings.observe(AppearanceSettings.DynamicColor),
+                settings.observe(AppearanceSettings.SeedColor),
+                settings.observe(AppearanceSettings.Palette),
+                settings.observe(AppearanceSettings.PureBlack),
+            ) { mode, dynamic, seed, palette, black ->
+                SonaThemeConfig(mode, dynamic, seed, palette, black)
+            },
+            settings.observe(AppearanceSettings.Blur),
+        ) { config, blur ->
+            config.copy(blur = blur)
         }
 
     /** `null` until settings and accounts are read, which the splash screen waits for. */

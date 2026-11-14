@@ -380,6 +380,7 @@ an option an account can override.
 |---|---|---|
 | Theme: system, light, dark; high contrast; pure black | system | ✓ |
 | Dynamic color, or a seed color and palette style | dynamic | ✓ |
+| Blur: automatic, light, off (Android 12+; see [blur.md](blur.md)) | automatic | ✓ |
 | Fonts per role (as Docucraft) | packaged default | |
 | Dialpad letters | on | ✓ |
 | Show addresses under names | on | ✓ |

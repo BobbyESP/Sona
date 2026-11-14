@@ -20,6 +20,21 @@ enum class PaletteStyle {
     Monochrome,
 }
 
+/**
+ * How much the app blurs. The phone may blur less on its own (in battery saver, when it is hot, or
+ * below Android 12, where it never blurs); a choice can lower that, never raise it.
+ */
+enum class BlurPreference {
+    /** As much as the phone can afford: frosted bars, and the screen behind a sheet. */
+    Automatic,
+
+    /** Frosted bars only, at a lower resolution: lighter on the battery and on an older phone. */
+    Light,
+
+    /** No blur: bars and sheets are solid. */
+    Off,
+}
+
 /** Sona's seed: a deep teal, until the user picks another. */
 const val SONA_SEED_COLOR: Int = 0xFF00696B.toInt()
 
@@ -37,6 +52,9 @@ object AppearanceSettings {
 
     /** Pure black surfaces in the dark theme. */
     val PureBlack = Setting.Toggle("appearance.pure_black", default = false)
+
+    /** Shown from Android 12, where blur exists. */
+    val Blur = Setting.choice("appearance.blur", BlurPreference.Automatic)
 }
 
 /** What the app remembers about itself. */

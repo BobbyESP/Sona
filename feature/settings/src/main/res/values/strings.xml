@@ -42,4 +42,10 @@
     <string name="appearance_palette_fruit_salad">Fruit salad</string>
     <string name="appearance_palette_rainbow">Rainbow</string>
     <string name="appearance_palette_monochrome">Monochrome</string>
+    <string name="appearance_blur">Blur</string>
+    <string name="appearance_blur_summary">Frosted bars, and the screen behind a sheet out of focus. The phone blurs less on its own in battery saver or when it is hot</string>
+    <string name="appearance_blur_keywords">frosted glass transparency effects performance battery smooth</string>
+    <string name="appearance_blur_automatic">Automatic</string>
+    <string name="appearance_blur_light">Light</string>
+    <string name="appearance_blur_off">Off</string>
 </resources>

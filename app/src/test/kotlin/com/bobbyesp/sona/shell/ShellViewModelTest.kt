@@ -14,6 +14,7 @@ import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.Secret
 import com.bobbyesp.sona.core.model.settings.AppSettings
 import com.bobbyesp.sona.core.model.settings.AppearanceSettings
+import com.bobbyesp.sona.core.model.settings.BlurPreference
 import com.bobbyesp.sona.core.model.settings.ThemeMode
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.core.testing.MainDispatcherRule
@@ -54,6 +55,16 @@ class ShellViewModelTest {
                 SonaThemeConfig(themeMode = ThemeMode.Dark),
                 viewModel.startup.value?.theme,
             )
+        }
+
+    @Test
+    fun `the blur setting reaches the theme`() =
+        runTest(main.dispatcher) {
+            settings.set(AppearanceSettings.Blur, BlurPreference.Off)
+            val viewModel = ShellViewModel(settings, FakeSipEngine(this), accounts)
+            advanceUntilIdle()
+
+            assertEquals(BlurPreference.Off, viewModel.startup.value?.theme?.blur)
         }
 
     @Test

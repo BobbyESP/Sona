@@ -3,12 +3,15 @@
  */
 package com.bobbyesp.sona.feature.settings
 
+import android.os.Build
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BlurOn
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Wallpaper
 import com.bobbyesp.sona.core.model.settings.AppearanceSettings
+import com.bobbyesp.sona.core.model.settings.BlurPreference
 import com.bobbyesp.sona.core.model.settings.PaletteStyle
 import com.bobbyesp.sona.core.model.settings.ThemeMode
 import com.bobbyesp.sona.core.ui.contribution.SettingItem
@@ -20,7 +23,7 @@ internal object AppearanceContributor : SettingsContributor {
     override val area = SettingsAreas.Appearance
 
     override val items: List<SettingItem> =
-        listOf(
+        listOfNotNull(
             SettingItem.Choice(
                 setting = AppearanceSettings.Theme,
                 title = R.string.appearance_theme,
@@ -64,5 +67,23 @@ internal object AppearanceContributor : SettingsContributor {
                     }
                 },
             ),
+            // Below Android 12 nothing blurs, so there is nothing to choose.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) blurItem() else null,
         )
 }
+
+private fun blurItem(): SettingItem =
+    SettingItem.Choice(
+        setting = AppearanceSettings.Blur,
+        title = R.string.appearance_blur,
+        icon = Icons.Rounded.BlurOn,
+        summary = R.string.appearance_blur_summary,
+        label = { preference ->
+            when (preference) {
+                BlurPreference.Automatic -> R.string.appearance_blur_automatic
+                BlurPreference.Light -> R.string.appearance_blur_light
+                BlurPreference.Off -> R.string.appearance_blur_off
+            }
+        },
+        keywords = R.string.appearance_blur_keywords,
+    )
