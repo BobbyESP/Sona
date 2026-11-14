@@ -41,6 +41,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -49,7 +50,7 @@ import androidx.compose.material3.SplitButtonDefaults
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -111,10 +112,7 @@ internal fun RecentsRoute(
             RecentsEffect.OpenCall -> openCall()
         }
     }
-    // Looking at Recents is what makes missed calls seen, and behind the lock screen nobody is
-    // looking. Found on a phone: when a call rings a locked phone and its screen closes, this
-    // screen is resumed under the lock for a moment, which marked the call seen and took its
-    // notification down before anyone saw either. Unlocking resumes it again.
+
     val context = LocalContext.current
     LifecycleResumeEffect(viewModel) {
         val locked = context.getSystemService(KeyguardManager::class.java)?.isKeyguardLocked == true
@@ -282,7 +280,6 @@ internal fun RecentsScreen(
 }
 
 /** A day: its heading, which sticks, and its calls as one segmented group. */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 private fun LazyListScope.dayGroup(day: Day, onIntent: (RecentsIntent) -> Unit) {
     stickyHeader(key = "day-${day.day}", contentType = "heading") { DayHeading(day.at) }
     val count = day.entries.size
@@ -326,7 +323,6 @@ private fun DayHeading(at: Long) {
     )
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RecentRow(
     group: RecentGroup,
@@ -401,7 +397,7 @@ private fun CallRecord.summary(): String {
  * The details of an entry: who, one split button whose main part calls and whose menu holds the
  * rest (add to contacts, delete), and every call of the group with its SIP status.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DetailsSheet(
     group: RecentGroup,
@@ -414,7 +410,12 @@ private fun DetailsSheet(
     var menu by rememberSaveable { mutableStateOf(false) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState =
+            rememberBottomSheetState(
+                initialValue = SheetValue.Hidden,
+                // No half-open state: it opens at its content's height and back closes it.
+                enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
+            ),
     ) {
         Column(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 24.dp),
