@@ -27,10 +27,11 @@ android {
     }
 
     // One APK per ABI (small, for whoever knows their phone) and a universal one with all of them
-    // (for whoever does not). The app bundle ignores this: Google Play splits it on its own.
+    // (for whoever does not). The app bundle is built without them (-PnoAbiSplits): Google Play
+    // splits it on its own, and AGP refuses to build both in one run.
     splits {
         abi {
-            isEnable = true
+            isEnable = !project.hasProperty("noAbiSplits")
             reset()
             include("armeabi-v7a", "arm64-v8a", "x86_64")
             isUniversalApk = true

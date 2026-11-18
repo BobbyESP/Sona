@@ -56,7 +56,9 @@ jobs:
           echo "SIGNING_KEY_STORE_PATH=$RUNNER_TEMP/keystore.jks" >> "$GITHUB_ENV"
 
       - name: Build
-        run: ./gradlew :app:assembleFullRelease :app:bundleFullRelease
+        run: |
+          ./gradlew :app:assembleFullRelease
+          ./gradlew :app:bundleFullRelease -PnoAbiSplits
 
       # An unsigned bundle keeps its name, so it is told apart by its missing signature file.
       - name: Check that the APK and the bundle are signed
