@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-// The release keystore comes from the environment: the release workflow decodes it, and a local
+// The release keystore comes from the environment. The release workflow decodes it, and a local
 // release build without it is left unsigned. The key is never in the repository.
 val signingStorePath: String? = System.getenv("SIGNING_KEY_STORE_PATH")
 
@@ -18,12 +18,23 @@ android {
         applicationId = "com.bobbyesp.sona"
         versionCode = rootProject.extra["versionCode"] as Int
         versionName = rootProject.extra["versionName"] as String
-        // Phones and the emulator. Linphone ships native code for four ABIs; the two 32-bit ones
-        // only add size for devices no lab has.
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        // Phones and the emulator. Linphone ships native code for four ABIs. `armeabi-v7a` is kept
+        // for older 32-bit ARM phones; only 32-bit x86 (no phone, no current emulator) is left out.
+        ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64") }
         // Where this app's source is published: the GPLv3 owes it to whoever has the app, and
         // About links to it. To be the real address once the repository exists.
         buildConfigField("String", "SOURCE_URL", "\"https://github.com/BobbyESP/Sona\"")
+    }
+
+    // One APK per ABI (small, for whoever knows their phone) and a universal one with all of them
+    // (for whoever does not). The app bundle ignores this: Google Play splits it on its own.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a", "x86_64")
+            isUniversalApk = true
+        }
     }
 
     buildFeatures { buildConfig = true }

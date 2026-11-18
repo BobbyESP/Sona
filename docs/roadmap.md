@@ -534,5 +534,5 @@ JVM, device tests check only what the platform answers, ports are tested with fa
 | Manufacturers that kill background apps (Xiaomi, Huawei, some Samsung settings) | *Always reachable* is not | battery check in readiness, a help page per manufacturer, test on one such phone |
 | Campus Wi-Fi: client isolation, SIP ALG, blocked UDP | registrations that work at home and not in class | TCP and TLS transports, `rtp_symmetric` on the server, the network test |
 | Linphone's API changes between 5.x releases | broken builds on upgrade | pinned version, every Linphone type confined to `:sip:linphone`, its mapper tested |
-| APK size (Linphone's AAR is about 60 MB with every ABI) | slow installs | ABI splits (`arm64-v8a`, `x86_64` for emulators), an App Bundle for any store |
+| APK size (Linphone's AAR is about 60 MB with every ABI) | slow installs | ABI splits (`arm64-v8a`, `armeabi-v7a` for older 32-bit phones, `x86_64` for emulators) plus a universal APK, an App Bundle for any store |
 | GPLv3 (Linphone SDK) | the app's source must be available to its users | Sona is GPLv3 like Docucraft and Metadator; the source link is in About |

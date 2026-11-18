@@ -7,7 +7,7 @@ Sona is free software (GPLv3), and its releases are built in the open by GitHub 
 | Workflow | When | What |
 |---|---|---|
 | `ci.yml` | every pull request and push to `main` | format (`spotlessCheck`), unit tests, lint, and the debug APKs of both engines (format first; the rest run in parallel after it). The `CI` job is the one check to require in branch protection |
-| `release.yml` | run by hand (Actions → Release → Run workflow), on a branch or tag | runs `ci.yml`, then builds the signed `full` APK and app bundle, checks that both are signed, and keeps them as the artifact `sona-release` |
+| `release.yml` | run by hand (Actions → Release → Run workflow), on a branch or tag | runs `ci.yml`, then builds the signed `full` APKs (per ABI and universal) and app bundle, checks that both are signed, and keeps them as the artifact `sona-release` |
 | `dependabot.yml` | weekly | keeps the actions, the version catalog and the Gradle wrapper current |
 
 Every action is used by its major version tag (`@v7`); Dependabot proposes the next major.
@@ -47,7 +47,12 @@ SIGNING_KEY_ALIAS=sona SIGNING_KEY_PASSWORD=… ./gradlew :app:assembleFullRelea
    the release of one version are ordered. `Version.Beta(1, 0, 0, build = 2)` is `1.0.0-beta.2`,
    code 10000102; `Version.Stable(1, 0, 0)` is `1.0.0`, code 10000300.
 2. Run the Release workflow on `main` (or on a tag).
-3. Download `sona-release` from the run: the APK is for GitHub Releases and F-Droid-style
-   distribution, the bundle for Google Play.
-4. Publish the APK and the SHA-256 of the signing certificate, so people can verify it:
-   `apksigner verify --print-certs sona-full-release.apk`.
+3. Download `sona-release` from the run. The build makes four APKs: one per ABI
+   (`*-arm64-v8a-release.apk` for current phones, `*-armeabi-v7a-release.apk` for older 32-bit ARM
+   phones, `*-x86_64-release.apk` for emulators and Chromebooks) and `*-universal-release.apk`,
+   which holds all of them, for whoever does not know their phone's architecture (it is the
+   largest). They are for GitHub Releases and F-Droid-style distribution; the bundle is for Google
+   Play, which splits it by itself.
+4. Publish the APKs and the SHA-256 of the signing certificate, so people can verify it:
+   `apksigner verify --print-certs <apk>` (all four share one key). Say in the release notes which
+   file to pick: when unsure, the universal one.
