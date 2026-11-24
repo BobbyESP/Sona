@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -236,6 +237,29 @@ fun SwipeToDeleteRow(
             }
         },
         content = { content() },
+    )
+}
+
+/**
+ * A list item's headline: what the item is (a name, a setting), one weight above the lines that
+ * explain it, so a list is read by its headlines and not as one grey block. Its color is the item's
+ * content color unless [color] says otherwise (the error color of a missed call).
+ */
+@Composable
+fun ListHeadline(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = color,
+        style = MaterialTheme.typography.bodyLargeEmphasized,
+        maxLines = maxLines,
+        overflow = overflow,
     )
 }
 

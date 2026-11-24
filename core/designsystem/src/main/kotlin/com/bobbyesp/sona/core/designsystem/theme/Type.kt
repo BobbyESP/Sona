@@ -15,7 +15,11 @@ import androidx.compose.ui.unit.sp
  * optical size is its own font size.
  *
  * The emphasized roles (Material 3 Expressive) are the same voices a weight step or two heavier:
- * for what the eye should land on first, as the number on the keypad.
+ * for what the eye should land on first, as the number on the keypad, or a list item's headline.
+ *
+ * Weight follows importance, never the other way round: a list item's name (`bodyLargeEmphasized`)
+ * outweighs what explains it (body) and what is said about it (a time, a state: the medium and
+ * small labels, which stay light). Large labels speak for actions, and keep their weight.
  */
 internal fun createTypography(): Typography {
     val base = Typography()
@@ -36,15 +40,15 @@ internal fun createTypography(): Typography {
         headlineLarge = base.headlineLarge.voiced(FontWeight.SemiBold, Round),
         headlineMedium = base.headlineMedium.voiced(FontWeight.SemiBold, Round),
         headlineSmall = base.headlineSmall.voiced(FontWeight.SemiBold, Round),
-        titleLarge = base.titleLarge.voiced(FontWeight.Bold, Rounded),
-        titleMedium = base.titleMedium.voiced(FontWeight.Bold, Rounded),
+        titleLarge = base.titleLarge.voiced(FontWeight.SemiBold, Rounded),
+        titleMedium = base.titleMedium.voiced(FontWeight.SemiBold, Rounded),
         titleSmall = base.titleSmall.voiced(FontWeight.SemiBold, Rounded),
         bodyLarge = base.bodyLarge.reading(FontWeight.Normal, Soft),
         bodyMedium = base.bodyMedium.reading(FontWeight.Normal, Soft),
         bodySmall = base.bodySmall.reading(FontWeight.Normal, Soft),
         labelLarge = base.labelLarge.voiced(FontWeight.SemiBold, Rounded),
-        labelMedium = base.labelMedium.voiced(FontWeight.SemiBold, Rounded),
-        labelSmall = base.labelSmall.voiced(FontWeight.SemiBold, Rounded),
+        labelMedium = base.labelMedium.voiced(FontWeight.Medium, Rounded),
+        labelSmall = base.labelSmall.voiced(FontWeight.Medium, Rounded),
         displayLargeEmphasized = base.displayLargeEmphasized.voiced(FontWeight.Bold, Round),
         displayMediumEmphasized = base.displayMediumEmphasized.voiced(FontWeight.Bold, Round),
         displaySmallEmphasized = base.displaySmallEmphasized.voiced(FontWeight.Bold, Round),

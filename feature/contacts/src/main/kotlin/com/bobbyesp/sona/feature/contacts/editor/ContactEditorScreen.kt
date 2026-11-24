@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
@@ -220,7 +221,7 @@ internal fun ContactEditorScreen(
                     supportingContent = {
                         Text(stringResource(R.string.contact_editor_favorite_hint))
                     },
-                    content = { Text(stringResource(R.string.contact_editor_favorite)) },
+                    content = { ListHeadline(stringResource(R.string.contact_editor_favorite)) },
                 )
             }
         }

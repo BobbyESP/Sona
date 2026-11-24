@@ -397,7 +397,7 @@ private fun DialedNumber(input: String) {
         if (empty) {
             Text(
                 text = stringResource(R.string.dialer_hint),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -573,7 +573,7 @@ private fun TypedField(input: String, onIntent: (KeypadIntent) -> Unit) {
                 if (state.text.isEmpty()) {
                     Text(
                         text = stringResource(R.string.dialer_hint),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = colors.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )

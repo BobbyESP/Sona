@@ -55,6 +55,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
@@ -201,7 +202,7 @@ private fun CaptureSwitch(capturing: Boolean, onIntent: (TraceIntent) -> Unit) {
         colors = segmentedListColors(),
         supportingContent = { Text(stringResource(R.string.trace_capture_summary)) },
         trailingContent = { Switch(checked = capturing, onCheckedChange = null) },
-        content = { Text(stringResource(R.string.trace_capture)) },
+        content = { ListHeadline(stringResource(R.string.trace_capture)) },
     )
 }
 

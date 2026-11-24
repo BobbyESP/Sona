@@ -68,7 +68,14 @@ fun FrostedLargeTopAppBar(
         title = { Text(text = title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         subtitle =
             subtitle?.let {
-                { Text(text = it, maxLines = 1, overflow = TextOverflow.StartEllipsis) }
+                {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.StartEllipsis,
+                    )
+                }
             },
         modifier =
             modifier

@@ -76,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bobbyesp.sona.calling.ui.problemText
 import com.bobbyesp.sona.core.designsystem.components.ExpressiveSearch
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
@@ -411,7 +412,9 @@ private fun ContactRow(
                     }
                 }
             } else null,
-        content = { Text(contact.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        content = {
+            ListHeadline(contact.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        },
     )
 }
 
@@ -473,7 +476,7 @@ private fun ContactSheet(
                                 )
                             }
                         },
-                        content = { Text(number.value) },
+                        content = { ListHeadline(number.value) },
                     )
                 }
             }
