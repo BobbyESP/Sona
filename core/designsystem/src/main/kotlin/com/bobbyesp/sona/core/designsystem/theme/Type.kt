@@ -19,8 +19,9 @@ import androidx.compose.ui.unit.sp
  * for what the eye should land on first, as the number on the keypad, or a list item's headline.
  *
  * Weight follows importance, never the other way round: a list item's name (`bodyLargeEmphasized`)
- * outweighs what explains it (body) and what is said about it (a time, a state: the medium and
- * small labels, which stay light). Large labels speak for actions, and keep their weight.
+ * outweighs what explains it (body) and what is said about it (a time, a state: the labels). Body
+ * text is light, so a title above it (a dialog's, a card's) is read first; the smallest body text
+ * keeps the regular weight, which a light stroke at that size would leave too faint.
  */
 internal fun createTypography(): Typography {
     val base = Typography()
@@ -43,11 +44,11 @@ internal fun createTypography(): Typography {
         headlineSmall = base.headlineSmall.voiced(FontWeight.SemiBold, Round),
         titleLarge = base.titleLarge.voiced(FontWeight.SemiBold, Rounded),
         titleMedium = base.titleMedium.voiced(FontWeight.SemiBold, Rounded),
-        titleSmall = base.titleSmall.voiced(FontWeight.SemiBold, Rounded),
-        bodyLarge = base.bodyLarge.reading(FontWeight.Normal, Soft),
-        bodyMedium = base.bodyMedium.reading(FontWeight.Normal, Soft),
+        titleSmall = base.titleSmall.voiced(FontWeight.Medium, Rounded),
+        bodyLarge = base.bodyLarge.reading(FontWeight.Light, Soft),
+        bodyMedium = base.bodyMedium.reading(FontWeight.Light, Soft),
         bodySmall = base.bodySmall.reading(FontWeight.Normal, Soft),
-        labelLarge = base.labelLarge.voiced(FontWeight.SemiBold, Rounded),
+        labelLarge = base.labelLarge.voiced(FontWeight.Medium, Rounded),
         labelMedium = base.labelMedium.voiced(FontWeight.Medium, Rounded),
         labelSmall = base.labelSmall.voiced(FontWeight.Medium, Rounded),
         displayLargeEmphasized = base.displayLargeEmphasized.voiced(FontWeight.Bold, Round),
@@ -59,9 +60,9 @@ internal fun createTypography(): Typography {
         titleLargeEmphasized = base.titleLargeEmphasized.voiced(FontWeight.ExtraBold, Rounded),
         titleMediumEmphasized = base.titleMediumEmphasized.voiced(FontWeight.ExtraBold, Rounded),
         titleSmallEmphasized = base.titleSmallEmphasized.voiced(FontWeight.Bold, Rounded),
-        bodyLargeEmphasized = base.bodyLargeEmphasized.reading(FontWeight.SemiBold, Soft),
-        bodyMediumEmphasized = base.bodyMediumEmphasized.reading(FontWeight.SemiBold, Soft),
-        bodySmallEmphasized = base.bodySmallEmphasized.reading(FontWeight.SemiBold, Soft),
+        bodyLargeEmphasized = base.bodyLargeEmphasized.reading(FontWeight.Medium, Soft),
+        bodyMediumEmphasized = base.bodyMediumEmphasized.reading(FontWeight.Medium, Soft),
+        bodySmallEmphasized = base.bodySmallEmphasized.reading(FontWeight.Medium, Soft),
         labelLargeEmphasized = base.labelLargeEmphasized.voiced(FontWeight.Bold, Rounded),
         labelMediumEmphasized = base.labelMediumEmphasized.voiced(FontWeight.Bold, Rounded),
         labelSmallEmphasized = base.labelSmallEmphasized.voiced(FontWeight.Bold, Rounded),

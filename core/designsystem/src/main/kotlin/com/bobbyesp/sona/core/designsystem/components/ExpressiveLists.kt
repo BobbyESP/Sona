@@ -180,7 +180,7 @@ fun <T> SegmentedChoiceList(
                 selected = option == selected,
                 onClick = { onSelect(option) },
                 shapes = ListItemDefaults.segmentedShapes(index = index, count = options.size),
-                colors = ListItemDefaults.segmentedColors(containerColor = containerColor),
+                colors = segmentedListColors(containerColor = containerColor),
                 leadingContent = { RadioButton(selected = option == selected, onClick = null) },
                 modifier = Modifier.semantics { role = Role.RadioButton },
             ) {
@@ -269,7 +269,12 @@ fun ListHeadline(
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun segmentedListColors(): ListItemColors =
+fun segmentedListColors(
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+): ListItemColors =
     ListItemDefaults.segmentedColors(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = containerColor,
+        supportingContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        selectedSupportingContentColor =
+            MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
     )

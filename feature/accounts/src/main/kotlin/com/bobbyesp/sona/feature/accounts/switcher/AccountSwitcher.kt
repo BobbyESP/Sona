@@ -155,7 +155,8 @@ internal fun AccountSwitcherSheet(
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
                             leadingContentColor = MaterialTheme.colorScheme.error,
                             trailingContentColor = MaterialTheme.colorScheme.onErrorContainer,
-                            supportingContentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            supportingContentColor =
+                                MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.75f),
                         ),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
