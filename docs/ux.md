@@ -227,10 +227,11 @@ Material 3 Expressive, friendly but never toy-like. The keypad shows all of it; 
   (`titleMediumEmphasized`…) are a weight step heavier, for what the eye should land on first.
 - **Text has four levels, and weight follows them.** What a thing is (a name, a setting) is
   `onSurface` and a list item's headline is `ListHeadline` (`bodyLargeEmphasized`); what explains
-  it is body text in `onSurfaceVariant`; what is said about it (a time, a state) is a medium or
-  small label, which stays light; headings are primary. Large labels speak for actions and keep
-  their weight. A hint, a subtitle or a description never wears a title's weight, and no text is
-  faded with an alpha to step it back: it takes the role below.
+  it is body text, light, in `onSurfaceVariant` (a dialog's text, a list item's supporting line);
+  what is said about it (a time, a state) is a label, which stays light; headings are primary. A
+  hint, a subtitle or a description never wears a title's weight, and no text is faded with an
+  alpha to step it back: it takes the role below. Only on a colored container, whose scheme has
+  no variant role (an error card, a selected option), is the line below its content color at 75%.
 - **Numbers have their own roles**: `SonaTheme.typography.numerals` (`large`, `medium`, `small`):
   round, a little wide, tabular figures. Monospace stays for what is read character by character
   (addresses, traces).

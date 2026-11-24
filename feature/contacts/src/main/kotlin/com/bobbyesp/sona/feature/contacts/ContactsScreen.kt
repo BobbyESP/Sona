@@ -352,6 +352,7 @@ private fun PhoneContactsCard(onAllow: () -> Unit) {
                 Text(
                     stringResource(R.string.contacts_phone_text),
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Button(
                     onClick = onAllow,
