@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
@@ -96,8 +97,9 @@ fun List<List<DialpadKey>>.withVoicemail(label: String): List<List<DialpadKey>> 
  * @param onLongPress A long press on a key with nothing of its own to type; return whether it was
  *   used (the voicemail shortcut on 1).
  * @param keyAspectRatio Each key's width to height, which sets the pad's height from its width.
- *   `null` makes the keys share the height the pad is given instead, for where height is what is
- *   short (a phone in landscape): the pad must then have a bounded height.
+ *   Given less height than that, the keys flatten to fit it rather than run past it. `null` makes
+ *   the keys share the height the pad is given instead, for where height is what is short (a phone
+ *   in landscape): the pad must then have a bounded height.
  */
 @Composable
 fun Dialpad(
@@ -111,13 +113,41 @@ fun Dialpad(
     onLongPress: (DialpadKey) -> Boolean = { false },
 ) {
     val dialTones = rememberDialpadTones(tones)
+    BoxWithConstraints(modifier.widthIn(max = DialpadMaxWidth).fillMaxWidth()) {
+        val keyHeight = keyAspectRatio?.let { ratio ->
+            val columns = keys.maxOf { it.size }
+            val fromWidth = (maxWidth - KeySpacing * (columns - 1)) / columns / ratio
+            if (constraints.hasBoundedHeight) {
+                val fits = (maxHeight - KeySpacing * (keys.size - 1)) / keys.size
+                minOf(fromWidth, fits).coerceAtLeast(0.dp)
+            } else {
+                fromWidth
+            }
+        }
+        DialpadRows(keys, keyHeight, showLetters, haptics, dialTones, onKey, onLongPress)
+    }
+}
+
+/** The rows of keys: each [keyHeight] tall, or sharing the pad's height when it is `null`. */
+@Composable
+private fun DialpadRows(
+    keys: List<List<DialpadKey>>,
+    keyHeight: Dp?,
+    showLetters: Boolean,
+    haptics: Boolean,
+    dialTones: DialpadTones?,
+    onKey: (Char) -> Unit,
+    onLongPress: (DialpadKey) -> Boolean,
+) {
     Column(
-        modifier = modifier.widthIn(max = DialpadMaxWidth).fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth()
+                .then(if (keyHeight == null) Modifier.fillMaxHeight() else Modifier),
         verticalArrangement = Arrangement.spacedBy(KeySpacing),
     ) {
         keys.forEach { row ->
             Row(
-                modifier = if (keyAspectRatio == null) Modifier.weight(1f) else Modifier,
+                modifier = if (keyHeight == null) Modifier.weight(1f) else Modifier,
                 horizontalArrangement = Arrangement.spacedBy(KeySpacing),
             ) {
                 row.forEach { key ->
@@ -142,8 +172,8 @@ fun Dialpad(
                         modifier =
                             Modifier.weight(1f)
                                 .then(
-                                    if (keyAspectRatio != null) {
-                                        Modifier.aspectRatio(keyAspectRatio)
+                                    if (keyHeight != null) {
+                                        Modifier.height(keyHeight)
                                     } else {
                                         Modifier.fillMaxHeight()
                                     },

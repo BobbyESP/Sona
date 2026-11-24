@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.navigation.keys.CallReadiness
@@ -278,7 +279,7 @@ private fun CheckRow(
                     }
                 }
             } else null,
-        content = { Text(stringResource(result.check.title), color = colors.onSurface) },
+        content = { ListHeadline(stringResource(result.check.title), color = colors.onSurface) },
     )
 }
 

@@ -62,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.designsystem.components.ConnectedChoice
 import com.bobbyesp.sona.core.designsystem.components.ExpressiveSearch
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.RankedList
 import com.bobbyesp.sona.core.designsystem.components.SectionHeader
 import com.bobbyesp.sona.core.designsystem.components.SegmentedChoiceList
@@ -203,7 +204,7 @@ private fun SettingsTopBar(
 ) {
     LargeFlexibleTopAppBar(
         title = { Text(title) },
-        subtitle = subtitle?.let { { Text(it) } },
+        subtitle = subtitle?.let { { Text(it, style = MaterialTheme.typography.bodyLarge) } },
         navigationIcon = {
             IconButton(onClick = onBack) {
                 Icon(
@@ -289,7 +290,7 @@ private fun AreaRow(
         trailingContent = {
             Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
         },
-        content = { Text(stringResource(area.title)) },
+        content = { ListHeadline(stringResource(area.title)) },
     )
 }
 
@@ -348,7 +349,7 @@ private fun InfoRow(item: SettingItem.Info, shapes: ListItemShapes, modifier: Mo
                 modifier = Modifier.size(20.dp),
             )
         },
-        content = { Text(stringResource(item.title)) },
+        content = { ListHeadline(stringResource(item.title)) },
     )
 }
 
@@ -369,7 +370,7 @@ private fun LinkRow(
         trailingContent = {
             Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
         },
-        content = { Text(stringResource(item.title)) },
+        content = { ListHeadline(stringResource(item.title)) },
     )
 }
 
@@ -407,7 +408,7 @@ private fun SwitchRow(
                     } else null,
             )
         },
-        content = { Text(stringResource(item.title)) },
+        content = { ListHeadline(stringResource(item.title)) },
     )
 }
 
@@ -461,7 +462,7 @@ private fun <E : Enum<E>> InlineChoice(
                 )
             }
         },
-        content = { Text(stringResource(item.title)) },
+        content = { ListHeadline(stringResource(item.title)) },
     )
 }
 
@@ -485,7 +486,7 @@ private fun <E : Enum<E>> DialogChoice(
         trailingContent = {
             Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
         },
-        content = { Text(stringResource(item.title)) },
+        content = { ListHeadline(stringResource(item.title)) },
     )
     if (open) {
         AlertDialog(
@@ -540,7 +541,7 @@ private fun RankedRow(
         trailingContent = {
             Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
         },
-        content = { Text(stringResource(item.title)) },
+        content = { ListHeadline(stringResource(item.title)) },
     )
     if (open) {
         AlertDialog(
@@ -588,7 +589,7 @@ private fun ActionRow(
         colors = segmentedListColors(),
         leadingContent = rowIcon(item.icon, tint),
         supportingContent = item.summary?.let { { Text(stringResource(it)) } },
-        content = { Text(stringResource(item.title), color = tint) },
+        content = { ListHeadline(stringResource(item.title), color = tint) },
     )
     val confirm = item.confirm
     if (asking && confirm != null) {

@@ -115,6 +115,7 @@ import com.bobbyesp.sona.accounts.domain.DraftProblem
 import com.bobbyesp.sona.accounts.ui.explain
 import com.bobbyesp.sona.accounts.ui.stateText
 import com.bobbyesp.sona.core.designsystem.components.ConnectedChoice
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.RankedList
 import com.bobbyesp.sona.core.designsystem.components.SectionHeader
 import com.bobbyesp.sona.core.designsystem.components.SegmentedChoiceList
@@ -373,7 +374,9 @@ private fun MoreOptionsToggle(expanded: Boolean, onToggle: () -> Unit) {
             )
         },
     ) {
-        Text(stringResource(if (expanded) R.string.fewer_options else R.string.more_options))
+        ListHeadline(
+            stringResource(if (expanded) R.string.fewer_options else R.string.more_options),
+        )
     }
 }
 
@@ -694,7 +697,7 @@ private fun SwitchItem(
         supportingContent = description?.let { { Text(stringResource(it)) } },
         trailingContent = { ThumbSwitch(checked) },
     ) {
-        Text(stringResource(title))
+        ListHeadline(stringResource(title))
     }
 }
 
@@ -754,7 +757,7 @@ private fun <T> OverrideItem(
             Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null)
         },
     ) {
-        Text(stringResource(title))
+        ListHeadline(stringResource(title))
     }
     if (open) {
         AlertDialog(
@@ -805,7 +808,7 @@ private fun DialogSwitchRow(title: Int, checked: Boolean, onCheckedChange: (Bool
                 selectedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             ),
     ) {
-        Text(stringResource(title))
+        ListHeadline(stringResource(title))
     }
 }
 

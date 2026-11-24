@@ -200,7 +200,7 @@ New for Sona:
 | `EndCallButton` | Wide, error container, the largest target on the call screen |
 | `CallControl` | A toggle button with icon and label for the call screen's button group |
 | `Avatar` | Initials on one of Material's expressive shapes (cookie, clover, flower…) and a container color, both derived from the name, so the same person is always the same mark |
-| `segmentedItems`, `segmentedListColors` | Lists as segmented groups (`SegmentedListItem`): outer corners round, inner ones square, a gap between, corners morphing under the finger. Recents, Contacts, Settings and Diagnostics are made of them |
+| `segmentedItems`, `segmentedListColors`, `ListHeadline` | Lists as segmented groups (`SegmentedListItem`): outer corners round, inner ones square, a gap between, corners morphing under the finger. Recents, Contacts, Settings and Diagnostics are made of them; each item's headline is a `ListHeadline` |
 | `SectionHeader` | A group's heading, read as a heading by TalkBack; sticky in Recents and Contacts |
 | `SegmentedChoiceList` | One choice among many as selectable segmented items with a radio mark: the options of a dialog (a setting with more than three values, the DTMF method) |
 | `ConnectedChoice` | One choice among two to four, as a connected group of toggle buttons (Recents' All / Missed, a setting's values) |
@@ -225,6 +225,12 @@ Material 3 Expressive, friendly but never toy-like. The keypad shows all of it; 
   rounded (60), body text a hint of it (20), so the app is warm where it speaks up and plain where it
   explains. Each role's optical size is its own size. The emphasized roles
   (`titleMediumEmphasized`…) are a weight step heavier, for what the eye should land on first.
+- **Text has four levels, and weight follows them.** What a thing is (a name, a setting) is
+  `onSurface` and a list item's headline is `ListHeadline` (`bodyLargeEmphasized`); what explains
+  it is body text in `onSurfaceVariant`; what is said about it (a time, a state) is a medium or
+  small label, which stays light; headings are primary. Large labels speak for actions and keep
+  their weight. A hint, a subtitle or a description never wears a title's weight, and no text is
+  faded with an alpha to step it back: it takes the role below.
 - **Numbers have their own roles**: `SonaTheme.typography.numerals` (`large`, `medium`, `small`):
   round, a little wide, tabular figures. Monospace stays for what is read character by character
   (addresses, traces).

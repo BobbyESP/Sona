@@ -35,6 +35,7 @@ import com.bobbyesp.sona.accounts.domain.AccountsRepository
 import com.bobbyesp.sona.accounts.domain.SetAccountEnabled
 import com.bobbyesp.sona.accounts.domain.observeAccountStatuses
 import com.bobbyesp.sona.accounts.ui.AccountStatusRow
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.navigation.overlay.OverlaySheetSkeleton
 import com.bobbyesp.sona.core.ui.contribution.ReadinessMonitor
@@ -158,7 +159,7 @@ internal fun AccountSwitcherSheet(
                         ),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                    Text(stringResource(R.string.accounts_readiness))
+                    ListHeadline(stringResource(R.string.accounts_readiness))
                 }
             }
             state.accounts.forEach { status ->

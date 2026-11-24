@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.core.common.AppInfo
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.ui.contribution.SettingItem
@@ -144,7 +145,7 @@ internal fun LicensesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                 trailingContent = {
                     Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null)
                 },
-                content = { Text(work.name) },
+                content = { ListHeadline(work.name) },
             )
         }
     }

@@ -73,6 +73,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bobbyesp.sona.calling.ui.problemText
 import com.bobbyesp.sona.core.designsystem.components.ConnectedChoice
+import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.SwipeToDeleteRow
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
@@ -312,7 +313,7 @@ private fun LazyListScope.dayGroup(day: Day, onIntent: (RecentsIntent) -> Unit) 
 private fun DayHeading(at: Long) {
     Text(
         formatDayHeading(at),
-        style = MaterialTheme.typography.titleSmall,
+        style = MaterialTheme.typography.titleSmallEmphasized,
         color = MaterialTheme.colorScheme.primary,
         modifier =
             Modifier.fillMaxWidth()
@@ -373,7 +374,7 @@ private fun RecentRow(
             }
         },
         content = {
-            Text(
+            ListHeadline(
                 title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -492,7 +493,7 @@ private fun DetailsSheet(
             }
             Text(
                 stringResource(R.string.history_details_calls),
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmallEmphasized,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.semantics { heading() },
             )
@@ -520,7 +521,7 @@ private fun DetailsSheet(
                                     )
                                 }
                             },
-                        content = { Text(call.summary()) },
+                        content = { ListHeadline(call.summary()) },
                     )
                 }
             }

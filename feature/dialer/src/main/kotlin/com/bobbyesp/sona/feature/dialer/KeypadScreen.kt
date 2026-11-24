@@ -94,6 +94,9 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -113,6 +116,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -200,8 +204,11 @@ internal fun KeypadScreen(
         }
     }
 
-    val display: @Composable () -> Unit = {
-        DialDisplay(state = state, typing = typing, onIntent = onIntent, onPaste = paste)
+    val number: @Composable () -> Unit = {
+        DialNumber(state = state, typing = typing, onIntent = onIntent, onPaste = paste)
+    }
+    val address: @Composable () -> Unit = {
+        Box(Modifier.padding(bottom = 8.dp)) { AddressLine(state) }
     }
     val suggestions: @Composable () -> Unit = {
         SuggestionRow(
@@ -256,7 +263,8 @@ internal fun KeypadScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        display()
+                        number()
+                        address()
                         suggestions()
                         Spacer(Modifier.height(12.dp))
                         actions()
@@ -285,18 +293,14 @@ internal fun KeypadScreen(
                 // Where height is short (a small phone, a large font), the keys flatten rather than
                 // push the call button off the screen.
                 val keyAspectRatio = if (maxHeight < CompactKeypadHeight) 2.1f else 1.6f
-                Column(
+                StackedKeypad(
                     // With the keyboard up, the number and the action row stay above it.
                     modifier = Modifier.fillMaxSize().imePadding(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                    number = number,
+                    address = address,
+                    suggestions = suggestions,
+                    actions = { Box(Modifier.padding(vertical = 20.dp)) { actions() } },
                 ) {
-                    Box(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.BottomCenter,
-                    ) {
-                        display()
-                    }
-                    suggestions()
                     AnimatedVisibility(
                         visible = !typing,
                         enter =
@@ -317,9 +321,54 @@ internal fun KeypadScreen(
                             modifier = Modifier.padding(top = 12.dp),
                         )
                     }
-                    Spacer(Modifier.height(20.dp))
-                    actions()
-                    Spacer(Modifier.height(20.dp))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The keypad stacked: the number, the address it calls, who it could be, the dialpad, the action
+ * row. The address, the suggestions and the actions always get the height they ask for, so a
+ * suggestion never squeezes the address. What gives way is the number, which shrinks to fit down to
+ * [NumberMinHeight], so the keys stay where they are while one types; only below that do the keys
+ * flatten. Height to spare goes above the number.
+ */
+@Composable
+private fun StackedKeypad(
+    number: @Composable () -> Unit,
+    address: @Composable () -> Unit,
+    suggestions: @Composable () -> Unit,
+    actions: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    dialpad: @Composable () -> Unit,
+) {
+    Layout(
+        contents = listOf(number, address, suggestions, dialpad, actions),
+        modifier = modifier,
+    ) { (numberM, addressM, suggestionsM, dialpadM, actionsM), constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        fun List<Measurable>.measureAll(c: Constraints) = map { it.measure(c) }
+        fun List<Placeable>.height() = sumOf { it.height }
+        fun room(used: Int) =
+            loose.copy(maxHeight = (constraints.maxHeight - used).coerceAtLeast(0))
+
+        val actionsP = actionsM.measureAll(loose)
+        val suggestionsP = suggestionsM.measureAll(loose)
+        val addressP = addressM.measureAll(loose)
+        val fixed = actionsP.height() + suggestionsP.height() + addressP.height()
+        val dialpadP = dialpadM.measureAll(room(fixed + NumberMinHeight.roundToPx()))
+        val numberP = numberM.measureAll(room(fixed + dialpadP.height()))
+
+        val width = constraints.maxWidth
+        layout(width, constraints.maxHeight) {
+            // From the bottom up: the actions, the dialpad, the suggestions, the address, the
+            // number.
+            var bottom = constraints.maxHeight
+            for (group in listOf(actionsP, dialpadP, suggestionsP, addressP, numberP)) {
+                for (placeable in group.asReversed()) {
+                    bottom -= placeable.height
+                    placeable.place((width - placeable.width) / 2, bottom.coerceAtLeast(0))
                 }
             }
         }
@@ -334,12 +383,13 @@ private suspend fun Clipboard.text(): String? {
 }
 
 /**
- * What was typed, and the line under it. From the keys it is a number in the theme's large
- * numerals, shrinking to fit rather than scroll, that gives a small spring at each new key; a long
- * press pastes. With the keyboard it is a text field, whose action calls.
+ * What was typed. From the keys it is a number in the theme's large numerals, shrinking to fit
+ * rather than scroll (in width, and in height where the screen is short of it), that gives a small
+ * spring at each new key; a long press pastes. With the keyboard it is a text field, whose action
+ * calls.
  */
 @Composable
-private fun DialDisplay(
+private fun DialNumber(
     state: KeypadState,
     typing: Boolean,
     onIntent: (KeypadIntent) -> Unit,
@@ -348,35 +398,30 @@ private fun DialDisplay(
 ) {
     val haptics = LocalHapticFeedback.current
     val pasteLabel = stringResource(R.string.dialer_paste)
-    Column(
-        modifier = modifier.fillMaxWidth().padding(bottom = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = NumberHeight)
+                .then(
+                    if (typing) {
+                        Modifier
+                    } else {
+                        Modifier.combinedClickable(
+                            interactionSource = null,
+                            indication = null,
+                            onLongClickLabel = pasteLabel,
+                            onLongClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onPaste()
+                            },
+                            onClick = {},
+                        )
+                    },
+                ),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .heightIn(min = NumberHeight)
-                    .then(
-                        if (typing) {
-                            Modifier
-                        } else {
-                            Modifier.combinedClickable(
-                                interactionSource = null,
-                                indication = null,
-                                onLongClickLabel = pasteLabel,
-                                onLongClick = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onPaste()
-                                },
-                                onClick = {},
-                            )
-                        },
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (typing) TypedField(state.input, onIntent) else DialedNumber(state.input)
-        }
-        AddressLine(state)
+        if (typing) TypedField(state.input, onIntent) else DialedNumber(state.input)
     }
 }
 
@@ -397,7 +442,7 @@ private fun DialedNumber(input: String) {
         if (empty) {
             Text(
                 text = stringResource(R.string.dialer_hint),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -573,7 +618,7 @@ private fun TypedField(input: String, onIntent: (KeypadIntent) -> Unit) {
                 if (state.text.isEmpty()) {
                     Text(
                         text = stringResource(R.string.dialer_hint),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = colors.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
@@ -833,6 +878,9 @@ private fun SuggestionPill(
 
 private val ScreenMargin = 24.dp
 private val NumberHeight = 72.dp
+
+/** The least the number keeps where height is short, before the keys give any of theirs. */
+private val NumberMinHeight = 44.dp
 private val AddressLineHeight = 36.dp
 private val PillMaxWidth = 360.dp
 private val ActionSpacing = 20.dp
