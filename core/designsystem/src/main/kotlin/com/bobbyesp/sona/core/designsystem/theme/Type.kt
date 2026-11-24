@@ -6,6 +6,7 @@ package com.bobbyesp.sona.core.designsystem.theme
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
 /**
@@ -84,7 +85,7 @@ internal fun createNumerals(typography: Typography): SonaNumerals {
     return SonaNumerals(
         large =
             typography.displayLarge
-                .copy(fontSize = 52.sp, lineHeight = 60.sp)
+                .copy(fontSize = 52.sp, lineHeight = 1.15.em)
                 .numeral(FontWeight.Medium),
         medium = typography.headlineLarge.numeral(FontWeight.Medium),
         small = typography.titleLarge.numeral(FontWeight.SemiBold),
