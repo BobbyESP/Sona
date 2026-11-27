@@ -73,8 +73,9 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
         if (forbidden.isNotEmpty()) {
             throw GradleException(
                 "$path depends on $forbidden. A feature sees :core:* (never :core:data or " +
-                    ":core:database), :accounts:*, :calling:* and :directory:* (never their :data or " +
-                    ":platform) and the engines' contracts (*:api). It opens another feature by " +
+                    ":core:database), :accounts:*, :calling:*, :directory:* and :messaging:* " +
+                    "(never their :data or :platform) and the engines' contracts (*:api). It " +
+                    "opens another feature by " +
                     "a key of :core:navigation, adds to its screens through a contribution, and " +
                     "implementations are bound in :app."
             )
@@ -89,7 +90,10 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
             this == ":core:data" || this == ":core:database" -> false
             endsWith(":data") || endsWith(":platform") -> false
             startsWith(":core:") -> true
-            startsWith(":accounts:") || startsWith(":calling:") || startsWith(":directory:") -> true
+            startsWith(":accounts:") ||
+                startsWith(":calling:") ||
+                startsWith(":directory:") ||
+                startsWith(":messaging:") -> true
             endsWith(":api") -> true
             else -> false
         }

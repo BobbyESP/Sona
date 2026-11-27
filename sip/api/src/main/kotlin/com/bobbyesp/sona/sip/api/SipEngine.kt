@@ -87,6 +87,9 @@ interface SipEngine {
     val trace: StateFlow<List<SipTraceEntry>>
 
     suspend fun clearTrace()
+
+    /** `MESSAGE` out of a dialog, on the same accounts. See [SipMessaging]. */
+    val messaging: SipMessaging
 }
 
 /** Whether the engine is running. */
