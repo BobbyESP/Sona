@@ -30,11 +30,16 @@
             </intent-filter>
         </activity>
 
-        <!-- The call screen: over the lock screen, in a task of its own. -->
+        <!-- The call screen: over the lock screen, in a task of its own. A video call goes on in
+             Picture-in-Picture; turning and resizing keep the activity, so the video views are
+             never built again mid-call. -->
         <activity
             android:name=".CallActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
             android:showWhenLocked="true"
             android:theme="@style/Theme.Sona"
             android:taskAffinity="${applicationId}.call"

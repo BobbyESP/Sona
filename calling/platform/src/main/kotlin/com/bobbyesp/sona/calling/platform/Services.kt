@@ -4,6 +4,7 @@
 package com.bobbyesp.sona.calling.platform
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -234,7 +235,10 @@ class ServiceController(
     }
 }
 
-/** The notification's *Decline* and *Hang up*, carried out by the coordinator. */
+/**
+ * The notification's *Decline* and *Hang up*, and Picture-in-Picture's *Mute* and *Hang up*,
+ * carried out by the coordinator.
+ */
 class CallActionReceiver : BroadcastReceiver(), KoinComponent {
     private val coordinator: CallCoordinator by inject()
 
@@ -243,13 +247,38 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
         when (intent.action) {
             ACTION_DECLINE -> coordinator.decline(call)
             ACTION_HANG_UP -> coordinator.hangUp(call)
+            ACTION_TOGGLE_MUTE -> {
+                val muted = coordinator.calls.value.firstOrNull { it.id == call }?.muted ?: return
+                coordinator.setMuted(call, !muted)
+            }
         }
     }
 
     companion object {
         const val ACTION_DECLINE = "com.bobbyesp.sona.call.DECLINE"
         const val ACTION_HANG_UP = "com.bobbyesp.sona.call.HANG_UP"
+        const val ACTION_TOGGLE_MUTE = "com.bobbyesp.sona.call.TOGGLE_MUTE"
         const val EXTRA_CALL = "call"
+
+        /**
+         * [action] on [call], as a broadcast to this receiver: for a surface outside the
+         * notification (Picture-in-Picture's actions). [request] tells apart the pending intents of
+         * one surface.
+         */
+        fun pendingIntent(
+            context: Context,
+            action: String,
+            call: CallId,
+            request: Int,
+        ): PendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                request,
+                Intent(context, CallActionReceiver::class.java)
+                    .setAction(action)
+                    .putExtra(EXTRA_CALL, call.value),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
     }
 }
 

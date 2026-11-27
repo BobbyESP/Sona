@@ -2,4 +2,7 @@
 <resources>
     <string name="app_name">Sona</string>
     <string name="call_back_failed">Could not call back. Check that your account is registered.</string>
+    <string name="pip_mute">Mute</string>
+    <string name="pip_unmute">Unmute</string>
+    <string name="pip_hang_up">Hang up</string>
 </resources>
