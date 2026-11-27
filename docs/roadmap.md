@@ -142,7 +142,7 @@ Each item is a new module plus contributions, without editing the features above
 | Blind and attended transfer, add call, conference | `:feature:transfer` | `CallActionProvider`, new `CallMachine` commands |
 | Voicemail and MWI | `:feature:voicemail` | `TopLevelDestination` (badge), `Mwi` capability, account setting |
 | Presence and BLF (Asterisk hints) | `:presence:*`, `:feature:presence` | `PartyActionProvider`, a state on `Avatar` |
-| Messaging (SIP `MESSAGE`) | `:messaging:*`, `:feature:messaging` | `TopLevelDestination`, `PartyActionProvider` |
+| Messaging (SIP `MESSAGE`) | `:messaging:*`, `:feature:messages` | `TopLevelDestination`, `PartyActionProvider` (**built 2026-11-27**) |
 | Call recording | `:feature:recording` | `CallActionProvider` |
 | Widgets and Quick Settings tiles (favorites, *Always reachable*, DND) | `:feature:widgets` | standing requests |
 | AppFunctions ("call extension 102") | `:feature:appfunctions` | the same use cases |
@@ -150,6 +150,17 @@ Each item is a new module plus contributions, without editing the features above
 
 Then, once Sona is stable: the design system shared by Docucraft, Metadator and Sona as one
 library.
+
+**Built ahead of this phase (2026-11-27): video calls and messaging.** Video
+([video.md](video.md)): the engine contract, Linphone video (VP8, H.264, H.265), the coordinator's
+camera decisions with their scenarios, network-aware bandwidth, the video call screen, statistics
+and the quality indicator, Picture-in-Picture, *Settings › Video*, *Video call* as a party action.
+Messaging ([messaging.md](messaging.md)): SIP `MESSAGE` in both engines, Sona's envelopes
+(receipts, typing, long texts, files in chunks that survive a restart), Room schema 4, the
+Messages tab, notifications with *Reply*, *Message* as a party action; `PartyActionProvider` is
+built, hosted by Contacts and Recents. The lab relays both. Checked: the JVM tests (382 runs),
+both debug flavors, lint on `full`, a final review. **Nothing of it has been seen on a device**;
+what to check is in [todo.md](todo.md#video-calls).
 
 ## What is left
 

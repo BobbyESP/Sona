@@ -1,14 +1,16 @@
 # AGENTS.md
 
 Sona is a SIP softphone for Android, made first for Asterisk: it registers SIP accounts, places and
-receives audio calls through Android's Telecom, keeps a history and a directory of contacts, and
-explains every failure in words and in SIP. Nothing leaves the device except SIP and RTP to the
-servers the user configured.
+receives audio and video calls through Android's Telecom, sends texts and files over SIP `MESSAGE`,
+keeps a history and a directory of contacts, and explains every failure in words and in SIP.
+Nothing leaves the device except SIP and RTP to the servers the user configured.
 
 This file is the map and the rules. How each part works, and why, is in [`docs/`](docs/README.md).
 
-**Status:** phases 0, 1 and 2 are built, and phase 3 is built except the parts its section lists (see [docs/roadmap.md](docs/roadmap.md)). The modules below that do not
-exist yet arrive with the phase that needs them, and are added to `settings.gradle.kts` then.
+**Status:** phases 0, 1 and 2 are built, and phase 3 is built except the parts its section lists;
+video calls and messaging were built ahead of phase 5, checked on the JVM only (see
+[docs/roadmap.md](docs/roadmap.md)). The modules below that do not exist yet arrive with the phase
+that needs them, and are added to `settings.gradle.kts` then.
 
 ---
 
@@ -18,19 +20,20 @@ exist yet arrive with the phase that needs them, and are added to `settings.grad
 |---|---|---|
 | `:app` | `App`, `MainActivity`, `CallActivity`, the navigation shell, DI wiring, flavors (`full`, `demo`) | The only module that names implementations |
 | `:core:model`, `:core:common` | Ids, `SipAddress`, setting declarations, dispatchers, `StringProvider` | Plain Kotlin |
-| `:core:data`, `:core:database` | DataStore settings; Room (accounts, overrides, history, contacts) | Seen only by `:app` and `*:data` |
+| `:core:data`, `:core:database` | DataStore settings; Room (accounts, overrides, history, contacts, messages) | Seen only by `:app` and `*:data` |
 | `:core:designsystem` | `SonaTheme`, tokens, blur, shared components | No feature knowledge |
-| `:core:ui` | `BaseViewModel`, messages, contribution point contracts (`NavSection`, `TopLevelDestination`, `SettingsContributor`, `ReadinessCheck`) | |
+| `:core:ui` | `BaseViewModel`, messages, contribution point contracts (`NavSection`, `TopLevelDestination`, `SettingsContributor`, `ReadinessCheck`, `PartyActionProvider`) | |
 | `:core:navigation` | Keys, `Navigator`, scenes, `NavigationMotion` | Cross-feature keys live here, uuids and ids at most |
 | `:accounts:domain` / `:data` / `:ui` | SIP accounts on the user's own server: model, validation, use cases, the engine sync; Room storage; rows, state words, failure sentences | `:domain` plain Kotlin; `:data` only seen by `:app` |
-| `:calling:domain` | `CallCoordinator` (the call decisions, tested by scenarios), call use cases, `AddressResolver`, `EndReason` | Plain Kotlin |
-| `:calling:ui` | What the calling domain says in words: why nothing was dialed (more arrives with the quality badge) | |
+| `:calling:domain` | `CallCoordinator` (the call decisions, video included, tested by scenarios), call use cases, `AddressResolver`, `EndReason`, `CallQuality`, `NetworkMonitor` | Plain Kotlin |
+| `:calling:ui` | What the calling domain says in words: why nothing was dialed, the call's quality, why the camera is off | |
 | `:calling:platform` | `CallService`, `KeepAliveService`, notifications, boot receiver | Only `:app` depends on it |
 | `:directory:domain` / `:data` / `:ui` | History, contacts, favorites, T9 matching | `:data` only seen by `:app` |
+| `:messaging:domain` / `:data` / `:ui` / `:platform` | SIP `MESSAGE`: `Messenger`, envelopes, file transfers; Room storage and message files (`MessageFileProvider`); statuses and failures in words; notifications | `:domain` plain Kotlin; `:data` and `:platform` only seen by `:app` |
 | `:sip:api` / `:sip:linphone` / `:sip:fake` | The SIP engine contract and its implementations | No `org.linphone` type leaves `:sip:linphone` |
 | `:telecom:api` / `:telecom:jetpack` | Android Telecom (Core-Telecom) | No `androidx.core.telecom` type leaves `:telecom:jetpack` |
 | `:credentials:api` / `:credentials:keystore` | SIP passwords, sealed with a Keystore key | |
-| `:feature:*` | `onboarding`, `accounts`, `dialer`, `call`, `history`, `contacts`, `settings`, `diagnostics` | `:core:*`, `:calling:*`, `:directory:*` (never `:data`, `:database`, `:platform`) and `*:api` only. `sona.android.feature` fails the build otherwise |
+| `:feature:*` | `onboarding`, `accounts`, `dialer`, `call`, `history`, `contacts`, `messages`, `settings`, `diagnostics` | `:core:*`, `:accounts:*`, `:calling:*`, `:directory:*`, `:messaging:*` (never `:data`, `:database`, `:platform`) and `*:api` only. `sona.android.feature` fails the build otherwise |
 
 Build setup: `build-logic` holds the convention plugins and `ProjectConfig` (minSdk 26,
 compileSdk 37, targetSdk 37, Java 17). Versions are in `gradle/libs.versions.toml`.
@@ -90,8 +93,8 @@ compileSdk 37, targetSdk 37, Java 17). Versions are in `gradle/libs.versions.tom
 3. Register its destinations in a `<name>Section` object (`NavSection`), bound in its Koin module
    (`single { HistorySection } bind NavSection::class`). The shell collects every section and tab;
    there is no list to edit.
-4. Contribute what it adds to other screens: `TopLevelDestination`, `SettingsContributor`, `ReadinessCheck`
-   (`CallActionProvider` and `PartyActionProvider` are planned, see docs/todo.md).
+4. Contribute what it adds to other screens: `TopLevelDestination`, `SettingsContributor`,
+   `ReadinessCheck`, `PartyActionProvider` (`CallActionProvider` is planned, see docs/todo.md).
 5. Bind its ViewModels and contributions in its Koin module; add the module to `App.kt`.
 6. If it needs the engine to do something new, add a capability (below) first.
 
@@ -130,4 +133,5 @@ docker compose -f lab/compose.yaml up -d --build # the lab Asterisk; the emulato
 ## 5. Docs
 
 [architecture.md](docs/architecture.md) · [calling.md](docs/calling.md) · [ux.md](docs/ux.md) ·
-[roadmap.md](docs/roadmap.md) · [todo.md](docs/todo.md) · [blur.md](docs/blur.md) · [releasing.md](docs/releasing.md) · [lab/](lab/README.md)
+[video.md](docs/video.md) · [messaging.md](docs/messaging.md) · [roadmap.md](docs/roadmap.md) ·
+[todo.md](docs/todo.md) · [blur.md](docs/blur.md) · [releasing.md](docs/releasing.md) · [lab/](lab/README.md)

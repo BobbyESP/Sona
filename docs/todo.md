@@ -2,7 +2,7 @@
 
 The short list: what to do next, what is still to build, and what is built but not yet seen
 working. The history of each item (what was found, where it was checked) stays in
-[roadmap.md](roadmap.md#what-is-left); this file only says what remains. Last updated 2026-11-11.
+[roadmap.md](roadmap.md#what-is-left); this file only says what remains. Last updated 2026-11-27.
 
 Remove a line when it is built **and** seen working, and note where in the roadmap.
 
@@ -64,7 +64,7 @@ Each needs its declaration, its item with keywords, and whatever reads it.
 ### Shell
 
 - [ ] `tel:` and `sip:` links open Sona.
-- [ ] `PartyActionProvider` for a contact, a history entry and a suggestion.
+- [ ] `PartyActionProvider` on a keypad suggestion (Contacts and Recents host them, 2026-11-27).
 - [ ] List-detail on wide windows; the keypad as a supporting pane.
 - [ ] The fast scroller in Contacts.
 - [ ] The readiness step also after a first account added from the chip, not only the welcome.
@@ -93,6 +93,50 @@ rest of that day's work was seen on the Pixel the same evening (see the roadmap)
       screen (only the battery one was pressed), a permission refused for good, the step after a
       first account, the rows' look.
 
+## Video calls
+
+Built 2026-11-27 ([video.md](video.md)), tested on the JVM only; nothing seen on a phone yet.
+
+- [ ] A video call through the lab, VP8 and H.264, both ways; *Answer with video*, *Answer audio
+      only*, the camera on and off mid-call, the other side adding video (taken receive-only).
+- [ ] Linphone's camera names: the front camera picked first (`… Front`), *Switch camera* to the
+      back one, and the `null` update not sending a re-INVITE.
+- [ ] `deviceRotation`: the angle Linphone expects for each display rotation, the picture sent
+      upright at 0, 90, 180 and 270.
+- [ ] The local preview: behind a ringing video call, on the tile while sent, stopped when no view
+      shows it.
+- [ ] Telecom's `requestCallType` and the video call type on a watch or a car; the speaker taken
+      once when video starts on the earpiece.
+- [ ] The `camera` foreground type: granted with the camera on, dropped when it goes off, a
+      refusal leaving the call going.
+- [ ] The frost of the controls over a `TextureView` (blur may not see it).
+- [ ] Picture-in-Picture: entering on leaving (below and from Android 12), the picture's shape,
+      *Mute* and *Hang up* from it, and coming back.
+- [ ] The bandwidth limits on Wi-Fi and mobile data, and the weak connection banner on a poor
+      network.
+
+## Messaging
+
+Built 2026-11-27 ([messaging.md](messaging.md)), tested on the JVM only; nothing seen on a phone
+yet.
+
+- [ ] Texts between two phones through the lab, and to a plain SIP phone; a long text in parts.
+- [ ] Asterisk answers `202` before delivering: a text to a plain peer stays *Sent*, never
+      *Delivered*; one to an extension not registered is lost without a word. Known, to confirm.
+- [ ] Two Sona phones become Sona peers only after a file (or another envelope) went between them;
+      until then no receipts or typing. Known; see whether a first `hi` is worth sending.
+- [ ] A picture and a file: offer, automatic download under the limit, *Download* above it,
+      progress, repair after chunks lost, the SHA-256 check, opening it in another app through
+      `MessageFileProvider`, *Save a copy*.
+- [ ] A transfer across an app restart, both sides; *Cancel* and *Retry*.
+- [ ] A body near 1300 bytes over UDP (PJSIP moves it to TCP), and the larger size limits on
+      another server.
+- [ ] Notifications: one per conversation, *Reply* and *Mark as read* from the lock screen, taken
+      down once read.
+- [ ] Linphone's history empty after messages came (`deleteMessage`), and nothing stored from what
+      was sent.
+- [ ] The camera's picture (`CameraCaptures`) sent after the permission.
+
 ## Never checked on a phone
 
 From phases 1 and 2.
@@ -109,7 +153,8 @@ From phases 1 and 2.
 ## Release
 
 - [ ] A signing configuration; the release APK run on a device; `proguard-rules.pro` for Linphone.
-- [ ] Device tests: the Room migrations (1 to 2, 2 to 3), the device contacts query, Core-Telecom.
+- [ ] Device tests: the Room migrations (1 to 2, 2 to 3, 3 to 4), the device contacts query,
+      Core-Telecom.
 - [ ] Screenshots of the screens on the fake engine: light, dark, large font.
 - [ ] Previews in large font and right-to-left.
 - [ ] A translation, if the course wants one.
