@@ -42,10 +42,9 @@ import kotlinx.coroutines.sync.withLock
 
 /**
  * Texts, pictures and files between extensions, over SIP `MESSAGE`: the one place that sends,
- * receives and keeps them. It lives in the application's scope, like the call coordinator: start
- * it once at app start, **before the engine**, so nothing the engine receives waits unread.
- * Screens observe its flows and call its functions; notifications follow [events]. See
- * docs/messaging.md.
+ * receives and keeps them. It lives in the application's scope, like the call coordinator: start it
+ * once at app start, **before the engine**, so nothing the engine receives waits unread. Screens
+ * observe its flows and call its functions; notifications follow [events]. See docs/messaging.md.
  *
  * - **Plain peers** get the text as typed, cut at word boundaries when longer than the account's
  *   server relays. **Sona peers** (they sent an envelope) get texts with ids, and receipts and
@@ -156,13 +155,14 @@ class Messenger(
     suspend fun open(account: AccountId, peer: SipAddress): ConversationId? {
         val owner = accountList.filterNotNull().first().firstOrNull { it.id == account }
         owner ?: return null
-        return lock.withLock { store.openConversation(account, peerOf(peer, owner), null, clock()) }
+        return lock
+            .withLock { store.openConversation(account, peerOf(peer, owner), null, clock()) }
             .id
     }
 
     /**
-     * Says which conversation is on screen, or `null` when none is (the screen left, the app went to
-     * the background). What arrives in it is read at once, and its notification is not needed.
+     * Says which conversation is on screen, or `null` when none is (the screen left, the app went
+     * to the background). What arrives in it is read at once, and its notification is not needed.
      */
     fun setVisibleConversation(id: ConversationId?) {
         visible.value = id
@@ -181,21 +181,20 @@ class Messenger(
             EnvelopeCodec.textParts(text, limit, id)
                 ?: return SendOutcome.TooLong(text.encodeToByteArray().size, limit)
         stoppedTyping(conversation, sent = true)
-        val message =
-            lock.withLock {
-                store.add(
-                    Message(
-                        conversation = conversation,
-                        direction = MessageDirection.Outgoing,
-                        text = text,
-                        at = clock(),
-                        status = MessageStatus.Sending,
-                        envelopeId = id,
-                        parts = parts.size,
-                        sizeLimit = limit,
-                    ),
-                )
-            }
+        val message = lock.withLock {
+            store.add(
+                Message(
+                    conversation = conversation,
+                    direction = MessageDirection.Outgoing,
+                    text = text,
+                    at = clock(),
+                    status = MessageStatus.Sending,
+                    envelopeId = id,
+                    parts = parts.size,
+                    sizeLimit = limit,
+                ),
+            )
+        }
         scope.launch { deliver(message.id, resumed = false) }
         return SendOutcome.Queued(message.id)
     }
@@ -213,39 +212,39 @@ class Messenger(
                 is PreparedAttachment.Ready -> prepared
                 is PreparedAttachment.TooLarge ->
                     return SendOutcome.FileTooLarge(prepared.size, prepared.limit)
-                is PreparedAttachment.Unreadable -> return SendOutcome.FileUnreadable(prepared.detail)
+                is PreparedAttachment.Unreadable ->
+                    return SendOutcome.FileUnreadable(prepared.detail)
             }
         val sizeLimit = sizeLimit(owner.account)
         val chunk = EnvelopeCodec.chunkSize(sizeLimit)
         val id = newId()
-        val message =
-            lock.withLock {
-                store.add(
-                    Message(
-                        conversation = conversation,
-                        direction = MessageDirection.Outgoing,
-                        text = "",
-                        at = clock(),
-                        status = MessageStatus.Sending,
-                        envelopeId = id,
-                        sizeLimit = sizeLimit,
-                        attachment =
-                            Attachment(
-                                transferId = id,
-                                name = FileNames.safe(ready.name),
-                                mime = ready.mime,
-                                size = ready.size,
-                                sha256 = ready.sha256,
-                                chunkSize = chunk,
-                                chunks = EnvelopeCodec.chunksOf(ready.size, chunk),
-                                width = ready.width,
-                                height = ready.height,
-                                state = TransferState.Offering,
-                                file = ready.file,
-                            ),
-                    ),
-                )
-            }
+        val message = lock.withLock {
+            store.add(
+                Message(
+                    conversation = conversation,
+                    direction = MessageDirection.Outgoing,
+                    text = "",
+                    at = clock(),
+                    status = MessageStatus.Sending,
+                    envelopeId = id,
+                    sizeLimit = sizeLimit,
+                    attachment =
+                        Attachment(
+                            transferId = id,
+                            name = FileNames.safe(ready.name),
+                            mime = ready.mime,
+                            size = ready.size,
+                            sha256 = ready.sha256,
+                            chunkSize = chunk,
+                            chunks = EnvelopeCodec.chunksOf(ready.size, chunk),
+                            width = ready.width,
+                            height = ready.height,
+                            state = TransferState.Offering,
+                            file = ready.file,
+                        ),
+                ),
+            )
+        }
         scope.launch { deliver(message.id, resumed = false) }
         return SendOutcome.Queued(message.id)
     }
@@ -412,14 +411,13 @@ class Messenger(
         val envelope = EnvelopeCodec.decode(received.body)
         val content =
             envelope is Envelope.Plain || envelope is Envelope.Text || envelope is Envelope.Offer
-        val found =
-            lock.withLock {
-                if (content) {
-                    store.openConversation(owner.id, peer, received.fromName, received.atMillis)
-                } else {
-                    store.findConversation(owner.id, peer)
-                }
+        val found = lock.withLock {
+            if (content) {
+                store.openConversation(owner.id, peer, received.fromName, received.atMillis)
+            } else {
+                store.findConversation(owner.id, peer)
             }
+        }
         if (found == null) {
             // A transfer nobody here knows of (its conversation was deleted): stop it.
             if (envelope is Envelope.Chunk) transfers.stranger(owner.id, peer, envelope.id)
@@ -459,7 +457,8 @@ class Messenger(
         var next = conversation
         if (name != null && name != conversation.peerName) next = next.copy(peerName = name)
         if (envelope is Envelope.Plain) {
-            if (conversation.peerKind == PeerKind.Unknown) next = next.copy(peerKind = PeerKind.Plain)
+            if (conversation.peerKind == PeerKind.Unknown)
+                next = next.copy(peerKind = PeerKind.Plain)
         } else if (conversation.peerKind != PeerKind.Sona) {
             next = next.copy(peerKind = PeerKind.Sona)
             if (envelope != Envelope.Hi) {
@@ -472,24 +471,22 @@ class Messenger(
 
     private suspend fun receivePlain(conversation: Conversation, text: String, at: Long) {
         stoppedTyping(conversation.id, sent = false)
-        val message =
-            lock.withLock {
-                store.add(
-                    Message(
-                        conversation = conversation.id,
-                        direction = MessageDirection.Incoming,
-                        text = text,
-                        at = at,
-                        status = MessageStatus.Received,
-                    ),
-                )
-            }
+        val message = lock.withLock {
+            store.add(
+                Message(
+                    conversation = conversation.id,
+                    direction = MessageDirection.Incoming,
+                    text = text,
+                    at = at,
+                    status = MessageStatus.Received,
+                ),
+            )
+        }
         announce(conversation, message)
     }
 
     private suspend fun receiveText(conversation: Conversation, text: Envelope.Text, at: Long) {
-        val known =
-            store.messageByEnvelope(conversation.id, MessageDirection.Incoming, text.id)
+        val known = store.messageByEnvelope(conversation.id, MessageDirection.Incoming, text.id)
         if (known != null) {
             // Sent again: the sender did not hear the server's answer. It is here already.
             queueDelivered(conversation, text.id)
@@ -555,12 +552,11 @@ class Messenger(
 
     /** Delivered receipts go together, a moment after the texts they are for. */
     private suspend fun queueDelivered(conversation: Conversation, id: String) {
-        val first =
-            lock.withLock {
-                val queue = deliveredQueue.getOrPut(conversation.id) { mutableSetOf() }
-                queue.add(id)
-                queue.size == 1
-            }
+        val first = lock.withLock {
+            val queue = deliveredQueue.getOrPut(conversation.id) { mutableSetOf() }
+            queue.add(id)
+            queue.size == 1
+        }
         if (!first) return
         scope.launch {
             delay(RECEIPT_BATCH)
@@ -601,8 +597,11 @@ class Messenger(
     private suspend fun resume() {
         for (message in store.unfinished()) {
             val attachment = message.attachment
-            if (message.outgoing && message.status == MessageStatus.Sending &&
-                (attachment == null || attachment.state == TransferState.Offering)) {
+            if (
+                message.outgoing &&
+                    message.status == MessageStatus.Sending &&
+                    (attachment == null || attachment.state == TransferState.Offering)
+            ) {
                 scope.launch { deliver(message.id, resumed = true) }
             } else if (attachment != null) {
                 transfers.resume(message)

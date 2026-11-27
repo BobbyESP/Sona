@@ -100,8 +100,8 @@ enum class MessageStatus {
  * @property failure Why it was not sent, or why its file did not arrive: set when [status] is
  *   [MessageStatus.Failed], or when an incoming file's transfer failed.
  * @property parts, [partsSent] An outgoing text longer than the server's limit goes in parts.
- * @property sizeLimit The limit its parts were cut for, so a text resumed after a restart is cut the
- *   same way even if the setting changed.
+ * @property sizeLimit The limit its parts were cut for, so a text resumed after a restart is cut
+ *   the same way even if the setting changed.
  */
 data class Message(
     val id: MessageId = MessageId.None,

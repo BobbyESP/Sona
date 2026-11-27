@@ -5,17 +5,17 @@ package com.bobbyesp.sona.messaging.domain.envelope
 
 /**
  * What a `MESSAGE` body means: a plain text, or one of Sona's envelopes. A body is an envelope when
- * its last line is a valid `sona:1:` line, all ASCII; anything else, a malformed envelope
- * included, is [Plain] and shown as it came. The wire format is [EnvelopeCodec]'s, and
- * docs/messaging.md, Envelopes.
+ * its last line is a valid `sona:1:` line, all ASCII; anything else, a malformed envelope included,
+ * is [Plain] and shown as it came. The wire format is [EnvelopeCodec]'s, and docs/messaging.md,
+ * Envelopes.
  */
 sealed interface Envelope {
     /** A body that is not an envelope: shown as it came. */
     data class Plain(val text: String) : Envelope
 
     /**
-     * Part [part] of [of] (from 1) of the text [id]: the parts of a text, put together in order, are
-     * the text. The part travels above the envelope line, so it may hold anything, new lines
+     * Part [part] of [of] (from 1) of the text [id]: the parts of a text, put together in order,
+     * are the text. The part travels above the envelope line, so it may hold anything, new lines
      * included.
      */
     data class Text(val id: String, val part: Int, val of: Int, val text: String) : Envelope
@@ -30,7 +30,10 @@ sealed interface Envelope {
     /** Chunk [index] (from 0) of the file [id]. */
     class Chunk(val id: String, val index: Int, val bytes: ByteArray) : Envelope {
         override fun equals(other: Any?): Boolean =
-            other is Chunk && other.id == id && other.index == index && other.bytes.contentEquals(bytes)
+            other is Chunk &&
+                other.id == id &&
+                other.index == index &&
+                other.bytes.contentEquals(bytes)
 
         override fun hashCode(): Int = (id.hashCode() * 31 + index) * 31 + bytes.contentHashCode()
 

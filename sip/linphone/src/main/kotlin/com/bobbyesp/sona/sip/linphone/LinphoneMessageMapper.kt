@@ -14,8 +14,8 @@ import org.linphone.core.ChatMessage.State as MessageState
  */
 
 /**
- * The final answer for a message in [state], or `null` while it is not final (`Idle`,
- * `InProgress`, `Queued`, `PendingDelivery`): the sender keeps waiting.
+ * The final answer for a message in [state], or `null` while it is not final (`Idle`, `InProgress`,
+ * `Queued`, `PendingDelivery`): the sender keeps waiting.
  *
  * A basic chat room without IMDN ends at `Delivered` once the server answered `2xx` (Asterisk's
  * `202 Accepted`); `DeliveredToUser` and `Displayed` would need IMDN, which Sona never asks for,
@@ -38,8 +38,7 @@ internal fun messageResultOf(
         MessageState.DeliveredToUser,
         MessageState.Displayed ->
             MessageSendResult.Accepted(
-                status =
-                    if (code in 200..299) SipStatus(code, phrase.orDefault(code)) else null,
+                status = if (code in 200..299) SipStatus(code, phrase.orDefault(code)) else null,
             )
         MessageState.NotDelivered,
         MessageState.FileTransferError ->
@@ -62,9 +61,9 @@ private fun String?.orDefault(code: Int): String =
     this?.takeIf { it.isNotBlank() } ?: if (code in 200..299) "OK" else "Error"
 
 /**
- * The account a message came to: the one Linphone matched it to, then the one whose identity it
- * was addressed to, then the only account there is. `null` when several accounts could be it and
- * none matched: the engine does not guess, and the messaging domain puts it on the default account.
+ * The account a message came to: the one Linphone matched it to, then the one whose identity it was
+ * addressed to, then the only account there is. `null` when several accounts could be it and none
+ * matched: the engine does not guess, and the messaging domain puts it on the default account.
  *
  * @param matched The account Linphone's chat room is on, if any of [identities].
  * @param identities Each account's user and domain, as `user@domain` without the scheme.

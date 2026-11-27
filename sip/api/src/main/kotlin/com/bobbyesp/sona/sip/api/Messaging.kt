@@ -15,14 +15,14 @@ import kotlinx.coroutines.flow.Flow
  * Every body is `text/plain`, the only type Asterisk relays (see docs/messaging.md). How long one
  * may be is the domain's to respect: the engine sends what it is given.
  *
- * An engine without [Capability.Messaging] answers every [send] with [MessageSendResult.Failed]
- * and never receives anything.
+ * An engine without [Capability.Messaging] answers every [send] with [MessageSendResult.Failed] and
+ * never receives anything.
  */
 interface SipMessaging {
     /**
      * Sends [body] from [account] to [to] and suspends until the server's final answer: a `2xx`
-     * (for Asterisk always `202 Accepted`, which means *taken*, not *delivered*), a failure, or none
-     * (the engine's own timeout). Never throws for what the network does.
+     * (for Asterisk always `202 Accepted`, which means *taken*, not *delivered*), a failure, or
+     * none (the engine's own timeout). Never throws for what the network does.
      *
      * An account that is not registered is answered [MessageSendResult.AccountUnavailable] at once:
      * nothing is sent.

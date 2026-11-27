@@ -102,10 +102,14 @@ class MessengerTest {
         runTest {
             val (a, b) = phones()
             var busy = 2
-            link(a, b, answer = { _, _ ->
-                if (busy-- > 0) MessageSendResult.Failed(SipStatus(503, "Service Unavailable"))
-                else FakeMessaging.ACCEPTED
-            })
+            link(
+                a,
+                b,
+                answer = { _, _ ->
+                    if (busy-- > 0) MessageSendResult.Failed(SipStatus(503, "Service Unavailable"))
+                    else FakeMessaging.ACCEPTED
+                },
+            )
             val conversation = a.with(b)
 
             a.messenger.sendText(conversation, "insisto")
@@ -137,10 +141,14 @@ class MessengerTest {
     fun `retrying a failed text sends it again`() = runTest {
         val (a, b) = phones()
         var refuse = true
-        link(a, b, answer = { _, _ ->
-            if (refuse) MessageSendResult.Failed(SipStatus(480, "Temporarily Unavailable"))
-            else FakeMessaging.ACCEPTED
-        })
+        link(
+            a,
+            b,
+            answer = { _, _ ->
+                if (refuse) MessageSendResult.Failed(SipStatus(480, "Temporarily Unavailable"))
+                else FakeMessaging.ACCEPTED
+            },
+        )
         val conversation = a.with(b)
         a.messenger.sendText(conversation, "luego")
         runCurrent()
@@ -344,6 +352,22 @@ class MessengerTest {
 
         assertEquals(List(5) { "m$it" }, a.messaging.sentTo(b.address))
         assertEquals(List(5) { "m$it" }, b.messages(b.conversationWith(a)!!.id).map { it.text })
+    }
+
+    @Test
+    fun `a chunk of a transfer nobody here knows of is answered once, to stop it`() = runTest {
+        val (a, b) = phones()
+        repeat(3) {
+            b.messaging.deliver(
+                from = a.address,
+                body = "sona:1:c:abcde23456:$it:AAAA",
+                account = b.account,
+            )
+        }
+        runCurrent()
+
+        assertEquals(listOf(Envelope.Cancel("abcde23456")), b.sentTo(a))
+        assertNull(b.conversationWith(a))
     }
 
     @Test

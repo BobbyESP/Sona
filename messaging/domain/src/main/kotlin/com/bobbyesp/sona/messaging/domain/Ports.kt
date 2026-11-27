@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.flowOf
  * Where conversations and messages are kept: Room in the app (schema 4), maps in tests. The only
  * record there is: the engine keeps nothing (docs/messaging.md, Storage).
  *
- * A message is written whole ([add], [update]); what changes many times a second (which chunks
- * of a file arrived) has calls of its own, so a transfer does not rewrite its message each time.
+ * A message is written whole ([add], [update]); what changes many times a second (which chunks of a
+ * file arrived) has calls of its own, so a transfer does not rewrite its message each time.
  */
 interface MessageStore {
     /** Every conversation, the most recent first, with its last message and unread count. */
@@ -43,7 +43,9 @@ interface MessageStore {
     /** Deletes [id] and every message in it. */
     suspend fun deleteConversation(id: ConversationId)
 
-    /** Adds [message] (and its attachment); it comes back with its id. Its conversation moves up. */
+    /**
+     * Adds [message] (and its attachment); it comes back with its id. Its conversation moves up.
+     */
     suspend fun add(message: Message): Message
 
     suspend fun message(id: MessageId): Message?
@@ -176,7 +178,9 @@ fun interface OfferCaption {
     fun caption(name: String, size: Long): String
 
     companion object {
-        val English = OfferCaption { name, size -> "📎 $name · ${readableSize(size)} — sent with Sona" }
+        val English = OfferCaption { name, size ->
+            "📎 $name · ${readableSize(size)} — sent with Sona"
+        }
     }
 }
 

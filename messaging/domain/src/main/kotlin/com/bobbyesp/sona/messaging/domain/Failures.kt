@@ -74,15 +74,21 @@ internal fun MessageSendResult.toFailure(): MessageFailure? =
         is MessageSendResult.Failed -> {
             val reason =
                 when (status?.code) {
-                    null -> if (detail.isNoAnswer()) FailureReason.NoAnswer
+                    null ->
+                        if (detail.isNoAnswer()) FailureReason.NoAnswer
                         else FailureReason.ServerUnreachable
-                    404, 484, 604 -> FailureReason.NoSuchPeer
+                    404,
+                    484,
+                    604 -> FailureReason.NoSuchPeer
                     415 -> FailureReason.Unsupported
-                    401, 403, 407 -> FailureReason.Refused
+                    401,
+                    403,
+                    407 -> FailureReason.Refused
                     408 -> FailureReason.NoAnswer
                     480 -> FailureReason.PeerOffline
                     503 -> FailureReason.ServerUnreachable
-                    413, 513 -> FailureReason.TooLarge
+                    413,
+                    513 -> FailureReason.TooLarge
                     else -> FailureReason.Rejected
                 }
             MessageFailure(reason, status, detail)

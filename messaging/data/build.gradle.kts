@@ -11,4 +11,5 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.room.runtime)
     implementation(libs.bundles.coroutines)
+    testImplementation(libs.junit)
 }

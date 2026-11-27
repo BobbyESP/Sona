@@ -4,8 +4,8 @@
 package com.bobbyesp.sona.messaging.domain
 
 /**
- * What asking to send did. [Queued] means the message is in the conversation and on its way; how
- * it goes on is its [Message.status]. The others say why nothing was added.
+ * What asking to send did. [Queued] means the message is in the conversation and on its way; how it
+ * goes on is its [Message.status]. The others say why nothing was added.
  */
 sealed interface SendOutcome {
     data class Queued(val message: MessageId) : SendOutcome

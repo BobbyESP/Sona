@@ -63,8 +63,8 @@ internal class Courier(private val engine: SipEngine, private val scope: Corouti
     }
 
     /**
-     * Waits, at most [timeout], for [account] to be registered. Right after the app starts, or after
-     * the network changed, it registers within seconds; a message sent before would fail.
+     * Waits, at most [timeout], for [account] to be registered. Right after the app starts, or
+     * after the network changed, it registers within seconds; a message sent before would fail.
      */
     suspend fun awaitRegistered(account: AccountId, timeout: Duration): Boolean =
         withTimeoutOrNull(timeout) {

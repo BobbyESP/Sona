@@ -33,19 +33,21 @@ class InMemoryMessageStore : MessageStore {
     val all: Map<MessageId, Message>
         get() = state.value.messages
 
-    override val conversations: Flow<List<ConversationSummary>> =
-        state.map { now ->
-            now.conversations.values
-                .sortedWith(compareByDescending<Conversation> { it.lastActivityAt }.thenByDescending { it.id.value })
-                .map { conversation ->
-                    val messages = now.messages.values.filter { it.conversation == conversation.id }
-                    ConversationSummary(
-                        conversation = conversation,
-                        last = messages.maxByOrNull { it.id.value },
-                        unread = messages.count { !it.outgoing && !it.read },
-                    )
-                }
-        }
+    override val conversations: Flow<List<ConversationSummary>> = state.map { now ->
+        now.conversations.values
+            .sortedWith(
+                compareByDescending<Conversation> { it.lastActivityAt }
+                    .thenByDescending { it.id.value },
+            )
+            .map { conversation ->
+                val messages = now.messages.values.filter { it.conversation == conversation.id }
+                ConversationSummary(
+                    conversation = conversation,
+                    last = messages.maxByOrNull { it.id.value },
+                    unread = messages.count { !it.outgoing && !it.read },
+                )
+            }
+    }
 
     override fun messages(conversation: ConversationId): Flow<List<Message>> =
         state
@@ -57,9 +59,12 @@ class InMemoryMessageStore : MessageStore {
             .distinctUntilChanged()
 
     override val unread: Flow<Int> =
-        state.map { now -> now.messages.values.count { !it.outgoing && !it.read } }.distinctUntilChanged()
+        state
+            .map { now -> now.messages.values.count { !it.outgoing && !it.read } }
+            .distinctUntilChanged()
 
-    override suspend fun conversation(id: ConversationId): Conversation? = state.value.conversations[id]
+    override suspend fun conversation(id: ConversationId): Conversation? =
+        state.value.conversations[id]
 
     override suspend fun findConversation(account: AccountId, peer: SipAddress): Conversation? =
         state.value.conversations.values.firstOrNull { it.account == account && it.peer == peer }
@@ -182,7 +187,9 @@ class InMemoryMessageStore : MessageStore {
         text: String,
         at: Long,
     ): Map<Int, String> {
-        state.update { it.copy(parts = it.parts + (Triple(conversation, envelopeId, index) to text)) }
+        state.update {
+            it.copy(parts = it.parts + (Triple(conversation, envelopeId, index) to text))
+        }
         return state.value.parts
             .filterKeys { it.first == conversation && it.second == envelopeId }
             .mapKeys { it.key.third }
@@ -265,7 +272,10 @@ class InMemoryAttachmentFiles : AttachmentFiles {
     override suspend fun read(file: String, offset: Long, length: Int): ByteArray? {
         val bytes = stored[file] ?: return null
         if (offset > bytes.size) return null
-        return bytes.copyOfRange(offset.toInt(), minOf(bytes.size.toLong(), offset + length).toInt())
+        return bytes.copyOfRange(
+            offset.toInt(),
+            minOf(bytes.size.toLong(), offset + length).toInt(),
+        )
     }
 
     override suspend fun delete(file: String) {
@@ -283,7 +293,8 @@ class InMemoryAttachmentFiles : AttachmentFiles {
     val preparer = AttachmentPreparer { source, _, limit ->
         val (name, bytes) =
             picked[source] ?: return@AttachmentPreparer PreparedAttachment.Unreadable("No $source")
-        if (bytes.size > limit) return@AttachmentPreparer PreparedAttachment.TooLarge(bytes.size.toLong(), limit)
+        if (bytes.size > limit)
+            return@AttachmentPreparer PreparedAttachment.TooLarge(bytes.size.toLong(), limit)
         val path = "sent/${names.incrementAndGet()}/$name"
         stored[path] = bytes
         PreparedAttachment.Ready(
@@ -297,6 +308,8 @@ class InMemoryAttachmentFiles : AttachmentFiles {
 
     companion object {
         fun sha256Of(bytes: ByteArray): String =
-            MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+            MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {
+                "%02x".format(it)
+            }
     }
 }

@@ -8,8 +8,8 @@ package com.bobbyesp.sona.messaging.domain.envelope
  * only. Put together in order, the parts are the text, every character kept: a Sona peer joins them
  * back, and a plain peer reads them one after another.
  *
- * A part ends after a space or a line break when one fits; a word longer than a part is cut where
- * a character begins. Never inside a UTF-8 sequence or a surrogate pair, and, where it can, not
+ * A part ends after a space or a line break when one fits; a word longer than a part is cut where a
+ * character begins. Never inside a UTF-8 sequence or a surrogate pair, and, where it can, not
  * inside what reads as one character: before a combining mark, a variation selector, an emoji
  * modifier or a zero-width joiner, after a joiner, between the two letters of a flag or within a
  * `\r\n`.

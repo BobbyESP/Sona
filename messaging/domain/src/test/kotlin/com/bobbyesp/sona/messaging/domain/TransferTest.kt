@@ -12,7 +12,6 @@ import kotlin.random.Random
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -63,7 +62,10 @@ class TransferTest {
 
         val offer = world.a.sentTo(world.b).filterIsInstance<Envelope.Offer>().single()
         assertTrue(offer.caption.contains("holiday.jpg"))
-        assertEquals(EnvelopeCodec.chunksOf(20_000, EnvelopeCodec.chunkSize(700)), offer.offer.chunks)
+        assertEquals(
+            EnvelopeCodec.chunksOf(20_000, EnvelopeCodec.chunkSize(700)),
+            offer.offer.chunks,
+        )
         assertEquals(offer.offer.chunks, world.chunksSent().size)
         assertTrue(world.chunksSent().all { EnvelopeCodec.encode(it).length <= 700 })
 
@@ -96,35 +98,41 @@ class TransferTest {
     }
 
     @Test
-    fun `chunks lost on the way are asked for again after eight seconds, and repaired`() =
-        runTest {
-            val lost = mutableSetOf<Int>()
-            val world =
-                world(
-                    lose = { from, body ->
-                        val chunk = EnvelopeCodec.decode(body) as? Envelope.Chunk
-                        // Every third chunk is lost the first time it is sent.
-                        from.user == "101" && chunk != null && chunk.index % 3 == 0 &&
-                            lost.add(chunk.index)
-                    },
-                )
+    fun `chunks lost on the way are asked for again after eight seconds, and repaired`() = runTest {
+        val lost = mutableSetOf<Int>()
+        val world =
+            world(
+                lose = { from, body ->
+                    val chunk = EnvelopeCodec.decode(body) as? Envelope.Chunk
+                    // Every third chunk is lost the first time it is sent.
+                    from.user == "101" &&
+                        chunk != null &&
+                        chunk.index % 3 == 0 &&
+                        lost.add(chunk.index)
+                },
+            )
 
-            world.send()
-            wait(3)
-            assertEquals(TransferState.Receiving, world.there().attachment!!.state)
+        world.send()
+        wait(3)
+        assertEquals(TransferState.Receiving, world.there().attachment!!.state)
 
-            wait(10)
+        wait(10)
 
-            val miss = world.b.sentTo(world.a).filterIsInstance<Envelope.Miss>()
-            assertTrue(miss.isNotEmpty())
-            assertEquals(TransferState.Done, world.there().attachment!!.state)
-            assertArrayEquals(picture, world.b.files.stored.getValue(world.there().attachment!!.file!!))
-            assertEquals(TransferState.Done, world.sent().state)
-        }
+        val miss = world.b.sentTo(world.a).filterIsInstance<Envelope.Miss>()
+        assertTrue(miss.isNotEmpty())
+        assertEquals(TransferState.Done, world.there().attachment!!.state)
+        assertArrayEquals(picture, world.b.files.stored.getValue(world.there().attachment!!.file!!))
+        assertEquals(TransferState.Done, world.sent().state)
+    }
 
     @Test
     fun `a file larger than the automatic limit waits for Download`() = runTest {
-        val world = world(setUp = { _, b -> b.settings.set(MessageSettings.AutoDownload, AutoDownloadLimit.Never) })
+        val world =
+            world(
+                setUp = { _, b ->
+                    b.settings.set(MessageSettings.AutoDownload, AutoDownloadLimit.Never)
+                },
+            )
 
         world.send()
         wait(20)
@@ -168,7 +176,9 @@ class TransferTest {
                 val chunk = EnvelopeCodec.decode(sent.body) as? Envelope.Chunk
                 if (corrupt && chunk?.index == 1) {
                     val bytes = chunk.bytes.copyOf().also { it[0] = (it[0] + 1).toByte() }
-                    server(sent.copy(body = EnvelopeCodec.encode(Envelope.Chunk(chunk.id, 1, bytes))))
+                    server(
+                        sent.copy(body = EnvelopeCodec.encode(Envelope.Chunk(chunk.id, 1, bytes))),
+                    )
                 } else {
                     server(sent)
                 }
@@ -187,7 +197,10 @@ class TransferTest {
 
             assertEquals(TransferState.Done, world.sent().state)
             assertEquals(TransferState.Done, world.there().attachment!!.state)
-            assertArrayEquals(picture, world.b.files.stored.getValue(world.there().attachment!!.file!!))
+            assertArrayEquals(
+                picture,
+                world.b.files.stored.getValue(world.there().attachment!!.file!!),
+            )
         }
 
     @Test
@@ -230,7 +243,12 @@ class TransferTest {
 
     @Test
     fun `declining a file tells the sender`() = runTest {
-        val world = world(setUp = { _, b -> b.settings.set(MessageSettings.AutoDownload, AutoDownloadLimit.Never) })
+        val world =
+            world(
+                setUp = { _, b ->
+                    b.settings.set(MessageSettings.AutoDownload, AutoDownloadLimit.Never)
+                },
+            )
 
         world.send()
         wait(1)
@@ -242,21 +260,33 @@ class TransferTest {
     }
 
     @Test
-    fun `a file larger than the largest attachment is refused before anything is sent`() =
-        runTest {
-            val world = world(setUp = { a, _ -> a.settings.set(MessageSettings.LargestAttachment, AttachmentLimit.Mb2) })
-            world.a.files.pick("content://picked/2", "big.bin", ByteArray(3 * 1024 * 1024))
+    fun `a file larger than the largest attachment is refused before anything is sent`() = runTest {
+        val world =
+            world(
+                setUp = { a, _ ->
+                    a.settings.set(MessageSettings.LargestAttachment, AttachmentLimit.Mb2)
+                },
+            )
+        world.a.files.pick("content://picked/2", "big.bin", ByteArray(3 * 1024 * 1024))
 
-            val outcome = world.a.messenger.sendFile(world.conversation, "content://picked/2")
+        val outcome = world.a.messenger.sendFile(world.conversation, "content://picked/2")
 
-            assertTrue(outcome is SendOutcome.FileTooLarge)
-            assertTrue(world.a.messaging.sent.isEmpty())
-        }
+        assertTrue(outcome is SendOutcome.FileTooLarge)
+        assertTrue(world.a.messaging.sent.isEmpty())
+    }
 
     @Test
     fun `a receiver closed mid-transfer goes on with the chunks it had kept`() = runTest {
         var cut = true
-        val world = world(lose = { from, body -> cut && from.user == "101" && body.contains(":c:") && EnvelopeCodec.decode(body).let { it is Envelope.Chunk && it.index >= 20 } })
+        val world =
+            world(
+                lose = { from, body ->
+                    cut &&
+                        from.user == "101" &&
+                        body.contains(":c:") &&
+                        EnvelopeCodec.decode(body).let { it is Envelope.Chunk && it.index >= 20 }
+                },
+            )
 
         world.send()
         wait(3)

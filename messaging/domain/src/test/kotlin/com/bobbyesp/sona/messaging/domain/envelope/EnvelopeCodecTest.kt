@@ -60,7 +60,10 @@ class EnvelopeCodecTest {
             "sona:1:rcpt:r:$id,bbbbbbbbbb",
             EnvelopeCodec.encode(Envelope.Receipt(true, listOf(id, "bbbbbbbbbb"))),
         )
-        assertEquals("sona:1:c:$id:3:AAE", EnvelopeCodec.encode(Envelope.Chunk(id, 3, byteArrayOf(0, 1))))
+        assertEquals(
+            "sona:1:c:$id:3:AAE",
+            EnvelopeCodec.encode(Envelope.Chunk(id, 3, byteArrayOf(0, 1))),
+        )
     }
 
     @Test
@@ -123,7 +126,8 @@ class EnvelopeCodecTest {
     @Test
     fun `an offered name is only ever a name, and an unknown type is a plain file`() {
         val offer = FileOffer(id, "../../shared_prefs/x.xml", "TEXT/<script>", 1, hash, 1, 1)
-        val read = EnvelopeCodec.decode(EnvelopeCodec.encode(Envelope.Offer(offer))) as Envelope.Offer
+        val read =
+            EnvelopeCodec.decode(EnvelopeCodec.encode(Envelope.Offer(offer))) as Envelope.Offer
 
         assertEquals("x.xml", read.offer.name)
         assertEquals("application/octet-stream", read.offer.mime)

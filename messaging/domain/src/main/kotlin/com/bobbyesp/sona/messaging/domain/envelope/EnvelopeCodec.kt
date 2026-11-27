@@ -56,7 +56,10 @@ object EnvelopeCodec {
             is Envelope.Fail -> PREFIX + "fail:${envelope.id}:${envelope.reason}"
             is Envelope.Cancel -> PREFIX + "cancel:" + envelope.id
             is Envelope.Receipt ->
-                PREFIX + "rcpt:" + (if (envelope.read) "r:" else "d:") + envelope.ids.joinToString(",")
+                PREFIX +
+                    "rcpt:" +
+                    (if (envelope.read) "r:" else "d:") +
+                    envelope.ids.joinToString(",")
             Envelope.Typing -> PREFIX + "typing"
             Envelope.Hi -> PREFIX + "hi"
         }
@@ -108,13 +111,15 @@ object EnvelopeCodec {
     /** [ids] as receipts, as few as fit within [limit] bytes each. */
     fun receiptsFitting(read: Boolean, ids: List<String>, limit: Int): List<Envelope.Receipt> {
         val perReceipt = (limit - RECEIPT_OVERHEAD + 1) / (ID_LENGTH + 1)
-        return ids.distinct().chunked(perReceipt.coerceAtLeast(1)).map { Envelope.Receipt(read, it) }
+        return ids.distinct().chunked(perReceipt.coerceAtLeast(1)).map {
+            Envelope.Receipt(read, it)
+        }
     }
 
     /**
-     * The body offering [offer] within [limit] bytes, with [caption] above for a person: the name is
-     * shortened (in both) until it fits, keeping its extension. `null` when even the shortest does
-     * not fit.
+     * The body offering [offer] within [limit] bytes, with [caption] above for a person: the name
+     * is shortened (in both) until it fits, keeping its extension. `null` when even the shortest
+     * does not fit.
      *
      * @param caption What to say of the file under a name, for a plain phone's reader.
      */
@@ -179,7 +184,8 @@ object EnvelopeCodec {
         val json =
             runCatching { String(Base64.getUrlDecoder().decode(rest), Charsets.UTF_8) }.getOrNull()
                 ?: return null
-        val read = runCatching { Codec.decodeFromString<OfferJson>(json) }.getOrNull() ?: return null
+        val read =
+            runCatching { Codec.decodeFromString<OfferJson>(json) }.getOrNull() ?: return null
         return read.toOffer()?.let { Envelope.Offer(it, above) }
     }
 
@@ -187,7 +193,8 @@ object EnvelopeCodec {
         val fields = rest.split(':')
         if (fields.size != 3 || !isId(fields[0])) return null
         val index = fields[1].number() ?: return null
-        val bytes = runCatching { Base64.getUrlDecoder().decode(fields[2]) }.getOrNull() ?: return null
+        val bytes =
+            runCatching { Base64.getUrlDecoder().decode(fields[2]) }.getOrNull() ?: return null
         return Envelope.Chunk(fields[0], index, bytes)
     }
 
@@ -196,14 +203,13 @@ object EnvelopeCodec {
         if (!isId(id)) return null
         val items = list.split(',')
         if (items.size > MAX_RANGES) return null
-        val ranges =
-            items.map { item ->
-                val bounds = item.split('-')
-                val first = bounds[0].number() ?: return null
-                val last = if (bounds.size == 2) bounds[1].number() ?: return null else first
-                if (bounds.size > 2 || last < first) return null
-                first..last
-            }
+        val ranges = items.map { item ->
+            val bounds = item.split('-')
+            val first = bounds[0].number() ?: return null
+            val last = if (bounds.size == 2) bounds[1].number() ?: return null else first
+            if (bounds.size > 2 || last < first) return null
+            first..last
+        }
         return Envelope.Miss(id, ranges)
     }
 
@@ -236,8 +242,10 @@ object EnvelopeCodec {
     private fun String.idOrNull(): String? = takeIf(::isId)
 
     /** A count or an index: digits only, no sign, no more than an `Int` holds. */
-    private fun String.number(): Int? =
-        takeIf { it.isNotEmpty() && it.length <= 9 && it.all(Char::isDigit) }?.toInt()
+    private fun String.number(): Int? = takeIf {
+        it.isNotEmpty() && it.length <= 9 && it.all(Char::isDigit)
+    }
+        ?.toInt()
 
     // --- Encoding ----------------------------------------------------------------------------
 
@@ -310,7 +318,8 @@ object EnvelopeCodec {
     }
 
     private const val BASE32 = "abcdefghijklmnopqrstuvwxyz234567"
-    private val MimePattern = Regex("[a-z0-9][a-z0-9!#$&^_.+-]{0,63}/[a-z0-9][a-z0-9!#$&^_.+-]{0,63}")
+    private val MimePattern =
+        Regex("[a-z0-9][a-z0-9!#$&^_.+-]{0,63}/[a-z0-9][a-z0-9!#$&^_.+-]{0,63}")
     private const val OCTET_STREAM = "application/octet-stream"
 
     /** `⏎sona:1:t:` with an id, `:`, `99/99`. */

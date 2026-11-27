@@ -357,32 +357,31 @@ internal class Transfers(
     suspend fun offered(conversation: Conversation, offer: FileOffer, at: Long) {
         val known = store.messageByEnvelope(conversation.id, MessageDirection.Incoming, offer.id)
         if (known != null) return offeredAgain(conversation, known)
-        val message =
-            lock.withLock {
-                store.add(
-                    Message(
-                        conversation = conversation.id,
-                        direction = MessageDirection.Incoming,
-                        text = "",
-                        at = at,
-                        status = MessageStatus.Received,
-                        envelopeId = offer.id,
-                        attachment =
-                            Attachment(
-                                transferId = offer.id,
-                                name = offer.name,
-                                mime = offer.mime,
-                                size = offer.size,
-                                sha256 = offer.sha256,
-                                chunkSize = offer.chunk,
-                                chunks = offer.chunks,
-                                width = offer.width,
-                                height = offer.height,
-                                state = TransferState.Offered,
-                            ),
-                    ),
-                )
-            }
+        val message = lock.withLock {
+            store.add(
+                Message(
+                    conversation = conversation.id,
+                    direction = MessageDirection.Incoming,
+                    text = "",
+                    at = at,
+                    status = MessageStatus.Received,
+                    envelopeId = offer.id,
+                    attachment =
+                        Attachment(
+                            transferId = offer.id,
+                            name = offer.name,
+                            mime = offer.mime,
+                            size = offer.size,
+                            sha256 = offer.sha256,
+                            chunkSize = offer.chunk,
+                            chunks = offer.chunks,
+                            width = offer.width,
+                            height = offer.height,
+                            state = TransferState.Offered,
+                        ),
+                ),
+            )
+        }
         received(conversation, message)
         if (downloadsByItself(offer.size)) accept(conversation, message)
     }
@@ -445,7 +444,10 @@ internal class Transfers(
         }
         val now =
             change(message.id) {
-                it.copy(failure = null, attachment = attachment.copy(state = TransferState.Receiving))
+                it.copy(
+                    failure = null,
+                    attachment = attachment.copy(state = TransferState.Receiving),
+                )
             } ?: return
         tell(conversation, Envelope.Accept(id))
         receive(conversation, now, BitSet())
@@ -456,8 +458,7 @@ internal class Transfers(
             it.take(chunk)
             return
         }
-        val message =
-            store.messageByEnvelope(conversation.id, MessageDirection.Incoming, chunk.id)
+        val message = store.messageByEnvelope(conversation.id, MessageDirection.Incoming, chunk.id)
         val attachment = message?.attachment
         if (message == null || attachment == null) {
             return stranger(conversation.account, conversation.peer, chunk.id)
@@ -504,7 +505,11 @@ internal class Transfers(
         return receive(conversation, now, bits)
     }
 
-    private suspend fun receive(conversation: Conversation, message: Message, bits: BitSet): Incoming {
+    private suspend fun receive(
+        conversation: Conversation,
+        message: Message,
+        bits: BitSet,
+    ): Incoming {
         val attachment = message.attachment!!
         var created = false
         val run =
@@ -564,7 +569,9 @@ internal class Transfers(
             scope.launch { ask() }
         }
 
-        /** Asks for as many of the missing chunks as one message can; whether the server took it. */
+        /**
+         * Asks for as many of the missing chunks as one message can; whether the server took it.
+         */
         private suspend fun ask(): Boolean {
             val ranges = synchronized(this) { missing() }
             if (ranges.isEmpty()) return false
@@ -612,8 +619,10 @@ internal class Transfers(
             val ranges = mutableListOf<IntRange>()
             var index = bits.nextClearBit(0)
             while (index < attachment.chunks) {
-                val end = (bits.nextSetBit(index).takeIf { it >= 0 } ?: attachment.chunks)
-                    .coerceAtMost(attachment.chunks)
+                val end =
+                    (bits.nextSetBit(index).takeIf { it >= 0 } ?: attachment.chunks).coerceAtMost(
+                        attachment.chunks,
+                    )
                 ranges += index until end
                 index = bits.nextClearBit(end)
             }
@@ -804,8 +813,7 @@ internal class Transfers(
             when (attachment.state) {
                 TransferState.Sending -> stream(conversation, message, from = attachment.done)
                 // Every chunk went out: wait for the receiver's word, or its requests.
-                TransferState.Confirming ->
-                    stream(conversation, message, from = attachment.chunks)
+                TransferState.Confirming -> stream(conversation, message, from = attachment.chunks)
                 else -> Unit
             }
             return
@@ -843,7 +851,9 @@ internal class Transfers(
         }
 
     private suspend fun changeAttachment(id: MessageId, block: (Attachment) -> Attachment) =
-        change(id) { message -> message.attachment?.let { message.copy(attachment = block(it)) } ?: message }
+        change(id) { message ->
+            message.attachment?.let { message.copy(attachment = block(it)) } ?: message
+        }
 
     private fun Message.failed(failure: MessageFailure): Message =
         copy(
@@ -852,7 +862,8 @@ internal class Transfers(
             attachment = attachment?.copy(state = TransferState.Failed),
         )
 
-    private fun keyOf(conversation: ConversationId, transferId: String) = "$conversation/$transferId"
+    private fun keyOf(conversation: ConversationId, transferId: String) =
+        "$conversation/$transferId"
 
     companion object {
         /** Chunks in flight at once. */

@@ -121,8 +121,8 @@ class Phone(
 }
 
 /**
- * Wires [a] and [b] through a server that takes every body ([FakeMessaging.ACCEPTED]) and brings
- * it to the other, unless [lose] says the body is lost on its way (the server still took it).
+ * Wires [a] and [b] through a server that takes every body ([FakeMessaging.ACCEPTED]) and brings it
+ * to the other, unless [lose] says the body is lost on its way (the server still took it).
  */
 fun link(
     a: Phone,
@@ -133,8 +133,11 @@ fun link(
     fun route(from: Phone, to: Phone) {
         from.messaging.server = { sent ->
             val result = answer(from, sent.body)
-            if (result is MessageSendResult.Accepted && sent.to == to.address &&
-                !lose(from, sent.body)) {
+            if (
+                result is MessageSendResult.Accepted &&
+                    sent.to == to.address &&
+                    !lose(from, sent.body)
+            ) {
                 to.messaging.deliver(from = from.address, body = sent.body, account = to.account)
             }
             result

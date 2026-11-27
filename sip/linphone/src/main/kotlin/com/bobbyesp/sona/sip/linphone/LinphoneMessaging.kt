@@ -29,8 +29,8 @@ import org.linphone.core.Factory
 import org.linphone.core.Reason
 
 /**
- * `MESSAGE` on liblinphone: one basic chat room per account and peer, plain `text/plain` bodies,
- * no CPIM, no IMDN, no is-composing (Sona's own receipts and typing travel in the bodies; see
+ * `MESSAGE` on liblinphone: one basic chat room per account and peer, plain `text/plain` bodies, no
+ * CPIM, no IMDN, no is-composing (Sona's own receipts and typing travel in the bodies; see
  * docs/messaging.md). Everything here runs on the engine's Core thread ([dispatcher]); the engine
  * lends it its Core and its accounts, and forwards what the Core's listener hears.
  *
@@ -77,7 +77,9 @@ internal class LinphoneMessaging(
             ?: withContext(dispatcher) {
                 // Linphone answers a request nobody answers itself (408, after 32 s): this is only
                 // for a message it never said anything more about.
-                inFlight.entries.firstOrNull { it.value === answer }?.let { inFlight.remove(it.key) }
+                inFlight.entries
+                    .firstOrNull { it.value === answer }
+                    ?.let { inFlight.remove(it.key) }
                 val server = lines()[account]?.spec?.registrar
                 MessageSendResult.Failed(status = null, detail = "No answer from $server")
             }
@@ -180,7 +182,12 @@ internal class LinphoneMessaging(
                     message.toAddress?.let { to ->
                         to.domain
                             ?.takeIf { it.isNotBlank() }
-                            ?.let { SipAddress(user = to.username?.takeIf { it.isNotBlank() }, host = it) }
+                            ?.let {
+                                SipAddress(
+                                    user = to.username?.takeIf { it.isNotBlank() },
+                                    host = it,
+                                )
+                            }
                     },
                 body = message.utf8Text ?: message.textContent.orEmpty(),
                 contentType = message.contentType?.substringBefore(';')?.trim() ?: TEXT_PLAIN,
