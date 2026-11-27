@@ -79,6 +79,7 @@ import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -86,6 +87,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -246,25 +248,25 @@ internal fun CallScreen(
     KeepScreenOn(active = !call.isOver)
 
     SonaAccentTheme(accent = state.account?.color?.let(::Color)) {
-        when {
-            pictureInPicture ->
-                if (call.isVideo) {
-                    RemoteVideoOnly(
-                        call,
-                        paused = state.videoPaused,
-                        modifier = modifier.fillMaxSize(),
-                    )
-                } else {
-                    Box(
-                        modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CallerMark(call.title, size = 72.dp, ringing = false)
+        // The activity draws nothing under this screen: the surface is what makes text and icons
+        // take the theme's color (black otherwise). Inside the accent theme, to take its color.
+        Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+            when {
+                pictureInPicture ->
+                    if (call.isVideo) {
+                        RemoteVideoOnly(
+                            call,
+                            paused = state.videoPaused,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Box(contentAlignment = Alignment.Center) {
+                            CallerMark(call.title, size = 72.dp, ringing = false)
+                        }
                     }
-                }
-            call.isVideo ->
-                Box(modifier.fillMaxSize()) { VideoCallScreen(state, onIntent, actions) }
-            else -> AudioCallScreen(state, onIntent, actions, modifier)
+                call.isVideo -> VideoCallScreen(state, onIntent, actions)
+                else -> AudioCallScreen(state, onIntent, actions)
+            }
         }
     }
 }
@@ -275,7 +277,6 @@ private fun AudioCallScreen(
     state: CallUiState,
     onIntent: (CallIntent) -> Unit,
     actions: CallActions,
-    modifier: Modifier = Modifier,
 ) {
     val call = state.call ?: return
     val context = LocalContext.current
@@ -286,7 +287,7 @@ private fun AudioCallScreen(
     val behind = rememberBlurSource()
     val colors = MaterialTheme.colorScheme
 
-    BoxWithConstraints(modifier.fillMaxSize().background(colors.surface)) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= WideWidth
         Box(Modifier.fillMaxSize().blurSource(behind)) {
             if (backdrop) {
@@ -493,34 +494,37 @@ private fun BannerCard(
     val surface =
         if (behind != null) Modifier.frosted(behind, colors.surfaceContainerHigh, shape)
         else Modifier.clip(shape).background(colors.secondaryContainer)
-    Row(
-        modifier =
-            Modifier.padding(top = 8.dp)
-                .then(surface)
-                .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Icon(icon, contentDescription = null)
-        Column(Modifier.weight(1f, fill = false)) {
-            Text(text, style = MaterialTheme.typography.bodyMedium)
-            detail?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = SonaTheme.typography.monospace,
-                    color = colors.onSurfaceVariant,
-                )
+    val content = if (behind != null) colors.onSurface else colors.onSecondaryContainer
+    CompositionLocalProvider(LocalContentColor provides content) {
+        Row(
+            modifier =
+                Modifier.padding(top = 8.dp)
+                    .then(surface)
+                    .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)
+                    .semantics { liveRegion = LiveRegionMode.Polite },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(icon, contentDescription = null)
+            Column(Modifier.weight(1f, fill = false)) {
+                Text(text, style = MaterialTheme.typography.bodyMedium)
+                detail?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = SonaTheme.typography.monospace,
+                        color = if (behind != null) colors.onSurfaceVariant else content,
+                    )
+                }
             }
-        }
-        TextButton(onClick = onAction) { Text(action) }
-        onDismiss?.let {
-            IconButton(onClick = it) {
-                Icon(
-                    Icons.Rounded.Close,
-                    contentDescription = stringResource(R.string.call_dismiss),
-                )
+            TextButton(onClick = onAction) { Text(action) }
+            onDismiss?.let {
+                IconButton(onClick = it) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.call_dismiss),
+                    )
+                }
             }
         }
     }

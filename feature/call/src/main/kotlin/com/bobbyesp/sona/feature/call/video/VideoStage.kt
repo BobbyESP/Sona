@@ -22,11 +22,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.material.icons.rounded.VideocamOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -376,21 +378,16 @@ private fun Paused(small: Boolean) {
         Modifier.fillMaxSize().background(colors.scrim.copy(alpha = PausedDim)),
         contentAlignment = Alignment.Center,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Icon(
-                Icons.Rounded.PauseCircle,
-                contentDescription = if (small) text else null,
-                tint = colors.inverseOnSurface,
-            )
-            if (!small) {
-                Text(
-                    text,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.inverseOnSurface,
-                )
+        // On a surface of its own: the scrim is black in both themes, and no one text color of
+        // the scheme reads on it in both.
+        Surface(shape = CircleShape, color = colors.surfaceContainerHigh) {
+            Row(
+                modifier = Modifier.padding(if (small) 8.dp else 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(Icons.Rounded.PauseCircle, contentDescription = if (small) text else null)
+                if (!small) Text(text, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
