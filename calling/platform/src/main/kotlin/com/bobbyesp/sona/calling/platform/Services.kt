@@ -39,9 +39,11 @@ private const val TAG = "SonaServices"
  * call begins, with its `CallStyle` notification, and stopped when none is left. It shows the call
  * that matters most: one ringing, else one active, else the latest.
  *
- * Its type is `phoneCall`, plus `microphone` once a call was dialed or answered. Android only lets
- * a service use the microphone when it starts from a user action or a visible activity; if it
- * refuses, the call goes on as `phoneCall` alone and the refusal is logged (docs/calling.md).
+ * Its type is `phoneCall`, plus `microphone` once a call was dialed or answered, plus `camera`
+ * while a call's camera is on and Sona may use it (docs/video.md). Android only lets a service use
+ * the microphone or the camera when it starts from a user action or a visible activity; if it
+ * refuses, the call goes on with less (the camera first, then the microphone) and the refusal is
+ * logged (docs/calling.md).
  */
 class CallService : LifecycleService(), KoinComponent {
     private val coordinator: CallCoordinator by inject()
@@ -66,7 +68,8 @@ class CallService : LifecycleService(), KoinComponent {
                         stop()
                     } else {
                         val label = all.firstOrNull { it.id == call.account }?.label
-                        show(call, label, (foreground as? CallForeground.Calls)?.microphone == true)
+                        val uses = foreground as? CallForeground.Calls
+                        show(call, label, uses?.microphone == true, uses?.camera == true)
                     }
                 }
         }
@@ -75,25 +78,33 @@ class CallService : LifecycleService(), KoinComponent {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         val call = coordinator.calls.value.mostImportant()
-        if (call == null) stop() else show(call, null, microphone = false)
+        if (call == null) stop() else show(call, null, microphone = false, camera = false)
         return START_NOT_STICKY
     }
 
-    private fun show(call: Call, accountLabel: String?, microphone: Boolean) {
+    private fun show(call: Call, accountLabel: String?, microphone: Boolean, camera: Boolean) {
         val (id, notification) = notifications.forCall(call, accountLabel)
-        val withMicrophone =
-            microphone &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
-                    PackageManager.PERMISSION_GRANTED
-        try {
-            ServiceCompat.startForeground(this, id, notification, types(withMicrophone))
-        } catch (error: Exception) {
-            Log.w(TAG, "Foreground with the microphone refused; continuing as a phone call", error)
-            ServiceCompat.startForeground(this, id, notification, types(microphone = false))
+        val withMicrophone = microphone && granted(Manifest.permission.RECORD_AUDIO)
+        val withCamera = camera && granted(Manifest.permission.CAMERA)
+        // What Android refuses is dropped, the camera first: the voice matters more.
+        val attempts =
+            listOf(withMicrophone to withCamera, withMicrophone to false, false to false).distinct()
+        for ((index, attempt) in attempts.withIndex()) {
+            val (mic, cam) = attempt
+            try {
+                ServiceCompat.startForeground(this, id, notification, types(mic, cam))
+                break
+            } catch (error: Exception) {
+                if (index == attempts.lastIndex) throw error
+                Log.w(TAG, "Foreground with microphone $mic, camera $cam refused", error)
+            }
         }
         shownId?.takeIf { it != id }?.let(notifications::cancel)
         shownId = id
     }
+
+    private fun granted(permission: String): Boolean =
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
     private fun stop() {
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
@@ -102,10 +113,11 @@ class CallService : LifecycleService(), KoinComponent {
         stopSelf()
     }
 
-    private fun types(microphone: Boolean): Int {
+    private fun types(microphone: Boolean, camera: Boolean): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return 0
         var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
         if (microphone) types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        if (camera) types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
         return types
     }
 

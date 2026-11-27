@@ -11,6 +11,7 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Troubleshoot
+import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
@@ -47,6 +48,14 @@ object SettingsAreas {
             R.string.settings_area_audio,
             R.string.settings_area_audio_summary,
             Icons.Rounded.GraphicEq,
+        )
+    val Video =
+        SettingsArea(
+            "video",
+            13,
+            R.string.settings_area_video,
+            R.string.settings_area_video_summary,
+            Icons.Rounded.Videocam,
         )
     val Network =
         SettingsArea(

@@ -5,4 +5,9 @@
     <string name="dial_not_registered">%1$s is not registered, so it cannot call yet</string>
     <string name="dial_invalid">Not a number, an extension or a SIP address</string>
     <string name="dial_failed">Could not call (%1$s)</string>
+
+    <string name="camera_blocked_permission">Your camera is off: Sona is not allowed to use it</string>
+    <string name="quality_good">Good connection</string>
+    <string name="quality_fair">Fair connection</string>
+    <string name="quality_poor">Poor connection</string>
 </resources>

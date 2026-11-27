@@ -57,10 +57,9 @@ interface SipEngine {
 ## Linphone (`:sip:linphone`)
 
 `org.linphone:linphone-sdk-android` 5.5.39 from `https://download.linphone.org/maven_repository`,
-with the repository filtered to the `org.linphone` groups. Sona uses the `org.linphone.no-video`
-variant: Sona makes audio calls only, and the variant is the same API without the video codecs and
-camera code, so the APK is smaller. Should video ever be wanted, it is the `org.linphone` artifact,
-one line in this module.
+with the repository filtered to the `org.linphone` groups. Sona uses the `org.linphone` artifact,
+the one with video (camera capture, VP8/H.264/H.265); `org.linphone.no-video` is the same API
+without them. How calls carry video is in [video.md](video.md).
 
 - **One thread owns the Core.** Linphone's `Core` is not thread safe. The module starts a
   `HandlerThread` ("sona-core"), creates the Core on it, iterates it every 20 ms while it runs, and
@@ -120,7 +119,10 @@ data class Call(
     val audioRoute: AudioRoute,
     val availableRoutes: List<AudioRoute>,
     val media: MediaInfo?,              // codec, sample rate, encryption, SAS
-    val quality: CallQuality?,          // Good / Fair / Poor, with jitter, loss, RTT
+    val video: CallVideo?,              // directions, camera, sizes; null for audio only
+    val videoOffered: Boolean,          // rings as a video call
+    val cameraOn: Boolean,              // what the user wants; the engine follows
+    val cameraBlocked: CameraBlocked?,  // why the camera is off although asked for
     val connectedAt: Instant?,
 )
 ```
@@ -237,7 +239,8 @@ Android means a foreground service. There are two services, for two needs:
   and nothing else.
 - **Keeping the registration up** is the engine's work: the registration is refreshed before it
   expires, NAT keep-alives (UDP) or TCP/TLS connection keep-alives are sent on the interval set,
-  and a network change should refresh registrations immediately (planned: `NetworkMonitor`; first
+  and a network change should refresh registrations immediately (`NetworkMonitor` exists for the
+  video limits, video.md; whether registrations should follow it too, first
   see whether Linphone already does it, docs/todo.md).
 - **The user decides.** *Always reachable* is on by default with an enabled account, explained in
   onboarding; off, Sona registers while open and unregisters a minute after leaving.

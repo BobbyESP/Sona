@@ -7,12 +7,23 @@ import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.CallDirection
+import com.bobbyesp.sona.sip.api.CallVideo
 import com.bobbyesp.sona.sip.api.EngineCallState
 import com.bobbyesp.sona.sip.api.MediaInfo
 import com.bobbyesp.sona.sip.api.SipStatus
 import com.bobbyesp.sona.telecom.api.AudioRoute
 
-/** A call as the user sees it: the engine's SIP and the system's audio together. */
+/**
+ * A call as the user sees it: the engine's SIP and the system's audio together.
+ *
+ * @property video The call's video as negotiated, or `null` for a call with none: who sends, who
+ *   receives, the camera, the sizes (docs/video.md).
+ * @property videoOffered The caller offered video: the call rings as a video call, with *Answer
+ *   with video* beside *Answer*.
+ * @property cameraOn The user wants this side's camera sent. The coordinator makes the engine's
+ *   [video] follow it; while the call is on hold it is what resuming brings back.
+ * @property cameraBlocked Why the camera is off although the user asked for it; `null` otherwise.
+ */
 data class Call(
     val id: CallId,
     val account: AccountId?,
@@ -26,6 +37,10 @@ data class Call(
     val connectedAt: Long? = null,
     val route: AudioRoute? = null,
     val routes: List<AudioRoute> = emptyList(),
+    val video: CallVideo? = null,
+    val videoOffered: Boolean = false,
+    val cameraOn: Boolean = false,
+    val cameraBlocked: CameraBlocked? = null,
 ) {
     /** What to call the other side: their name when they gave one, their user part otherwise. */
     val title: String
@@ -33,6 +48,28 @@ data class Call(
 
     val isOver: Boolean
         get() = state is CallState.Ended
+
+    /**
+     * The call shows video now: this side's camera or the other side's picture, on a call that is
+     * neither on hold (by either side) nor over. The screen takes the video layout, the proximity
+     * sensor never turns the screen off, and the screen stays on.
+     */
+    val isVideo: Boolean
+        get() =
+            video?.isActive == true &&
+                !isOver &&
+                state != CallState.OnHold &&
+                state != CallState.HeldByRemote
+
+    /** The other side's picture can be on screen: it sends, and this side takes it. */
+    val showsRemoteVideo: Boolean
+        get() = isVideo && video?.showsRemote == true
+}
+
+/** Why the camera is off although the user asked for it: the call goes on without it. */
+enum class CameraBlocked {
+    /** Sona may not use the camera. The screen says so, and can ask again. */
+    NoPermission,
 }
 
 sealed interface CallState {

@@ -8,6 +8,7 @@ import android.net.Uri
 import android.telecom.DisconnectCause as PlatformCause
 import android.util.Log
 import androidx.core.telecom.CallAttributesCompat
+import androidx.core.telecom.CallControlResult
 import androidx.core.telecom.CallControlScope
 import androidx.core.telecom.CallEndpointCompat
 import androidx.core.telecom.CallsManager
@@ -38,6 +39,10 @@ fun Context.createSystemCalls(scope: CoroutineScope): SystemCalls =
  * Each call lives in a coroutine of [scope] for as long as Telecom has it: `addCall` runs its
  * block, and the call stays until it is disconnected. Telecom owns the audio route; the engine's
  * voice streams follow whatever device it chooses.
+ *
+ * The app registers as able to make video calls, and a call's type follows whether it shows video
+ * (`CALL_TYPE_VIDEO_CALL`). Another device's answer asks for a type too; it is not followed, since
+ * no headset, watch or car turns the camera on (docs/video.md).
  */
 internal class JetpackSystemCalls(context: Context, private val scope: CoroutineScope) :
     SystemCalls {
@@ -48,7 +53,10 @@ internal class JetpackSystemCalls(context: Context, private val scope: Coroutine
     override suspend fun add(request: SystemCallRequest, events: SystemCallEvents): SystemCall? {
         if (!registered) {
             try {
-                manager.registerAppWithTelecom(CallsManager.CAPABILITY_BASELINE)
+                manager.registerAppWithTelecom(
+                    CallsManager.CAPABILITY_BASELINE or
+                        CallsManager.CAPABILITY_SUPPORTS_VIDEO_CALLING,
+                )
                 registered = true
             } catch (error: Exception) {
                 Log.w(TAG, "Telecom refused to register the app", error)
@@ -91,7 +99,7 @@ internal class JetpackSystemCalls(context: Context, private val scope: Coroutine
             direction =
                 if (incoming) CallAttributesCompat.DIRECTION_INCOMING
                 else CallAttributesCompat.DIRECTION_OUTGOING,
-            callType = CallAttributesCompat.CALL_TYPE_AUDIO_CALL,
+            callType = callTypeOf(video),
             callCapabilities = CallAttributesCompat.SUPPORTS_SET_INACTIVE,
         )
 
@@ -118,8 +126,8 @@ private class JetpackSystemCall(private val control: CallControlScope) : SystemC
         _routes.value = available.map { it.toRoute() }
     }
 
-    override suspend fun answer() {
-        guarded("answer") { control.answer(CallAttributesCompat.CALL_TYPE_AUDIO_CALL) }
+    override suspend fun answer(video: Boolean) {
+        guarded("answer") { control.answer(callTypeOf(video)) }
     }
 
     override suspend fun setActive() {
@@ -137,12 +145,26 @@ private class JetpackSystemCall(private val control: CallControlScope) : SystemC
     override suspend fun requestRoute(route: AudioRoute) {
         endpoints[route.id]?.let { guarded("route") { control.requestEndpointChange(it) } }
     }
+
+    override suspend fun setVideo(video: Boolean) {
+        guarded("callType") { control.requestCallType(callTypeOf(video)) }
+    }
 }
 
-/** Telecom refusing a request is logged, never a crash: the call goes on without it. */
+private fun callTypeOf(video: Boolean): Int =
+    if (video) CallAttributesCompat.CALL_TYPE_VIDEO_CALL
+    else CallAttributesCompat.CALL_TYPE_AUDIO_CALL
+
+/**
+ * Telecom refusing a request is logged, never a crash: the call goes on without it. A refusal is
+ * either thrown or answered as a [CallControlResult.Error]; both are logged the same.
+ */
 private suspend fun guarded(what: String, request: suspend () -> Any?) {
     try {
-        request()
+        val result = request()
+        if (result is CallControlResult.Error) {
+            Log.w("SonaTelecom", "Telecom refused $what: error ${result.errorCode}")
+        }
     } catch (error: Exception) {
         Log.w("SonaTelecom", "Telecom refused $what", error)
     }

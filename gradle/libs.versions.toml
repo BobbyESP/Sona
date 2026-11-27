@@ -108,8 +108,9 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
-# SIP: only :sip:linphone may depend on this
-linphone-sdk = { group = "org.linphone.no-video", name = "linphone-sdk-android", version.ref = "linphone" }
+# SIP: only :sip:linphone may depend on this. The `org.linphone` group is the SDK with video (the
+# camera, the video codecs); `org.linphone.no-video` is the same API without them.
+linphone-sdk = { group = "org.linphone", name = "linphone-sdk-android", version.ref = "linphone" }
 
 # UI
 material-kolor = { group = "com.materialkolor", name = "material-kolor", version.ref = "materialKolor" }

@@ -4,6 +4,7 @@
 package com.bobbyesp.sona.feature.diagnostics
 
 import com.bobbyesp.sona.calling.domain.EngineConfigBuilder
+import com.bobbyesp.sona.calling.domain.FakeNetworkMonitor
 import com.bobbyesp.sona.core.model.settings.DiagnosticsSettings
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.core.testing.MainDispatcherRule
@@ -33,7 +34,7 @@ class TraceViewModelTest {
     /** The engine, following the settings as the app makes it. */
     private suspend fun TestScope.engine(): FakeSipEngine {
         val engine = FakeSipEngine(this)
-        val config = EngineConfigBuilder(settings).config
+        val config = EngineConfigBuilder(settings, FakeNetworkMonitor()).config
         engine.start(config.first())
         backgroundScope.launch { config.collect { engine.apply(it) } }
         return engine

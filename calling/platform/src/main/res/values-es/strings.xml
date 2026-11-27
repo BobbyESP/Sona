@@ -24,9 +24,12 @@
 
     <string name="notification_incoming">Llamada entrante</string>
     <string name="notification_incoming_on">Llamada entrante en %1$s</string>
+    <string name="notification_incoming_video">Videollamada entrante</string>
+    <string name="notification_incoming_video_on">Videollamada entrante en %1$s</string>
     <string name="notification_calling">Llamando…</string>
     <string name="notification_ringing">Sonando…</string>
     <string name="notification_active">En llamada</string>
+    <string name="notification_active_video">En videollamada</string>
     <string name="notification_on_hold">En espera</string>
     <string name="notification_ended">Llamada finalizada</string>
     <string name="notification_reachable">Localizable en %1$s</string>

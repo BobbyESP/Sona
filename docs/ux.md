@@ -345,6 +345,19 @@ an option an account can override.
 | Start calls on speaker | off | ✓ |
 | Dialpad tones, dialpad haptics | on, on | ✓ |
 
+### Video
+
+| Option | Default | MVP |
+|---|---|---|
+| Video calls | on | ✓ |
+| Show video the other side turns on (receive-only, camera stays off) | on | ✓ |
+| Video codecs: order and enabled (VP8, H.264, H.265) | all, in that order | ✓ |
+| Quality and most sent on Wi-Fi | 720p, 1.5 Mbit/s | ✓ |
+| Quality and most sent on mobile data (or a metered Wi-Fi) | VGA, 512 kbit/s | ✓ |
+| Frame rate | 30 fps | ✓ |
+| Adapt to the network (adaptive rate control) | on | ✓ |
+| Send lost packets again (NACK), error correction (FEC) | on, on | ✓ |
+
 ### Network
 
 | Option | Default | MVP |

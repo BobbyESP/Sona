@@ -13,11 +13,14 @@ import com.bobbyesp.sona.core.model.Secret
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.CallSettings
 import com.bobbyesp.sona.core.model.settings.DeclineMode
+import com.bobbyesp.sona.core.model.settings.VideoSettings
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.credentials.api.InMemoryCredentialVault
 import com.bobbyesp.sona.sip.api.AudioDeviceKind
+import com.bobbyesp.sona.sip.api.CameraFacing
 import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.SipStatus
+import com.bobbyesp.sona.sip.fake.FakeNetwork
 import com.bobbyesp.sona.sip.fake.FakeSipEngine
 import com.bobbyesp.sona.telecom.api.AudioRoute
 import com.bobbyesp.sona.telecom.api.AudioRouteKind
@@ -25,6 +28,7 @@ import com.bobbyesp.sona.telecom.api.FakeSystemCall
 import com.bobbyesp.sona.telecom.api.FakeSystemCalls
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -42,7 +46,8 @@ class CallCoordinatorTest {
     private val accounts = InMemoryAccountsRepository()
     private val vault = InMemoryCredentialVault()
     private val settings = InMemorySettingsStore()
-    private val system = FakeSystemCalls()
+    /** The system the next world uses: replaced before `world()` for a headset plugged in. */
+    private var system = FakeSystemCalls()
     private val alice = SipAddress("101", "lab.local")
 
     private class World(val engine: FakeSipEngine, val calls: CallCoordinator)
@@ -51,6 +56,7 @@ class CallCoordinatorTest {
     private suspend fun TestScope.world(
         names: CallerNames = CallerNames.None,
         clock: () -> Long = { 1_000 },
+        camera: CameraPermission = CameraPermission.Granted,
     ): World {
         val engine = FakeSipEngine(backgroundScope)
         engine.start(EngineConfig())
@@ -69,6 +75,7 @@ class CallCoordinatorTest {
                 backgroundScope,
                 clock = clock,
                 names = names,
+                camera = camera,
             )
         coordinator.start()
         runCurrent()
@@ -77,10 +84,31 @@ class CallCoordinatorTest {
 
     private fun World.call(id: CallId) = calls.calls.value.single { it.id == id }
 
+    private fun World.video(id: CallId) = call(id).video
+
     private fun systemCall(id: CallId): FakeSystemCall = system.calls.getValue(id)
 
-    private suspend fun World.dial(input: String): CallId =
-        (calls.dial(input) as DialOutcome.Started).id
+    private suspend fun World.dial(input: String, video: Boolean = false): CallId =
+        (calls.dial(input, video = video) as DialOutcome.Started).id
+
+    private val World.foreground
+        get() = calls.foreground.value
+
+    /** A video call to 600, answered with the other side's camera: both ways. */
+    private suspend fun TestScope.videoCall(world: World): CallId {
+        val id = world.dial("600", video = true)
+        world.engine.remoteAnswers(id)
+        runCurrent()
+        return id
+    }
+
+    /** An audio call to 600, answered. */
+    private suspend fun TestScope.audioCall(world: World): CallId {
+        val id = world.dial("600")
+        world.engine.remoteAnswers(id)
+        runCurrent()
+        return id
+    }
 
     @Test
     fun `dialing an extension calls it on the account's domain, and the system knows`() = runTest {
@@ -393,5 +421,378 @@ class CallCoordinatorTest {
         runCurrent()
 
         assertEquals(CallState.Active, calls.calls.value.single().state)
+    }
+
+    // Video: the decisions of docs/video.md, one scenario each.
+
+    @Test
+    fun `dialing with video makes a video call, with the camera on and the speaker chosen`() =
+        runTest {
+            val world = world()
+            val id = world.dial("600", video = true)
+            runCurrent()
+
+            assertTrue(systemCall(id).request.video)
+            assertTrue(world.call(id).cameraOn)
+            assertTrue(world.video(id)!!.sending)
+            assertTrue(world.call(id).isVideo)
+            assertEquals(listOf("route:Speaker"), systemCall(id).log)
+            assertEquals(FakeSystemCall.Speaker, world.call(id).route)
+            assertEquals(CallForeground.Calls(microphone = true, camera = true), world.foreground)
+        }
+
+    @Test
+    fun `a video call keeps a headset that is the route`() = runTest {
+        system =
+            FakeSystemCalls(
+                route = FakeSystemCall.Headset,
+                routes = listOf(FakeSystemCall.Speaker, FakeSystemCall.Headset),
+            )
+        val world = world()
+        val id = world.dial("600", video = true)
+        runCurrent()
+
+        assertTrue(systemCall(id).log.none { it.startsWith("route:") })
+        assertEquals(FakeSystemCall.Headset, world.call(id).route)
+    }
+
+    @Test
+    fun `a call offering video rings as one, and answering with video turns the camera on`() =
+        runTest {
+            val world = world()
+            val id = world.engine.incomingCall(alice, video = true)
+            runCurrent()
+            assertTrue(world.call(id).videoOffered)
+            assertTrue(systemCall(id).request.video)
+            assertEquals(CallForeground.Calls(microphone = false), world.foreground)
+
+            world.calls.answer(id, video = true)
+            runCurrent()
+
+            assertEquals("answer:video", systemCall(id).log.first())
+            assertTrue(world.call(id).cameraOn)
+            assertTrue(world.video(id)!!.sending)
+            assertTrue(world.call(id).showsRemoteVideo)
+            assertEquals(CallForeground.Calls(microphone = true, camera = true), world.foreground)
+        }
+
+    @Test
+    fun `answering audio only shows the caller with the camera off, and it can be turned on`() =
+        runTest {
+            val world = world()
+            val id = world.engine.incomingCall(alice, video = true)
+            runCurrent()
+
+            world.calls.answer(id)
+            runCurrent()
+
+            assertEquals(false, world.call(id).cameraOn)
+            assertEquals(false, world.video(id)!!.sending)
+            assertTrue(world.call(id).showsRemoteVideo)
+            assertEquals(CallForeground.Calls(microphone = true, camera = false), world.foreground)
+
+            world.calls.setCameraOn(id, true)
+            runCurrent()
+
+            assertEquals(
+                FakeSipEngine.VideoRequest(id, true, true),
+                world.engine.videoRequests.last(),
+            )
+            assertTrue(world.video(id)!!.sending)
+            assertEquals(CallForeground.Calls(microphone = true, camera = true), world.foreground)
+        }
+
+    @Test
+    fun `video the other side adds is shown with the camera off, on the speaker`() = runTest {
+        val world = world()
+        val id = audioCall(world)
+
+        world.engine.remoteStartsVideo(id)
+        runCurrent()
+
+        assertTrue(world.call(id).showsRemoteVideo)
+        assertEquals(false, world.call(id).cameraOn)
+        assertEquals(false, world.video(id)!!.sending)
+        assertEquals(listOf("active", "video:true", "route:Speaker"), systemCall(id).log)
+        assertEquals(CallForeground.Calls(microphone = true, camera = false), world.foreground)
+    }
+
+    /** Privacy does not rest on the engine: the camera is never on unless the user turned it on. */
+    @Test
+    fun `an engine that took added video with the camera on is told to turn it off`() = runTest {
+        val world = world()
+        val id = audioCall(world)
+
+        world.engine.remoteStartsVideo(id, withCamera = true)
+        runCurrent()
+
+        assertEquals(
+            listOf(FakeSipEngine.VideoRequest(id, send = false, receive = true)),
+            world.engine.videoRequests,
+        )
+        assertEquals(false, world.video(id)!!.sending)
+        assertTrue(world.call(id).showsRemoteVideo)
+    }
+
+    @Test
+    fun `the camera off and on is a change of direction, and the service's camera follows`() =
+        runTest {
+            val world = world()
+            val id = videoCall(world)
+
+            world.calls.setCameraOn(id, false)
+            runCurrent()
+            assertEquals(
+                FakeSipEngine.VideoRequest(id, false, true),
+                world.engine.videoRequests.last(),
+            )
+            assertEquals(false, world.video(id)!!.sending)
+            // The other side is still seen.
+            assertTrue(world.call(id).isVideo)
+            assertEquals(CallForeground.Calls(microphone = true, camera = false), world.foreground)
+
+            world.calls.setCameraOn(id, true)
+            runCurrent()
+            assertEquals(
+                FakeSipEngine.VideoRequest(id, true, true),
+                world.engine.videoRequests.last(),
+            )
+            assertEquals(CallForeground.Calls(microphone = true, camera = true), world.foreground)
+        }
+
+    @Test
+    fun `the camera turned off while ringing is asked once the call is up`() = runTest {
+        val world = world()
+        val id = world.dial("600", video = true)
+        runCurrent()
+
+        world.calls.setCameraOn(id, false)
+        runCurrent()
+        assertTrue(world.engine.videoRequests.isEmpty())
+
+        world.engine.remoteAnswers(id)
+        runCurrent()
+        assertEquals(
+            listOf(FakeSipEngine.VideoRequest(id, false, true)),
+            world.engine.videoRequests,
+        )
+        assertEquals(false, world.video(id)!!.sending)
+    }
+
+    @Test
+    fun `a video call answered without video turns the camera off`() = runTest {
+        val world = world()
+        val id = world.dial("600", video = true)
+        runCurrent()
+
+        world.engine.remoteAnswers(id, video = false)
+        runCurrent()
+
+        assertEquals(null, world.video(id))
+        assertEquals(false, world.call(id).cameraOn)
+        assertEquals("video:false", systemCall(id).log.last { it.startsWith("video:") })
+        assertEquals(CallForeground.Calls(microphone = true, camera = false), world.foreground)
+    }
+
+    @Test
+    fun `video that ends leaves the route as it is, and the next one looks at it again`() =
+        runTest {
+            val world = world()
+            val id = audioCall(world)
+            world.engine.remoteStartsVideo(id)
+            runCurrent()
+
+            world.engine.remoteStopsVideo(id)
+            runCurrent()
+
+            assertEquals(false, world.call(id).isVideo)
+            assertEquals(FakeSystemCall.Speaker, world.call(id).route)
+            assertEquals(
+                listOf("active", "video:true", "route:Speaker", "video:false"),
+                systemCall(id).log,
+            )
+
+            // The user goes back to the earpiece; video coming back moves to the speaker again.
+            world.calls.selectRoute(id, FakeSystemCall.Earpiece)
+            runCurrent()
+            world.engine.remoteStartsVideo(id)
+            runCurrent()
+            assertEquals("route:Speaker", systemCall(id).log.last())
+        }
+
+    @Test
+    fun `a route chosen during video is the user's`() = runTest {
+        val world = world()
+        val id = videoCall(world)
+
+        world.calls.selectRoute(id, FakeSystemCall.Earpiece)
+        runCurrent()
+        world.calls.setCameraOn(id, false)
+        runCurrent()
+
+        assertEquals(FakeSystemCall.Earpiece, world.call(id).route)
+        assertEquals("route:Earpiece", systemCall(id).log.last())
+    }
+
+    @Test
+    fun `hold stops the video, and resuming brings back the directions held before`() = runTest {
+        val world = world()
+        val id = videoCall(world)
+
+        world.calls.setOnHold(id, true)
+        runCurrent()
+        assertEquals(CallState.OnHold, world.call(id).state)
+        assertEquals(false, world.call(id).isVideo)
+        assertEquals(CallForeground.Calls(microphone = true, camera = false), world.foreground)
+
+        world.calls.setOnHold(id, false)
+        runCurrent()
+
+        assertEquals(FakeSipEngine.VideoRequest(id, true, true), world.engine.videoRequests.last())
+        assertTrue(world.video(id)!!.sending)
+        assertTrue(world.call(id).showsRemoteVideo)
+        assertEquals(CallForeground.Calls(microphone = true, camera = true), world.foreground)
+        // The system kept it a video call throughout.
+        assertTrue(systemCall(id).log.none { it == "video:false" })
+    }
+
+    @Test
+    fun `the camera turned off on hold stays off on resume`() = runTest {
+        val world = world()
+        val id = videoCall(world)
+        world.calls.setOnHold(id, true)
+        runCurrent()
+
+        world.calls.setCameraOn(id, false)
+        world.calls.setOnHold(id, false)
+        runCurrent()
+
+        assertEquals(FakeSipEngine.VideoRequest(id, false, true), world.engine.videoRequests.last())
+        assertEquals(false, world.video(id)!!.sending)
+        assertEquals(false, world.call(id).cameraOn)
+    }
+
+    @Test
+    fun `without the camera permission a video call is dialed as audio, and says why`() = runTest {
+        val world = world(camera = { false })
+        val id = world.dial("600", video = true)
+        runCurrent()
+
+        assertEquals(null, world.video(id))
+        assertEquals(false, world.call(id).cameraOn)
+        assertEquals(CameraBlocked.NoPermission, world.call(id).cameraBlocked)
+        assertEquals(false, systemCall(id).request.video)
+
+        world.engine.remoteAnswers(id)
+        world.calls.setCameraOn(id, true)
+        runCurrent()
+        assertTrue(world.engine.videoRequests.isEmpty())
+        assertEquals(CameraBlocked.NoPermission, world.call(id).cameraBlocked)
+        assertEquals(CallForeground.Calls(microphone = true, camera = false), world.foreground)
+    }
+
+    @Test
+    fun `without the camera permission answering with video answers with the camera off`() =
+        runTest {
+            val world = world(camera = { false })
+            val id = world.engine.incomingCall(alice, video = true)
+            runCurrent()
+
+            world.calls.answer(id, video = true)
+            runCurrent()
+
+            assertEquals(CallState.Active, world.call(id).state)
+            assertEquals(false, world.video(id)!!.sending)
+            assertEquals(CameraBlocked.NoPermission, world.call(id).cameraBlocked)
+        }
+
+    @Test
+    fun `another device's answer never turns the camera on`() = runTest {
+        val world = world()
+        val id = world.engine.incomingCall(alice, video = true)
+        runCurrent()
+
+        system.events.getValue(id).onAnswer()
+        runCurrent()
+
+        assertEquals(CallState.Active, world.call(id).state)
+        assertEquals(false, world.call(id).cameraOn)
+        assertEquals(false, world.video(id)!!.sending)
+    }
+
+    @Test
+    fun `with video off in the settings, calls are audio both ways`() = runTest {
+        settings.set(VideoSettings.Enabled, false)
+        val world = world()
+
+        val dialed = world.dial("600", video = true)
+        val incoming = world.engine.incomingCall(alice, video = true)
+        runCurrent()
+
+        assertEquals(null, world.video(dialed))
+        assertEquals(false, world.call(dialed).cameraOn)
+        assertEquals(null, world.call(dialed).cameraBlocked)
+        assertEquals(false, world.call(incoming).videoOffered)
+        assertEquals(false, systemCall(incoming).request.video)
+    }
+
+    @Test
+    fun `turning video off keeps the voice, and on again shows the other side, camera off`() =
+        runTest {
+            val world = world()
+            val id = videoCall(world)
+
+            world.calls.setVideoEnabled(id, false)
+            runCurrent()
+            assertEquals(null, world.video(id))
+            assertEquals(CallState.Active, world.call(id).state)
+            assertEquals(false, world.call(id).cameraOn)
+            assertEquals("video:false", systemCall(id).log.last())
+
+            world.calls.setVideoEnabled(id, true)
+            runCurrent()
+            assertEquals(
+                FakeSipEngine.VideoRequest(id, false, true),
+                world.engine.videoRequests.last(),
+            )
+            assertTrue(world.call(id).showsRemoteVideo)
+            assertEquals(false, world.call(id).cameraOn)
+        }
+
+    @Test
+    fun `switching the camera and the display's rotation reach the engine`() = runTest {
+        val world = world()
+        val id = videoCall(world)
+
+        world.calls.switchCamera(id)
+        world.calls.setDeviceRotation(268)
+        runCurrent()
+
+        assertEquals(CameraFacing.Back, world.video(id)!!.camera)
+        assertEquals(270, world.engine.rotation)
+    }
+
+    @Test
+    fun `statistics are measured only while looked at, and a weak network reads as poor`() =
+        runTest {
+            val world = world()
+            val good = audioCall(world)
+            advanceTimeBy(5.seconds)
+            assertEquals(0, world.engine.statisticsSamples)
+
+            assertEquals(CallQuality.Good, world.calls.quality(good).first())
+            assertEquals(1, world.engine.statisticsSamples)
+
+            world.engine.network(good, FakeNetwork.Weak)
+            assertEquals(CallQuality.Poor, world.calls.quality(good).first())
+            assertEquals(50L, world.calls.statistics(good).first().audio!!.packetsSent)
+        }
+
+    @Test
+    fun `a rotation is taken to the nearest quarter turn`() {
+        assertEquals(
+            listOf(0, 0, 90, 90, 180, 270, 270, 0),
+            listOf(0, 44, 45, 100, 200, 268, -90, 359).map(::quarterTurn),
+        )
     }
 }
