@@ -32,9 +32,10 @@ MainActivity
 ├── Diagnostics ─> SIP trace, Logs, Network test
 └── Onboarding (first start): Welcome ─> Add account ─> Call readiness ─> Done
 
-CallActivity (own task, over the lock screen)
-├── IncomingCall
-└── OngoingCall ─> Keypad (DTMF), AudioRoutes (overlay), CallInfo (overlay), ended summary
+CallActivity (own task, over the lock screen; Picture-in-Picture for a video call)
+├── IncomingCall (audio, or video: answer with video or audio only)
+├── OngoingCall ─> Keypad (DTMF), AudioRoutes (menu), Statistics (panel), ended summary
+└── VideoCall ─> the same, over the pictures; More (statistics, keypad, hold)
 ```
 
 - **Navigation bar on compact windows, navigation rail from medium width**, built from the
@@ -76,7 +77,8 @@ back or delete (both directions configurable), long press to select several.
 
 **CallDetail**: every attempt with that party, each with its duration and how it ended (both texts),
 codec and quality summary, and the actions contributed by features (`PartyActionProvider`): call,
-copy address, add to contacts, and later message.
+*Video call* (from the calls feature, when video calls are on), copy address, add to contacts, and
+later message.
 
 ### Contacts
 
@@ -129,6 +131,11 @@ swipe for those who answer with the phone in a pocket.
 
 With a call already active: *Hold and answer*, *End and answer*, *Decline*.
 
+**A call that offers video** says *Incoming video call* and has three: *Decline*, *Answer audio
+only* (the caller is still seen, this side's camera stays off) and *Answer with video*, which asks
+for the camera first if it must. With the camera already allowed, this side's camera is behind the
+screen under a veil.
+
 ### Ongoing call
 
 ```
@@ -155,6 +162,42 @@ With a call already active: *Hold and answer*, *End and answer*, *Decline*.
   Alice*, *Reconnecting…* (with the timer still running), each a live region for TalkBack.
 - **When it ends**, the screen stays a moment with how it ended, in both texts, then closes.
 - **Landscape and tabletop**: avatar and name on one side or half, controls on the other.
+  Whatever does not fit scrolls, so a large font cuts nothing.
+- **The quality indicator** sits beside the account: three bars and a word for TalkBack (never
+  only a color); a tap opens the statistics, a frosted panel from the bottom (beside the call on
+  a wide window).
+- **Video**, when the engine and the settings allow it: a *Video* control turns the camera on and
+  the screen becomes the video call.
+
+### Video call
+
+```
+┌──────────────────────────────┐
+│ ( Alice  03:42 🔒 Lab   ▂▄▆ )│  frosted top line
+│                       ┌────┐ │
+│                       │you │ │  the preview: drag to a corner, tap to swap
+│     the other side    └────┘ │
+│                              │  double tap: fit or fill
+│ ( 🎤  📷  ⟲  🔊  ⋮ )          │  frosted bar (a rail when lying down)
+│        ( ☎ hang up )         │
+└──────────────────────────────┘
+```
+
+- **The picture is the screen.** The other side's fills it, this side's camera floats on a tile
+  that snaps to the nearest corner on a spring and swaps with a tap. The front camera shows as in
+  a mirror. When a picture is missing, their mark on its shape says why ("Alice is not sending
+  video", "Your camera is off").
+- **Controls fade** four seconds after the last touch and come back with a tap; they stay while a
+  menu or a panel is open. Mute, camera, switch camera, the audio route, *More* (statistics,
+  keypad, hold), hang up.
+- **One banner at a time**, each with what to do: the camera is not allowed (*Settings*); "Weak
+  connection: video lowered" (*Turn off video*); "Alice turned on video" (*Turn on camera*).
+  A picture that stops arriving dims under "Video paused".
+- **Statistics**: codecs, sizes and frame rates, bitrates, loss, jitter, round trip, buffers, FEC,
+  bandwidth, transport, ICE, encryption; sparklines of the last minute. A side panel on a wide
+  window, from the bottom on a phone.
+- **Leaving keeps it in sight**: Picture-in-Picture with the other side's picture and *Mute*,
+  *Hang up*. The proximity sensor never turns the screen off during video.
 
 ### Accounts
 
@@ -208,7 +251,8 @@ New for Sona:
 | `SwipeToDeleteRow` | Swipe to delete, with a custom TalkBack action; Recents pairs it with a message to undo |
 | `readableWidth()` | At most 840 dp wide and centered, so a tablet gets margins, not long lines |
 | `RegistrationChip` | The account chip: color, name, animated state dot and word |
-| `CallQualityBadge` | Three bars with Good / Fair / Poor, details on long press |
+| `QualityIndicator` | Three bars lit by Good / Fair / Poor, its word for TalkBack; a tap opens the statistics (`:feature:call`) |
+| `StatisticsPanel`, `Sparkline` | The call's numbers in monospace, and a minute of two series drawn on a `Canvas` (`:feature:call`) |
 | `StatusText` | A failure's sentence with its technical line under it when *Show SIP details* is on |
 | `OngoingCallBanner` | The banner over the app while a call exists |
 | `LadderDiagram` | The SIP trace's lanes and arrows |
@@ -269,6 +313,8 @@ for fades, navigation transitions from `NavigationMotion` only. Moments that get
 - Connecting to active: the avatar shrinks to its place, the timer slides in.
 - Toggling a control: the button's shape changes on the spring.
 - Registration changing: the chip's dot morphs between states.
+- A video call's preview tile: follows the finger, then springs to its corner; controls and
+  panels fade and slide on the effects springs.
 
 Haptics: a tick per key (optional), a confirmation when a call connects, a double pulse when it
 ends, the system's reject pattern when a call fails. Reduced motion (the system's animation scale
