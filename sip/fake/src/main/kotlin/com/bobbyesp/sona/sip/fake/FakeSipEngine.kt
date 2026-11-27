@@ -83,6 +83,7 @@ class FakeSipEngine(
             Capability.AudioCalls,
             Capability.Dtmf,
             Capability.Hold,
+            Capability.Messaging,
             Capability.SipTrace,
             Capability.VideoCalls,
             Capability.CallStats,
@@ -91,6 +92,13 @@ class FakeSipEngine(
     private val _registrations = MutableStateFlow<Map<AccountId, RegistrationState>>(emptyMap())
     override val registrations: StateFlow<Map<AccountId, RegistrationState>> =
         _registrations.asStateFlow()
+
+    /** `MESSAGE`s, sent by accounts this engine has registered. See [FakeMessaging]. */
+    override val messaging: FakeMessaging =
+        FakeMessaging(
+            registered = { _registrations.value[it] == RegistrationState.Registered },
+            clock = clock,
+        )
 
     /** The accounts as last given, for asserting what the app sent. */
     var accounts: List<AccountSpec> = emptyList()

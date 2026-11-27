@@ -394,6 +394,19 @@ an option an account can override.
 | Show Sona's calls in the phone app's history | on | ✓ |
 | Clear history | — | ✓ |
 
+### Messages
+
+Declared in `MessageSettings` (`messages.*`); see [messaging.md](messaging.md).
+
+| Option | Default | MVP |
+|---|---|---|
+| Send read receipts (to other Sona phones) | on | |
+| Send typing indicators (to other Sona phones) | on | |
+| Download automatically up to (never, 500 KB, 2 MB, 10 MB) | 2 MB | |
+| Send pictures in original quality | off | |
+| Largest attachment (2, 5, 10, 20 MB) | 10 MB | |
+| Largest message the server relays (700 B, 1 KB, 4 KB, 16 KB, 60 KB) **A** | 700 B | |
+
 ### Appearance
 
 | Option | Default | MVP |

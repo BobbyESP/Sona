@@ -107,6 +107,8 @@ dependencies {
     implementation(project(":accounts:ui"))
     implementation(project(":directory:domain"))
     implementation(project(":directory:data"))
+    implementation(project(":messaging:domain"))
+    implementation(project(":messaging:data"))
     implementation(project(":credentials:keystore"))
     implementation(project(":core:database"))
 

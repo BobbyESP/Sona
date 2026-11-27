@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Above a file offered, for a person reading it on a phone that is not Sona. -->
+    <string name="messages_offer_caption">📎 %1$s · %2$s — sent with Sona</string>
+</resources>

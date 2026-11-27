@@ -30,6 +30,7 @@ import com.bobbyesp.sona.core.data.settings.createSettingsStore
 import com.bobbyesp.sona.core.database.SonaDatabase
 import com.bobbyesp.sona.core.database.createSonaDatabase
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.HistorySettings
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.ui.AndroidStringProvider
@@ -44,9 +45,20 @@ import com.bobbyesp.sona.directory.domain.CallRecorder
 import com.bobbyesp.sona.directory.domain.DeviceContacts
 import com.bobbyesp.sona.directory.domain.Directory
 import com.bobbyesp.sona.directory.domain.LocalContacts
+import com.bobbyesp.sona.directory.domain.find
 import com.bobbyesp.sona.directory.domain.prune
+import com.bobbyesp.sona.messaging.data.AndroidAttachmentFiles
+import com.bobbyesp.sona.messaging.data.AndroidAttachmentPreparer
+import com.bobbyesp.sona.messaging.data.messageStore
+import com.bobbyesp.sona.messaging.data.offerCaption
+import com.bobbyesp.sona.messaging.domain.AttachmentFiles
+import com.bobbyesp.sona.messaging.domain.AttachmentPreparer
+import com.bobbyesp.sona.messaging.domain.MessageStore
+import com.bobbyesp.sona.messaging.domain.Messenger
+import com.bobbyesp.sona.messaging.domain.PeerNames
 import com.bobbyesp.sona.shell.ShellViewModel
 import com.bobbyesp.sona.sip.api.SipEngine
+import com.bobbyesp.sona.sip.api.SipMessaging
 import com.bobbyesp.sona.telecom.api.SystemCalls
 import com.bobbyesp.sona.telecom.jetpack.createSystemCalls
 import java.util.UUID
@@ -54,6 +66,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModelOf
@@ -65,9 +78,13 @@ import org.koin.dsl.module
  */
 class ApplicationScope : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-/** Starts the SIP engine, and keeps its accounts equal to the stored ones from then on. */
+/**
+ * Starts the SIP engine, and keeps its accounts equal to the stored ones from then on. The
+ * messenger starts first, so that no message the engine receives waits unread.
+ */
 class EngineBootstrap(
     private val scope: ApplicationScope,
+    private val messenger: Messenger,
     private val engine: SipEngine,
     private val sync: AccountEngineSync,
     private val calls: CallCoordinator,
@@ -79,6 +96,7 @@ class EngineBootstrap(
     private val config: EngineConfigBuilder,
 ) {
     fun start() {
+        messenger.start()
         calls.start()
         services.start()
         recorder.start()
@@ -132,7 +150,35 @@ val appModule = module {
     single<NetworkMonitor> { AndroidNetworkMonitor(androidContext(), get<ApplicationScope>()) }
     factory { EngineConfigBuilder(get(), get()) }
     single {
-        EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
+        EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
+    }
+
+    // Messages: kept in Room and in the app's files, sent and received by the one messenger.
+    single<SipMessaging> { get<SipEngine>().messaging }
+    single<MessageStore> { get<SonaDatabase>().messageStore() }
+    single<AttachmentFiles> {
+        AndroidAttachmentFiles(androidContext(), get<DispatcherProvider>().io)
+    }
+    single<AttachmentPreparer> {
+        AndroidAttachmentPreparer(androidContext(), get<DispatcherProvider>().io)
+    }
+    single {
+        Messenger(
+            engine = get(),
+            store = get(),
+            files = get(),
+            preparer = get(),
+            accounts = get(),
+            settings = get(),
+            scope = get<ApplicationScope>(),
+            names =
+                PeerNames {
+                    get<Directory>().contacts.map { known ->
+                        { address: SipAddress -> known.find(address)?.name }
+                    }
+                },
+            captions = androidContext().offerCaption(),
+        )
     }
 
     // Calls: the coordinator, Android's Telecom, and the services and notifications that go with.

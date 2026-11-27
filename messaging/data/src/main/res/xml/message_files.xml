@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the files of messages, never the rest of the app's storage. -->
+<paths>
+    <files-path name="sent" path="messages/sent/" />
+    <files-path name="received" path="messages/received/" />
+</paths>

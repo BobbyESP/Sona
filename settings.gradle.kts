@@ -77,6 +77,15 @@ include(":directory:data")
 
 include(":directory:ui")
 
+// Messaging: texts, pictures and files over SIP MESSAGE (docs/messaging.md)
+include(":messaging:domain")
+
+include(":messaging:data")
+
+include(":messaging:ui")
+
+include(":messaging:platform")
+
 // Engines: a contract (api) and its implementations
 include(":sip:api")
 

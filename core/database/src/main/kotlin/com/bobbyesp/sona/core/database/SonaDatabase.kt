@@ -11,9 +11,10 @@ import androidx.room.RoomDatabase
 
 /**
  * Sona's one database. Version 1 held the accounts; version 2 adds the call history and the local
- * contacts; version 3 adds what each account overrides. A released schema is never changed in
- * place: each change is a new version with a migration, and the schemas are exported to `schemas/`
- * and committed.
+ * contacts; version 3 adds what each account overrides; version 4 adds messages (conversations,
+ * messages, their attachments, the chunks of a file arriving and the parts of a long text
+ * arriving). A released schema is never changed in place: each change is a new version with a
+ * migration, and the schemas are exported to `schemas/` and committed.
  */
 @Database(
     entities =
@@ -23,9 +24,19 @@ import androidx.room.RoomDatabase
             CallRecordEntity::class,
             ContactEntity::class,
             ContactNumberEntity::class,
+            ConversationEntity::class,
+            MessageEntity::class,
+            AttachmentEntity::class,
+            TransferChunksEntity::class,
+            MessagePartEntity::class,
         ],
-    version = 3,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    version = 4,
+    autoMigrations =
+        [
+            AutoMigration(from = 1, to = 2),
+            AutoMigration(from = 2, to = 3),
+            AutoMigration(from = 3, to = 4),
+        ],
     exportSchema = true,
 )
 abstract class SonaDatabase : RoomDatabase() {
@@ -34,6 +45,8 @@ abstract class SonaDatabase : RoomDatabase() {
     abstract fun callRecordDao(): CallRecordDao
 
     abstract fun contactDao(): ContactDao
+
+    abstract fun messageDao(): MessageDao
 }
 
 fun Context.createSonaDatabase(): SonaDatabase =

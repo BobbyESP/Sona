@@ -29,7 +29,10 @@ Sona speaks plain SIP text to everyone, and a little more to other Sona phones:
   and there are delivery and read receipts, typing indicators, long texts reassembled, and files.
 
 A Sona phone never sends an envelope to a peer that is not known to be Sona, except the file
-offer, which is written to be read by a person.
+offer, which is written to be read by a person. So two Sona phones that only ever exchanged plain
+texts do not know of each other yet: the first file offered (or any envelope, from a peer that
+already knows) makes them Sona peers, and each answers the first envelope it hears with `hi`.
+Until then their texts are plain, with *Sent* as the last status.
 
 ## Envelopes
 
@@ -52,6 +55,9 @@ in the envelope line; ids are 10 characters of base32.
 
 A body that does not end in a valid envelope line is a plain text, shown as it came.
 
+Delivered receipts go for every text with an id, gathered for 400 ms; read receipts and typing only
+when *Send read receipts* and *Send typing indicators* are on, and only ever to Sona peers.
+
 ## Files
 
 1. **Prepare.** A picture is resized (longest side 2048 px) and re-encoded unless *Send pictures in
@@ -64,14 +70,19 @@ A body that does not end in a valid envelope line is a plain text, shown as it c
    text, and nothing else is ever sent to it.
 4. **Stream.** Chunks are sent with a window of eight in flight: the next goes when the server has
    answered one. A chunk the server refuses or does not answer (`408`, `503`, no network) is sent
-   again with back-off. Chunk size follows from the message size limit (about 500 bytes of file per
-   message at 700 bytes).
+   again with back-off (2 s, 4 s, 8 s… up to 30 s, seven times). Chunk size follows from the message
+   size limit: `(limit − 28) / 4 × 3` bytes, 504 at 700 bytes. How far the sender got is saved
+   every 64 chunks or every second, so a restart goes on from there.
 5. **Repair.** The receiver writes each chunk at its place in a file of its own, keeps which ones
    it has in the database (so a transfer survives the app being closed), and when chunks stop
    coming for 8 seconds asks for the missing ones (`miss`). After five unanswered requests the
    transfer fails, with *Retry*.
-6. **Finish.** The receiver checks the SHA-256, answers `done`, and the file is in the
-   conversation; the sender shows it as delivered.
+6. **Finish.** The receiver checks the SHA-256 (streamed from the file), answers `done`, and the
+   file is in the conversation; the sender shows it as delivered. A mismatch discards what came
+   and answers `fail:…:hash`; *Retry* on the sender offers the file again from the start.
+
+Either side can `cancel`; deleting a message in transfer cancels it (or declines an offer not yet
+taken). A chunk of a transfer nobody knows of (its conversation was deleted) is answered `cancel`.
 
 What it costs: every message is a SIP transaction to the server and one from it, and base64 adds a
 third. About 2 000 messages carry a megabyte; on a local network that is seconds, over the
@@ -79,36 +90,64 @@ internet tens of seconds. This is why pictures are compressed by default and fil
 
 ## Storage
 
-The app's Room database is the only record (schema 4: `conversations`, `messages`,
-`attachments`). Linphone stores nothing the app depends on: what it keeps of a message is deleted
-once the app has it. Files are in the app's own storage (`files/messages/`), opened through a
-`FileProvider`, saved elsewhere only when the user picks a place.
+The app's Room database is the only record (schema 4, an automatic migration from 3):
+`conversations` (one per account and peer, with what is known of the peer), `messages`,
+`attachments` (a message's file and its transfer), `transfer_chunks` (which chunks of an incoming
+file arrived, one bit each, in a table of its own so listing a conversation never reads it) and
+`message_parts` (the parts of a long incoming text, until every part came).
 
-## Modules
+Linphone stores nothing the app depends on: an outgoing message is created not to be stored, and
+an incoming one is deleted from Linphone's history as soon as it has been handed over (what is left
+is an empty basic chat room per peer, which nothing reads). Linphone's IMDN and is-composing are
+off; Sona's receipts and typing travel in bodies.
 
-| Module | What it is |
+Files are in the app's own storage, `files/messages/`: `sent/` (the copy made to send, so a send
+survives the picker's grant and can be retried), `received/` (each file that arrived whole, in a
+folder of its own) and `incoming/` (one file per transfer coming in, written in place). They are
+opened through `MessageFileProvider`, authority `${applicationId}.messages`, which serves `sent/`
+and `received/` only; `Messenger.uriOf(attachment)` gives the `content://` address, to open with
+`FLAG_GRANT_READ_URI_PERMISSION`. They are saved elsewhere only when the user picks a place.
+
+## For the screens
+
+Everything goes through `Messenger` (`:messaging:domain`, a single in the app, started by
+`EngineBootstrap` before the engine):
+
+| What | How |
 |---|---|
-| `:sip:api` | `SipMessaging`: send a `text/plain` body from an account and learn the server's final answer; the bodies received |
-| `:sip:linphone` | `LinphoneMessaging`: Linphone basic chat rooms, on the Core thread |
-| `:sip:fake` | `FakeMessaging`: scripted, and a demo peer that answers and downloads files |
-| `:messaging:domain` | `Messenger` (sending, receiving, transfers, receipts; scenario-tested), the envelope codec, ports. Plain Kotlin |
-| `:messaging:data` | Room storage and files |
-| `:messaging:ui` | What the domain says in words: statuses, failures with their SIP line |
-| `:messaging:platform` | Notifications (MessagingStyle, inline reply, mark as read) |
-| `:feature:messages` | The Messages tab, a conversation, the picture viewer, new conversation, settings |
+| The list | `conversations: Flow<List<ConversationSummary>>` (name from the directory, last message, unread count); `conversation(id)` |
+| A conversation | `messages(id): Flow<List<Message>>` (oldest first), `typing(id): Flow<Boolean>` |
+| The tab's badge | `totalUnread: Flow<Int>` |
+| Notifications | `events: SharedFlow<MessengerEvent>`: `Received(conversation, message, visible)` |
+| Opening one | `open(account, peer): ConversationId?`, then `setVisibleConversation(id)` while it is on screen (and `null` when it leaves); what arrives in it is read at once |
+| Writing | `sendText(id, text)`, `sendFile(id, contentUri)` → `SendOutcome` (`Queued`, `Empty`, `NoConversation`, `TooLong`, `FileTooLarge`, `FileUnreadable`); `notifyTyping(id)` on every change of the field |
+| Acting on one | `retry`, `download`, `decline`, `cancel`, `delete(ids)`, `deleteConversation`, `markRead` |
+| A file | `uriOf(attachment)` |
+
+A `Message` has a `MessageStatus` (`Sending`, `Sent`, `Delivered`, `Read`, `Failed`, `Received`),
+an optional `Attachment` with its `TransferState` and `progress`, and, when something went wrong, a
+`MessageFailure` (`reason: FailureReason`, `status: SipStatus?`, `technical` for *Show SIP
+details*).
 
 ## Failures, in words and in SIP
 
 | SIP | What the user reads |
 |---|---|
-| `404`, `484` | There is no extension 205 on *Lab Asterisk* |
+| `404`, `484`, `604` | There is no extension 205 on *Lab Asterisk* |
 | `415` | The server does not relay this kind of message |
 | `401`, `403`, `407` | The server refused the message. Check this account's username and password |
+| `413`, `513` | The server takes shorter messages: lower *Largest message the server relays* |
 | `408`, no answer | *Lab Asterisk* did not answer |
 | `480` | 102 is not online right now |
 | `503`, transport error | *Lab Asterisk* (192.168.1.10:5060, UDP) did not answer |
 | account not registered | *Lab Asterisk* is not connected, so nothing was sent |
 | anything else | Not sent (`500 Server Internal Error`) |
+
+A transfer has its own: the receiver stopped answering (`TimedOut`), the file did not match its
+hash (`Corrupted`), the other phone could not take it (`PeerFailed`), this phone could not write it
+(`Storage`), the file to send is gone (`FileMissing`). `408`, `500`, `503`, `504` and no answer are
+tried again with back-off; any other answer is final. An account that is not registered fails a
+text at once, and a transfer waits for it.
 
 ## Asterisk
 

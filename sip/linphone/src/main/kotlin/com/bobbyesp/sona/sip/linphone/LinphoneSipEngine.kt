@@ -44,6 +44,8 @@ import org.linphone.core.AudioDevice
 import org.linphone.core.AuthInfo
 import org.linphone.core.Call
 import org.linphone.core.CallStats
+import org.linphone.core.ChatMessage
+import org.linphone.core.ChatRoom
 import org.linphone.core.Core
 import org.linphone.core.CoreListenerStub
 import org.linphone.core.Factory
@@ -102,6 +104,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
             Capability.AudioCalls,
             Capability.Dtmf,
             Capability.Hold,
+            Capability.Messaging,
             Capability.Srtp,
             Capability.Zrtp,
             Capability.SipTrace,
@@ -169,6 +172,15 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
         _trace.value = emptyList()
     }
 
+    override val messaging =
+        LinphoneMessaging(
+            dispatcher,
+            core = { core },
+            lines = { bound.mapValues { (_, it) -> LinphoneMessaging.Line(it.account, it.spec) } },
+            registered = { _registrations.value[it] == RegistrationState.Registered },
+            later = { block -> handler.post(block) },
+        )
+
     private val coreListener =
         object : CoreListenerStub() {
             override fun onCallStateChanged(
@@ -189,6 +201,15 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
                 val video = call.videoNow(call.state)
                 updateCall(id) { if (this.video == video) this else copy(video = video) }
             }
+
+            override fun onMessageReceived(core: Core, room: ChatRoom, message: ChatMessage) =
+                messaging.onReceived(room, message)
+
+            override fun onMessagesReceived(
+                core: Core,
+                room: ChatRoom,
+                messages: Array<out ChatMessage>,
+            ) = messages.forEach { messaging.onReceived(room, it) }
         }
 
     private val iterate =
@@ -223,6 +244,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
                 created.isNativeRingingEnabled = false
                 created.ring = null
                 configurer.apply(created, config)
+                messaging.prepare(created)
                 created.addListener(coreListener)
                 created.start()
                 // The front camera first, as people expect of a video call.
