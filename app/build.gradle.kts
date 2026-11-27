@@ -97,6 +97,7 @@ dependencies {
     implementation(project(":feature:call"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:diagnostics"))
+    implementation(project(":feature:messages"))
 
     implementation(project(":calling:domain"))
     implementation(project(":calling:platform"))
@@ -109,6 +110,7 @@ dependencies {
     implementation(project(":directory:data"))
     implementation(project(":messaging:domain"))
     implementation(project(":messaging:data"))
+    implementation(project(":messaging:platform"))
     implementation(project(":credentials:keystore"))
     implementation(project(":core:database"))
 

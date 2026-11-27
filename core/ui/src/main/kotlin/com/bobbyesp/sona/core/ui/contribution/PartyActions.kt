@@ -5,6 +5,8 @@ package com.bobbyesp.sona.core.ui.contribution
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.bobbyesp.sona.core.navigation.Navigator
 
@@ -55,3 +57,19 @@ interface PartyActionProvider {
      */
     @Composable fun rememberAction(party: PartyRef, navigator: Navigator): PartyAction?
 }
+
+/**
+ * Every [PartyActionProvider], sorted by [PartyActionProvider.order]. The shell provides them (it
+ * collects them from Koin), so a screen that shows a party asks for none by name.
+ */
+val LocalPartyActionProviders = staticCompositionLocalOf<List<PartyActionProvider>> { emptyList() }
+
+/**
+ * The actions every provider has for [party], in their order; those that do not apply are left out.
+ * What a host lays out, as buttons or menu items ([PartyActionButtons]).
+ */
+@Composable
+fun rememberPartyActions(party: PartyRef, navigator: Navigator): List<PartyAction> =
+    LocalPartyActionProviders.current.mapNotNull { provider ->
+        key(provider) { provider.rememberAction(party, navigator) }
+    }

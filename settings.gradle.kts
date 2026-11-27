@@ -117,3 +117,5 @@ include(":feature:accounts")
 include(":feature:onboarding")
 
 include(":feature:call")
+
+include(":feature:messages")

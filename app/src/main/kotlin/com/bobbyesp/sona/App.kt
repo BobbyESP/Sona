@@ -13,8 +13,10 @@ import com.bobbyesp.sona.feature.contacts.contactsModule
 import com.bobbyesp.sona.feature.diagnostics.diagnosticsModule
 import com.bobbyesp.sona.feature.dialer.dialerModule
 import com.bobbyesp.sona.feature.history.historyModule
+import com.bobbyesp.sona.feature.messages.messagesModule
 import com.bobbyesp.sona.feature.onboarding.onboardingModule
 import com.bobbyesp.sona.feature.settings.settingsModule
+import com.bobbyesp.sona.messaging.platform.MessageNotifications
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -37,8 +39,11 @@ class App : Application() {
                 callModule,
                 settingsModule,
                 diagnosticsModule,
+                messagesModule,
             )
         }
+        // Listening before anything can arrive: the messenger's events are not replayed.
+        get<MessageNotifications>().start()
         get<EngineBootstrap>().start()
     }
 }

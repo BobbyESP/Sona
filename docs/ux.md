@@ -24,6 +24,7 @@ are in [architecture.md](architecture.md); this document is about what they are 
 MainActivity
 ├── Recents (top level)         list ─> CallDetail ─> (call, add to contacts, copy address)
 ├── Contacts (top level)        list ─> ContactDetail ─> ContactEditor
+├── Messages (top level)        list ─> Conversation ─> Picture ; list ─> New message ─> Conversation
 ├── Keypad (top level)          keypad + suggestions ─> AccountPicker (overlay)
 ├── AccountSwitcher (overlay, from the account chip in every top bar)
 │     └── Accounts ─> AccountEditor ─> AccountDiagnostics
@@ -46,7 +47,10 @@ CallActivity (own task, over the lock screen; Picture-in-Picture for a video cal
   the account switcher. With a readiness problem, the chip turns to a warning and the switcher
   starts with it.
 - **On expanded windows** Recents and Contacts are list-detail, and the keypad becomes a supporting
-  pane beside them, so a tablet on a desk is a desk phone.
+  pane beside them, so a tablet on a desk is a desk phone. Messages is list-detail already: the
+  conversations beside the one open (or *New message*), through the shell's list-detail strategy.
+- **Requests from outside** (a message's notification) are standing requests: `MainActivity` hands
+  the key to `ShellViewModel.request`, and the shell opens it once it is drawn.
 
 ## Screens
 
@@ -76,16 +80,61 @@ details*). Filter chips above: All, Missed, Incoming, Outgoing, and one per acco
 back or delete (both directions configurable), long press to select several.
 
 **CallDetail**: every attempt with that party, each with its duration and how it ended (both texts),
-codec and quality summary, and the actions contributed by features (`PartyActionProvider`): call,
-*Video call* (from the calls feature, when video calls are on), copy address, add to contacts, and
-later message.
+codec and quality summary, and the actions contributed by features (`PartyActionProvider`, as tonal
+buttons that wrap): *Video call* (from the calls feature, when video calls are on) and *Message*
+(from the messages feature), beside call back, copy address and add to contacts.
 
 ### Contacts
 
 Two sources, shown together and marked: the device's contacts (with a SIP address or phone number,
 read with permission, never written) and Sona's own contacts (for extensions nobody puts in a phone
 book: "Lab 103 · Printer room"). Favorites on top as a row of large avatars. Fast scroller with
-letters. ContactDetail lists each address with its call action and the account it would use.
+letters. ContactDetail lists each address with its call action and the account it would use, and
+beside it the actions features contribute (`PartyActionProvider`, as icon buttons): *Message*.
+
+### Messages
+
+Texts, pictures and files with other extensions, over SIP `MESSAGE` ([messaging.md](messaging.md)).
+The tab's badge is what was received and not read (`Messenger.totalUnread`); it sits after
+Contacts, before the keypad.
+
+- **The list**: each conversation as a segmented row, most recent first: avatar, name (or the
+  extension), the account's dot when there are several, the last message on one line (its status
+  mark when it went out from here, a file's icon and *Photo* or its name), when, and an unread
+  badge. The last message and the time are emphasized while it is unread. Search grows from a pill
+  (name, address, last message); a swipe deletes a conversation after a confirmation; the empty
+  state says messages go through the user's server and nowhere else. *New message* is the floating
+  action, collapsing to its icon as the list scrolls.
+- **New message**: one field (*Name, extension or address*), *Write to 102* with the address it
+  resolves to (`sip:102@lab.local`, as the keypad resolves it), and the contacts that match, each
+  number a row. With several accounts, a row of chips says which one writes (the default first). A
+  party's *Message* opens it with the address: with one account, or the history entry's account,
+  it goes straight to the conversation.
+- **A conversation**: a frosted top bar with the name, the address in monospace (or *typing…* in
+  the primary color, a live region), the account's dot when there are several, and the actions
+  other features contribute for this party (*Call*, *Video call*; `PartyActionProvider`, never
+  named). The messages, newest at the bottom, each day under a centered heading, each side's run in
+  one block: bubbles in the theme's extra-large corners, those towards the rest of the run tightened
+  to extra-small; sent ones in the primary container. Under the last of a run, its time and, for
+  one sent, its status: a clock while sending, ✓ when the server took it, ✓✓ once delivered, ✓✓ in
+  the primary color once read (each mark has its word for TalkBack). A failed one says why, with
+  its SIP line and *Retry*. A long press offers *Copy*, *Retry*, *Details* (status, time, file,
+  failure and SIP line, the Sona id) and *Delete*.
+- **Files**: a picture inline, decoded at the size shown, with a progress ring while it travels
+  (an offer not taken yet is a placeholder with *Download (184 KB)* and *Decline*); tapping it
+  opens it on the whole screen (pinch to zoom, drag, double tap back; *Share*, *Save a copy*
+  through the system's file picker). Any other file is a card with its kind's icon, name, size and
+  where it is (*Waiting for 102 to download*, *Sending · 40 %*, a wavy bar), *Cancel* while it
+  travels; tapping one that is here opens it in another app by a read grant.
+- **The composer**, frosted over the messages and above the keyboard: *Attach* (a sheet: *Photos
+  and videos*, *Camera* after asking for the camera, *File*), a field growing to six lines, and
+  *Send*. Why something was not sent (too long for the server, a file over the limit, unreadable)
+  appears above it with its technical line, and what was written stays in the field.
+- **Plain phones**: at the start of a conversation with a phone not known to be Sona, a note says
+  receipts, typing and files work when it uses Sona too.
+- **Notifications**: one per conversation, in Android's messaging style with the sender's name,
+  *Reply* typed in the notification and *Mark as read*; none while the conversation is on screen,
+  and it goes once the conversation is read anywhere. A tap opens the conversation.
 
 ### Keypad
 
@@ -202,10 +251,11 @@ screen under a veil.
 ### Accounts
 
 The list shows every account with its color, state and actions (enable, set default, diagnostics).
-The editor groups fields as the add flow does, plus the per-account overrides: each overridable
-option shows *Uses app default (Opus, G.722, PCMU)* with an *Override* action, and an overridden one
-shows *Reset to default*. Changes that need a new registration say so, and saving re-registers and
-shows the result like onboarding does.
+The editor groups fields as the add flow does, plus the per-account overrides (*Calls with this
+account*: codecs and DTMF; *Messages with this account*: the largest message the server relays):
+each overridable option shows *Uses app default (Opus, G.722, PCMU)* with an *Override* action, and
+an overridden one shows *Reset to default*. Changes that need a new registration say so, and saving
+re-registers and shows the result like onboarding does.
 
 ### Settings
 
@@ -443,15 +493,17 @@ an option an account can override.
 ### Messages
 
 Declared in `MessageSettings` (`messages.*`); see [messaging.md](messaging.md).
+In *Settings › Messages* (`MessagesSettingsContributor`, `SettingsAreas.Messages`); the last is
+also in each account's editor, under *Messages with this account*.
 
 | Option | Default | MVP |
 |---|---|---|
-| Send read receipts (to other Sona phones) | on | |
-| Send typing indicators (to other Sona phones) | on | |
-| Download automatically up to (never, 500 KB, 2 MB, 10 MB) | 2 MB | |
-| Send pictures in original quality | off | |
-| Largest attachment (2, 5, 10, 20 MB) | 10 MB | |
-| Largest message the server relays (700 B, 1 KB, 4 KB, 16 KB, 60 KB) **A** | 700 B | |
+| Send read receipts (to other Sona phones) | on | ✓ |
+| Send typing indicators (to other Sona phones) | on | ✓ |
+| Download automatically up to (never, 500 KB, 2 MB, 10 MB) | 2 MB | ✓ |
+| Send pictures in original quality | off | ✓ |
+| Largest attachment (2, 5, 10, 20 MB) | 10 MB | ✓ |
+| Largest message the server relays (700 B, 1 KB, 4 KB, 16 KB, 60 KB) **A** | 700 B | ✓ |
 
 ### Appearance
 

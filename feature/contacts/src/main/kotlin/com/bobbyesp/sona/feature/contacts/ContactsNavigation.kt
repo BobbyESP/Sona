@@ -29,6 +29,7 @@ internal object ContactsSection : NavSection {
             ContactsRoute(
                 onNew = { navigator.goTo(ContactEditor()) },
                 onEdit = { contact -> navigator.goTo(ContactEditor(contactId = contact.id)) },
+                navigator = navigator,
             )
         }
         entry<ContactEditor> { key ->

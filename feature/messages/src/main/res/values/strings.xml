@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Messages tab -->
+    <string name="messages_title">Messages</string>
+    <string name="messages_new">New message</string>
+    <string name="messages_empty_title">No messages yet</string>
+    <string name="messages_empty_description">Write to an extension of your server: texts, photos and files go through it, and nowhere else.</string>
+    <string name="messages_search">Search messages</string>
+    <string name="messages_search_close">Close search</string>
+    <string name="messages_search_clear">Clear search</string>
+    <string name="messages_no_results">No conversation matches</string>
+    <plurals name="messages_unread">
+        <item quantity="one">%1$d unread message</item>
+        <item quantity="other">%1$d unread messages</item>
+    </plurals>
+    <string name="messages_delete">Delete</string>
+    <string name="messages_delete_title">Delete the conversation with %1$s?</string>
+    <string name="messages_delete_text">Every message and file in it is deleted from this phone. The other phone keeps its own.</string>
+    <string name="messages_cancel">Cancel</string>
+    <string name="messages_back">Back</string>
+    <string name="messages_pick_title">Choose a conversation</string>
+    <string name="messages_pick_description">Its messages open here, beside the list.</string>
+
+    <!-- New message -->
+    <string name="new_to">To</string>
+    <string name="new_to_placeholder">Name, extension or address</string>
+    <string name="new_write_to">Write to %1$s</string>
+    <string name="new_contacts">Contacts</string>
+    <string name="new_from">From</string>
+    <string name="new_no_account">Add an account first: messages go through your server</string>
+    <string name="new_not_an_address">This is not a number nor a SIP address</string>
+    <string name="new_account_gone">This account no longer exists</string>
+
+    <!-- A conversation -->
+    <string name="conversation_typing">typing…</string>
+    <string name="conversation_placeholder">Message</string>
+    <string name="conversation_send">Send</string>
+    <string name="conversation_attach">Attach</string>
+    <string name="conversation_dismiss">Dismiss</string>
+    <string name="conversation_preparing">Preparing the file…</string>
+    <string name="conversation_plain_peer">Delivery and read receipts, typing and files work when %1$s also uses Sona. Until then, texts go as plain SIP messages.</string>
+    <string name="conversation_more">Options</string>
+    <string name="conversation_copy">Copy</string>
+    <string name="conversation_copied">Copied</string>
+    <string name="conversation_retry">Retry</string>
+    <string name="conversation_delete">Delete</string>
+    <string name="conversation_details">Details</string>
+    <string name="conversation_close">Close</string>
+    <string name="conversation_sip">SIP: %1$s</string>
+    <string name="conversation_download">Download (%1$s)</string>
+    <string name="conversation_decline">Decline</string>
+    <string name="conversation_cancel_transfer">Cancel</string>
+    <string name="conversation_no_app">No app on this phone opens it</string>
+    <string name="conversation_camera_refused">Without the camera, pictures can still be sent from the gallery</string>
+    <string name="conversation_camera_unavailable">There is no room for the picture on this phone</string>
+    <string name="attach_media">Photos and videos</string>
+    <string name="attach_camera">Camera</string>
+    <string name="attach_file">File</string>
+
+    <!-- A message's details -->
+    <string name="details_status">Status</string>
+    <string name="details_when">When</string>
+    <string name="details_file">File</string>
+    <string name="details_size">Size and type</string>
+    <string name="details_problem">What happened</string>
+    <string name="details_sip">SIP details</string>
+    <string name="details_id">Sona id</string>
+
+    <!-- A picture on the whole screen -->
+    <string name="picture_share">Share</string>
+    <string name="picture_save">Save a copy</string>
+    <string name="picture_saved">Saved</string>
+    <string name="picture_not_saved">The picture could not be saved there</string>
+
+    <!-- What this feature adds wherever a party is shown -->
+    <string name="action_message">Message</string>
+
+    <!-- Settings › Messages -->
+    <string name="settings_read_receipts">Send read receipts</string>
+    <string name="settings_read_receipts_summary">Other Sona phones see when you read their messages</string>
+    <string name="settings_read_receipts_keywords">read receipt seen blue ticks privacy</string>
+    <string name="settings_typing">Send typing indicators</string>
+    <string name="settings_typing_summary">Other Sona phones see while you write to them</string>
+    <string name="settings_typing_keywords">typing writing composing privacy</string>
+    <string name="settings_auto_download">Download automatically up to</string>
+    <string name="settings_auto_download_summary">Larger files wait for you to tap Download</string>
+    <string name="settings_auto_download_keywords">download automatic files pictures data</string>
+    <string name="settings_original">Send pictures in original quality</string>
+    <string name="settings_original_summary">Off, pictures are resized and compressed first, so they arrive much sooner</string>
+    <string name="settings_original_keywords">quality photo picture compress resize</string>
+    <string name="settings_largest_attachment">Largest attachment</string>
+    <string name="settings_largest_attachment_summary">Every 500 bytes of a file is one message to your server</string>
+    <string name="settings_largest_attachment_keywords">attachment file size limit</string>
+    <string name="settings_largest_message">Largest message the server relays</string>
+    <string name="settings_largest_message_summary">Asterisk relays 700 bytes over UDP. An account can have its own, in its settings</string>
+    <string name="settings_largest_message_keywords">size limit bytes asterisk udp tcp 413 513</string>
+
+    <!-- Sizes, as the settings name them -->
+    <string name="limit_never">Never</string>
+    <string name="limit_500_kb">500 KB</string>
+    <string name="limit_2_mb">2 MB</string>
+    <string name="limit_5_mb">5 MB</string>
+    <string name="limit_10_mb">10 MB</string>
+    <string name="limit_20_mb">20 MB</string>
+    <string name="limit_700_b">700 bytes</string>
+    <string name="limit_1_kb">1 KB</string>
+    <string name="limit_4_kb">4 KB</string>
+    <string name="limit_16_kb">16 KB</string>
+    <string name="limit_60_kb">60 KB</string>
+</resources>

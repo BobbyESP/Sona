@@ -6,7 +6,7 @@ plugins { id("sona.android.library") }
 android { namespace = "com.bobbyesp.sona.messaging.platform" }
 
 // The notifications of messages (MessagingStyle, inline reply, mark as read), from the Messenger's
-// events. Only :app depends on it. Filled with the Messages screens.
+// events. Only :app depends on it.
 dependencies {
     api(project(":messaging:domain"))
     implementation(libs.androidx.core.ktx)

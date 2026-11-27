@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only the files of messages, never the rest of the app's storage. -->
+<!-- Only the files of messages (and the camera's pictures for them), never the rest of the
+     app's storage. -->
 <paths>
     <files-path name="sent" path="messages/sent/" />
     <files-path name="received" path="messages/received/" />
+    <!-- Where the camera writes a picture taken for a message, until it is sent. -->
+    <cache-path name="captures" path="message-captures/" />
 </paths>

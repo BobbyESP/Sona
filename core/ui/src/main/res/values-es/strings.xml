@@ -7,6 +7,8 @@
     <string name="settings_area_audio_summary">Códecs y eco</string>
     <string name="settings_area_video">Vídeo</string>
     <string name="settings_area_video_summary">Videollamadas, códecs, calidad por Wi-Fi y datos móviles</string>
+    <string name="settings_area_messages">Mensajes</string>
+    <string name="settings_area_messages_summary">Confirmaciones, escritura, descargas y el tamaño que admite tu servidor</string>
     <string name="settings_area_network">Red</string>
     <string name="settings_area_network_summary">Datos móviles o solo Wi-Fi</string>
     <string name="settings_area_directory">Contactos e historial</string>

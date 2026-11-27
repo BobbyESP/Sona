@@ -123,11 +123,55 @@ Everything goes through `Messenger` (`:messaging:domain`, a single in the app, s
 | Writing | `sendText(id, text)`, `sendFile(id, contentUri)` → `SendOutcome` (`Queued`, `Empty`, `NoConversation`, `TooLong`, `FileTooLarge`, `FileUnreadable`); `notifyTyping(id)` on every change of the field |
 | Acting on one | `retry`, `download`, `decline`, `cancel`, `delete(ids)`, `deleteConversation`, `markRead` |
 | A file | `uriOf(attachment)` |
+| A picture from the camera | `CameraCaptures.newCapture()`: where the camera app may write it |
 
 A `Message` has a `MessageStatus` (`Sending`, `Sent`, `Delivered`, `Read`, `Failed`, `Received`),
 an optional `Attachment` with its `TransferState` and `progress`, and, when something went wrong, a
 `MessageFailure` (`reason: FailureReason`, `status: SipStatus?`, `technical` for *Show SIP
 details*).
+
+## The screens
+
+What the user sees is described in [ux.md](ux.md#messages); how it is built:
+
+| Module | What it holds |
+|---|---|
+| `:messaging:ui` | The domain in words, for every screen and the notifications alike: `MessageStatus.label`, `Message.transferLine(peer)` (*Waiting for 102 to download*, *Sending · 40 %*), `MessageFailure.sentence(FailureSubject)` / `explain` (the sentence of the table below, and `technical` for *Show SIP details*), `SendOutcome.problem()`, `fileSize` (in the user's numbers), `FileKind.of(mime).icon`, `Message.preview()`, and `MessageStatusMark` (clock, ✓, ✓✓, ✓✓ in the primary color, the error mark). Each sentence is a `Sentence` (a string resource and its arguments), so what each case says is tested on the JVM |
+| `:feature:messages` | The Messages tab (`MessagesTab`, badge `totalUnread`, order 15), the list, *New message*, a conversation and the picture viewer; *Message* for every party (`MessagePartyAction`, order 100, opening `NewConversation(address, accountId)`); *Settings › Messages* (`MessagesSettingsContributor`) |
+| `:messaging:platform` | `MessageNotifications` and `MessageActionReceiver` (only `:app` depends on it) |
+
+- **Keys.** `Conversation(conversationId)` and `NewConversation(address?, accountId?)` are in
+  `:core:navigation/keys/MessageKeys.kt`, ids only; the tab and the picture viewer's keys stay in
+  the feature. The list is a list pane and a conversation or *New message* its detail
+  (`ListDetailSceneStrategy` metadata), so a wide window shows both through the shell's strategy;
+  opening another conversation from the list replaces the detail rather than piling up behind
+  back. A destination with the window to itself (`LocalPaneContext`) shows its own back arrow.
+- **New message** resolves what was typed with the calling domain's `AddressResolver` on the
+  chosen account's domain, then `open(account, peer)`. Opened with an address and no choice to
+  make (one account, or a history entry's), it opens at once and gives way to the conversation.
+- **A conversation** calls `setVisibleConversation(id)` while resumed and `null` when paused, so
+  what arrives is read at once and not notified; `notifyTyping` on every change of the field. The
+  thread is grouped by day and by run (one side, the same day, each within five minutes) by a pure
+  `toThread`, and drawn in a reversed lazy list with stable keys; `uriOf` runs off the main thread.
+  A text the messenger refused (`TooLong`) stays in the field with why.
+- **Files.** Pictures are drawn by Coil, which decodes them at the size they are laid out. The
+  camera writes to `CameraCaptures.newCapture()` (`AndroidCameraCaptures`: the app's cache,
+  `message-captures/`, served by `MessageFileProvider` for the camera app's grant), asked only
+  once `CAMERA` is granted, since the app declares it; a picture taken is sent as any other.
+  Opening a file is `ACTION_VIEW` on `uriOf` with `FLAG_GRANT_READ_URI_PERMISSION`; *Save a copy*
+  is `CreateDocument`, copied on the IO dispatcher.
+- **Notifications.** `MessageNotifications.start()` subscribes to `Messenger.events` before the
+  engine starts (the events are not replayed) and shows each `Received` that is not `visible`: one
+  notification per conversation (tag `messages`, id the conversation's), `MessagingStyle` with the
+  sender as a `Person`, *Reply* (`RemoteInput`, a mutable explicit broadcast) and *Mark as read*,
+  on the *Messages* channel. A conversation's notification is cancelled once its unread count is
+  zero, wherever it was read. The receiver `goAsync`s and leaves the work to the notifications.
+  Without the permission nothing is shown, and nothing fails. A tap opens `MainActivity` with the
+  conversation's id (`ConversationIntents`, bound in `:app`), which becomes a standing request on
+  `ShellViewModel` that the shell opens once drawn.
+- **Party actions elsewhere.** Contacts (beside each number) and Recents (in an entry's details)
+  show every `PartyActionProvider` through `PartyActionButtons` in `:core:ui`, which the shell feeds
+  with `LocalPartyActionProviders`; neither names messages nor calls.
 
 ## Failures, in words and in SIP
 

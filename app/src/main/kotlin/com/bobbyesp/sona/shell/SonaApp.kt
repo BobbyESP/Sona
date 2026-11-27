@@ -48,7 +48,9 @@ import com.bobbyesp.sona.core.navigation.rememberNavigator
 import com.bobbyesp.sona.core.ui.contribution.LocalAccountChip
 import com.bobbyesp.sona.core.ui.contribution.LocalCallScreen
 import com.bobbyesp.sona.core.ui.contribution.LocalOpenSettings
+import com.bobbyesp.sona.core.ui.contribution.LocalPartyActionProviders
 import com.bobbyesp.sona.core.ui.contribution.NavSection
+import com.bobbyesp.sona.core.ui.contribution.PartyActionProvider
 import com.bobbyesp.sona.core.ui.contribution.TopLevelDestination
 import com.bobbyesp.sona.feature.call.OngoingCallBanner
 import org.koin.compose.getKoin
@@ -64,6 +66,10 @@ import org.koin.compose.getKoin
  * - Each top bar shows the account chip, provided here through [LocalAccountChip]: it opens the
  *   account switcher, or the editor when there is no account yet.
  * - On a first start ([needsOnboarding]) the welcome rises over the first tab.
+ * - What a party can have done to it (*Message*, *Video call*) is every [PartyActionProvider],
+ *   provided through [LocalPartyActionProviders] for the screens that show parties.
+ * - A destination asked for from outside ([request]: a message's notification) is opened over what
+ *   is shown, once, then [onRequestShown].
  */
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -71,11 +77,14 @@ fun SonaApp(
     accountChip: AccountChipState?,
     needsOnboarding: Boolean,
     readinessWarning: Boolean = false,
+    request: NavKey? = null,
+    onRequestShown: (NavKey) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val koin = getKoin()
     val destinations = remember { koin.getAll<TopLevelDestination>().sortedBy { it.order } }
     val sections = remember { koin.getAll<NavSection>() }
+    val partyActions = remember { koin.getAll<PartyActionProvider>().sortedBy { it.order } }
     val topLevelKeys = remember(destinations) { destinations.map { it.key } }
 
     val backStack = rememberNavBackStack(destinations.first().key)
@@ -101,6 +110,11 @@ fun SonaApp(
     // somewhere on the stack, and only while there is no account and it was not skipped.
     LaunchedEffect(needsOnboarding) {
         if (needsOnboarding && Onboarding !in backStack) navigator.goTo(Onboarding)
+    }
+    LaunchedEffect(request) {
+        val key = request ?: return@LaunchedEffect
+        navigator.goTo(key)
+        onRequestShown(key)
     }
 
     // The bar is for moving between tabs: a full-screen destination that is not one (the welcome,
@@ -164,6 +178,7 @@ fun SonaApp(
             LocalAccountChip provides chip,
             LocalCallScreen provides openCall,
             LocalOpenSettings provides openSettings,
+            LocalPartyActionProviders provides partyActions,
         ) {
             Box(Modifier.fillMaxSize()) {
                 SonaNavDisplay(

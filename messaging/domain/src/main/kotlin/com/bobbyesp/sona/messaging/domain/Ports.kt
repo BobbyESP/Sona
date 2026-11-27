@@ -195,3 +195,12 @@ fun readableSize(bytes: Long): String =
             else "${tenths / 10}.${tenths % 10} MB"
         }
     }
+
+/**
+ * Where the camera writes a picture to send: a new place each time, which [AttachmentPreparer] can
+ * read afterwards like any picked file.
+ */
+fun interface CameraCaptures {
+    /** A `content://` address the camera app may write to, or `null` when none could be made. */
+    suspend fun newCapture(): String?
+}

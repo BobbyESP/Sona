@@ -53,6 +53,7 @@ import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Router
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Straighten
 import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Tune
@@ -128,6 +129,8 @@ import com.bobbyesp.sona.core.model.settings.AudioCodec
 import com.bobbyesp.sona.core.model.settings.AudioSettings
 import com.bobbyesp.sona.core.model.settings.CallSettings
 import com.bobbyesp.sona.core.model.settings.DtmfMethod
+import com.bobbyesp.sona.core.model.settings.MessageSettings
+import com.bobbyesp.sona.core.model.settings.MessageSizeLimit
 import com.bobbyesp.sona.core.model.settings.Override
 import com.bobbyesp.sona.core.ui.LocalNetworkAccess
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
@@ -473,6 +476,9 @@ private fun MoreOptions(state: EditorState, edit: (AccountDraft.() -> AccountDra
 
         Header(R.string.overrides_title)
         CallOverrides(state, edit)
+
+        Header(R.string.overrides_messages_title)
+        MessageOverrides(state, edit)
     }
 }
 
@@ -563,6 +569,40 @@ private fun CallOverrides(state: EditorState, edit: (AccountDraft.() -> AccountD
         }
     }
 }
+
+/** What messages on this account do differently from the app: the size its server relays. */
+@Composable
+private fun MessageOverrides(state: EditorState, edit: (AccountDraft.() -> AccountDraft) -> Unit) {
+    OverrideItem(
+        index = 0,
+        count = 1,
+        icon = Icons.Rounded.Straighten,
+        title = R.string.override_largest_message,
+        override = state.draft.overrides[MessageSettings.LargestMessage],
+        app = state.appLargestMessage,
+        describe = { stringResource(it.label) },
+        onChange = {
+            edit { copy(overrides = overrides.with(MessageSettings.LargestMessage, it)) }
+        },
+    ) { limit, change ->
+        SegmentedChoiceList(
+            options = MessageSizeLimit.entries,
+            selected = limit,
+            onSelect = change,
+            label = { stringResource(it.label) },
+        )
+    }
+}
+
+private val MessageSizeLimit.label: Int
+    get() =
+        when (this) {
+            MessageSizeLimit.B700 -> R.string.size_700_b
+            MessageSizeLimit.Kb1 -> R.string.size_1_kb
+            MessageSizeLimit.Kb4 -> R.string.size_4_kb
+            MessageSizeLimit.Kb16 -> R.string.size_16_kb
+            MessageSizeLimit.Kb60 -> R.string.size_60_kb
+        }
 
 /**
  * Fields that belong together as one segmented group: the segmented gap between them, and each with
