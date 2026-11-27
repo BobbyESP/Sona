@@ -6,6 +6,7 @@ package com.bobbyesp.sona.sip.linphone
 import com.bobbyesp.sona.sip.api.DtmfMode
 import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.EngineLogLevel
+import com.bobbyesp.sona.sip.api.VideoConfig
 import org.linphone.core.Core
 import org.linphone.core.Factory
 import org.linphone.core.LogLevel
@@ -38,6 +39,59 @@ internal class LinphoneConfigurer(private val appVersion: String) {
         core.isWifiOnlyEnabled = config.wifiOnly
         dtmf(core, config.dtmf)
         config.codecs?.let { codecs(core, it) }
+        video(core, config.video)
+    }
+
+    /**
+     * Video, and what the network allows the media (docs/video.md, The network). Most of it reaches
+     * the next call or re-INVITE; the bandwidth caps and DSCP marks, the next stream started.
+     *
+     * - **Never initiated, never taken by Linphone itself**: video added by the other side is
+     *   deferred and answered receive-only by the engine (`LinphoneSipEngine`), so this side's
+     *   camera is never turned on by a re-INVITE.
+     * - **Adaptive rate** with the `advanced` algorithm, which reads RTCP (loss, delay trend,
+     *   TMMBR) and steps the bitrate, the frame rate, then the definition down and back up. The
+     *   video preset is left `default` for it: `custom` would pin the definition.
+     * - **Losses repaired**: retransmission on NACK and FEC are offered; a peer without them
+     *   answers without them.
+     * - **Adaptive jitter buffers** for both streams.
+     * - **Caps**: the preferred definition and frame rate, and the upload and download bandwidth
+     *   (kbit/s, audio included, `0` for none), as `EngineConfigBuilder` chose them for the
+     *   network.
+     * - **DSCP** on the media packets, EF for voice and AF41 for video.
+     */
+    fun video(core: Core, video: VideoConfig) {
+        core.isVideoCaptureEnabled = video.enabled
+        core.isVideoDisplayEnabled = video.enabled
+        val policy = Factory.instance().createVideoActivationPolicy()
+        policy.automaticallyInitiate = false
+        policy.automaticallyAccept = false
+        core.videoActivationPolicy = policy
+
+        core.isAdaptiveRateControlEnabled = video.adaptiveRate
+        core.adaptiveRateAlgorithm = ADAPTIVE_RATE_ALGORITHM
+        core.isRetransmissionOnNackEnabled = video.retransmission
+        core.isFecEnabled = video.fec
+        core.isAudioAdaptiveJittcompEnabled = video.adaptiveJitter
+        core.isVideoAdaptiveJittcompEnabled = video.adaptiveJitter
+
+        core.preferredVideoDefinition =
+            Factory.instance()
+                .createVideoDefinition(video.definition.width, video.definition.height)
+        core.preferredFramerate = video.maxFrameRate.toFloat()
+        core.uploadBandwidth = video.uploadKbps
+        core.downloadBandwidth = video.downloadKbps
+
+        core.audioDscp = video.audioDscp
+        core.videoDscp = video.videoDscp
+        video.codecs?.let { videoCodecs(core, it) }
+    }
+
+    /** The video codecs the next offer or answer is built from, as [codecs] does for audio. */
+    private fun videoCodecs(core: Core, wanted: List<String>) {
+        val plan = codecPlan(core.videoPayloadTypes.toList(), wanted) { it.mimeType }
+        plan.forEach { (payload, enabled) -> payload.enable(enabled) }
+        core.setVideoPayloadTypes(plan.map { it.first }.toTypedArray())
     }
 
     /**
@@ -72,5 +126,6 @@ internal class LinphoneConfigurer(private val appVersion: String) {
 
     private companion object {
         const val LOG_TAG = "SonaSip"
+        const val ADAPTIVE_RATE_ALGORITHM = "advanced"
     }
 }

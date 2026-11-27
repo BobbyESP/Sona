@@ -84,7 +84,7 @@ data           port implementations: Room, DataStore, Linphone, Telecom, Contact
 ```
 
 - **Anything the framework does goes behind a port**: `SipEngine`, `SystemCalls`, `CredentialVault`,
-  `DeviceContacts`, `RingtonePlayer`, `BatteryOptimizations` (`NetworkMonitor` is planned). Tests use fakes.
+  `DeviceContacts`, `RingtonePlayer`, `BatteryOptimizations`, `NetworkMonitor`, `CameraPermission`, `VideoSurfaces`. Tests use fakes.
 - **A port that needs an `Activity`** (asking for a permission, opening the full-screen-intent
   settings) is called by the screen, after the ViewModel emits an effect.
 

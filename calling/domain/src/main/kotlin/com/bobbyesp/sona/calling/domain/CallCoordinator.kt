@@ -11,8 +11,12 @@ import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.CallSettings
 import com.bobbyesp.sona.core.model.settings.DeclineMode
 import com.bobbyesp.sona.core.model.settings.SettingsStore
+import com.bobbyesp.sona.core.model.settings.VideoSettings
 import com.bobbyesp.sona.sip.api.AudioDeviceKind
 import com.bobbyesp.sona.sip.api.CallDirection
+import com.bobbyesp.sona.sip.api.CallStatistics
+import com.bobbyesp.sona.sip.api.CallVideo
+import com.bobbyesp.sona.sip.api.Capability
 import com.bobbyesp.sona.sip.api.DialResult
 import com.bobbyesp.sona.sip.api.EngineCall
 import com.bobbyesp.sona.sip.api.EngineCallState
@@ -31,6 +35,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -39,6 +44,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -63,12 +70,15 @@ sealed interface DialOutcome {
     data class Failed(val detail: String) : DialOutcome
 }
 
-/** Whether a call needs the app in the foreground, and its microphone. */
+/** Whether a call needs the app in the foreground, and its microphone and camera. */
 sealed interface CallForeground {
     data object None : CallForeground
 
-    /** A call exists. [microphone] once one was dialed or answered (ringing needs none). */
-    data class Calls(val microphone: Boolean) : CallForeground
+    /**
+     * A call exists. [microphone] once one was dialed or answered (ringing needs none); [camera]
+     * while a call's camera is on, and the call is neither on hold nor over.
+     */
+    data class Calls(val microphone: Boolean, val camera: Boolean = false) : CallForeground
 }
 
 /**
@@ -97,6 +107,12 @@ data class RefusedCall(
  * Everything that changes a call goes through one lock, in order: an engine update, the user's
  * answer and a headset's hang-up never interleave.
  *
+ * **Video** is a second stream of the same call (docs/video.md). The coordinator keeps what the
+ * user wants of the camera ([Call.cameraOn]) apart from what the engine negotiated ([Call.video]),
+ * and makes the second follow the first: video the other side adds is shown with this side's camera
+ * off, a hold brings back on resume the directions it stopped, and the camera is never asked of the
+ * engine without the permission.
+ *
  * @param endedLinger How long an ended call stays in [calls], for the call screen to say how it
  *   ended before closing.
  */
@@ -109,8 +125,15 @@ class CallCoordinator(
     private val clock: () -> Long = System::currentTimeMillis,
     private val endedLinger: Duration = 3.seconds,
     private val names: CallerNames = CallerNames.None,
+    private val camera: CameraPermission = CameraPermission.Granted,
 ) {
-    private class Tracked(
+    /** Video directions, as asked or as they were. */
+    private data class Directions(val send: Boolean, val receive: Boolean) {
+        val any: Boolean
+            get() = send || receive
+    }
+
+    private data class Tracked(
         val engine: EngineCall,
         val system: SystemCall? = null,
         val answered: Boolean = false,
@@ -119,16 +142,30 @@ class CallCoordinator(
         val routeJob: Job? = null,
         /** Who the contacts say the other side is; preferred to what the server says. */
         val name: String? = null,
+        /** The caller offered video, and video calls are on. */
+        val videoOffered: Boolean = false,
+        /** The user wants the camera sent; the engine's video is made to follow. */
+        val cameraOn: Boolean = false,
+        val cameraBlocked: CameraBlocked? = null,
+        /** The directions a local hold stopped, to bring back on resume. */
+        val held: Directions? = null,
+        /** The route was already looked at for this stretch of video: chosen once, then left. */
+        val routedForVideo: Boolean = false,
+        /** Whether the system was told this is a video call. */
+        val systemVideo: Boolean = false,
+        /**
+         * New directions were just asked of the engine: until it answers, what it reports is the
+         * old state, and the system is not told about it.
+         */
+        val settling: Boolean = false,
     ) {
-        fun with(
-            engine: EngineCall = this.engine,
-            system: SystemCall? = this.system,
-            answered: Boolean = this.answered,
-            connectedAt: Long? = this.connectedAt,
-            endReason: EndReason? = this.endReason,
-            routeJob: Job? = this.routeJob,
-            name: String? = this.name,
-        ) = Tracked(engine, system, answered, connectedAt, endReason, routeJob, name)
+        val isOver: Boolean
+            get() = engine.state is EngineCallState.Ended
+
+        val isHeld: Boolean
+            get() =
+                engine.state == EngineCallState.LocalHold ||
+                    engine.state == EngineCallState.RemoteHold
 
         fun toCall(audio: Audio?): Call =
             Call(
@@ -143,6 +180,10 @@ class CallCoordinator(
                 connectedAt = connectedAt,
                 route = audio?.route,
                 routes = audio?.routes.orEmpty(),
+                video = engine.video,
+                videoOffered = videoOffered,
+                cameraOn = cameraOn,
+                cameraBlocked = cameraBlocked,
             )
     }
 
@@ -152,6 +193,11 @@ class CallCoordinator(
     private val lock = Mutex()
     private val tracked = MutableStateFlow<Map<CallId, Tracked>>(emptyMap())
     private val audio = MutableStateFlow<Map<CallId, Audio>>(emptyMap())
+
+    /** What the user asked of a call's camera when dialing it, until the call is first seen. */
+    private data class Dialed(val camera: Boolean, val blocked: CameraBlocked?)
+
+    private val dialed = mutableMapOf<CallId, Dialed>()
 
     /** Every call, in the order they began; an ended one stays a moment ([endedLinger]). */
     val calls: StateFlow<List<Call>> =
@@ -163,7 +209,7 @@ class CallCoordinator(
     val foreground: StateFlow<CallForeground> =
         tracked
             .map { all ->
-                val live = all.values.filter { it.engine.state !is EngineCallState.Ended }
+                val live = all.values.filterNot { it.isOver }
                 if (live.isEmpty()) CallForeground.None
                 else
                     CallForeground.Calls(
@@ -171,6 +217,7 @@ class CallCoordinator(
                             live.any {
                                 it.answered || it.engine.direction == CallDirection.Outgoing
                             },
+                        camera = live.any { it.cameraOn && !it.isHeld },
                     )
             }
             .stateIn(scope, SharingStarted.Eagerly, CallForeground.None)
@@ -185,7 +232,16 @@ class CallCoordinator(
         engine.calls.collect { list -> lock.withLock { onEngine(list) } }
     }
 
-    suspend fun dial(input: String, account: AccountId? = null): DialOutcome {
+    /**
+     * Calls [input] from [account] (the default one when `null`), with the camera on when [video].
+     * Without the camera permission the call is dialed as audio and says why
+     * ([Call.cameraBlocked]); with video off in the settings, or an engine without it, as audio.
+     */
+    suspend fun dial(
+        input: String,
+        account: AccountId? = null,
+        video: Boolean = false,
+    ): DialOutcome {
         val from =
             (account?.let { accounts.get(it) } ?: accounts.defaultAccount().first())
                 ?: return DialOutcome.NoAccount
@@ -195,16 +251,32 @@ class CallCoordinator(
                 is AddressResolution.Invalid -> return DialOutcome.InvalidAddress(resolution.reason)
                 is AddressResolution.Resolved -> resolution.address
             }
-        return when (val result = engine.dial(from.id, address)) {
-            is DialResult.Started -> DialOutcome.Started(result.id)
-            DialResult.AccountUnavailable ->
-                DialOutcome.NotRegistered(from.label, engine.registrations.value[from.id])
-            is DialResult.Failed -> DialOutcome.Failed(result.detail)
+        val wantsCamera = video && videoAllowed()
+        val withCamera = wantsCamera && camera.granted()
+        // Under the lock, so the call is first seen once its camera's story is written down.
+        return lock.withLock {
+            when (val result = engine.dial(from.id, address, video = withCamera)) {
+                is DialResult.Started -> {
+                    val blocked = CameraBlocked.NoPermission.takeIf { wantsCamera && !withCamera }
+                    dialed[result.id] = Dialed(withCamera, blocked)
+                    DialOutcome.Started(result.id)
+                }
+                DialResult.AccountUnavailable ->
+                    DialOutcome.NotRegistered(from.label, engine.registrations.value[from.id])
+                is DialResult.Failed -> DialOutcome.Failed(result.detail)
+            }
         }
     }
 
-    /** Answers [id]; a call already in progress is put on hold first (call waiting). */
-    fun answer(id: CallId) = act { answerLocked(id, fromSystem = false) }
+    /**
+     * Answers [id], with the camera on when [video] and the caller offered video; a call already in
+     * progress is put on hold first (call waiting). Without [video], video the caller offered is
+     * still shown, receive-only, when the settings accept it: *Answer audio only* keeps this side's
+     * camera off, not the other side's picture.
+     */
+    fun answer(id: CallId, video: Boolean = false) = act {
+        answerLocked(id, fromSystem = false, video = video)
+    }
 
     fun decline(id: CallId) = act { engine.decline(id) }
 
@@ -222,9 +294,99 @@ class CallCoordinator(
         tracked.value[id]?.system?.requestRoute(route)
     }
 
+    /**
+     * Turns this side's camera on or off for [id]: a change of direction, so turning it off sends
+     * nothing and the other side shows its placeholder. Turned on in an audio call, it adds video
+     * both ways. Without the permission nothing is asked and the call says why. On hold, the wish
+     * is kept for the resume; before the call is up, for when it is.
+     */
+    fun setCameraOn(id: CallId, on: Boolean) = act {
+        val known = tracked.value[id] ?: return@act
+        if (known.isOver) return@act
+        if (on && !camera.granted()) {
+            put(known.copy(cameraOn = false, cameraBlocked = CameraBlocked.NoPermission))
+            return@act
+        }
+        if (on && !videoAllowed()) return@act
+        val now = known.engine.video
+        when (known.engine.state) {
+            EngineCallState.LocalHold -> {
+                val held = known.held ?: Directions(send = false, receive = on)
+                put(known.copy(cameraOn = on, cameraBlocked = null, held = held.copy(send = on)))
+            }
+            EngineCallState.Active -> {
+                put(known.copy(cameraOn = on, cameraBlocked = null))
+                val receive = now?.receiving ?: on
+                if (now != null || on) engine.setVideo(id, send = on, receive = receive)
+            }
+            else -> put(known.copy(cameraOn = on, cameraBlocked = null))
+        }
+    }
+
+    /**
+     * Video on or off for [id] as a whole. Off drops the stream both ways and keeps the voice (the
+     * weak connection banner's *Turn off video*); on takes the other side's picture again,
+     * receive-only, with the camera left off until the user turns it on.
+     */
+    fun setVideoEnabled(id: CallId, enabled: Boolean) = act {
+        val known = tracked.value[id] ?: return@act
+        if (known.isOver) return@act
+        if (enabled && !videoAllowed()) return@act
+        val now = known.engine.video
+        when (known.engine.state) {
+            EngineCallState.LocalHold ->
+                put(
+                    known.copy(
+                        cameraOn = known.cameraOn && enabled,
+                        held = if (enabled) Directions(known.cameraOn, receive = true) else null,
+                    ),
+                )
+            EngineCallState.Active ->
+                if (!enabled) {
+                    put(known.copy(cameraOn = false))
+                    if (now != null) engine.setVideo(id, send = false, receive = false)
+                } else if (now?.receiving != true) {
+                    engine.setVideo(
+                        id,
+                        send = known.cameraOn && now?.sending == true,
+                        receive = true,
+                    )
+                }
+            else -> if (!enabled) put(known.copy(cameraOn = false))
+        }
+    }
+
+    /** Sends [id] from the other camera, front or back, without renegotiating. */
+    fun switchCamera(id: CallId) = act {
+        if (tracked.value[id]?.engine?.video != null) engine.switchCamera(id)
+    }
+
+    /**
+     * How the display is turned, so the picture sent stays upright: any angle, taken to the nearest
+     * quarter turn (0, 90, 180, 270).
+     */
+    fun setDeviceRotation(degrees: Int) = act { engine.setDeviceRotation(quarterTurn(degrees)) }
+
+    /**
+     * [id]'s numbers once a second while collected, and nothing measured while not (the engine
+     * polls only for a collector). Empty on an engine without statistics.
+     */
+    fun statistics(id: CallId): Flow<CallStatistics> =
+        if (Capability.CallStats in engine.capabilities) engine.statistics(id) else emptyFlow()
+
+    /** [id]'s quality as it changes, from [statistics]; measured only while collected too. */
+    fun quality(id: CallId): Flow<CallQuality> =
+        statistics(id).map(CallQuality::of).filterNotNull().distinctUntilChanged()
+
     private fun act(block: suspend () -> Unit) {
         scope.launch { lock.withLock { block() } }
     }
+
+    private fun put(call: Tracked) = tracked.update { it + (call.engine.id to call) }
+
+    private suspend fun videoAllowed(): Boolean =
+        Capability.VideoCalls in engine.capabilities &&
+            settings.observe(VideoSettings.Enabled).first()
 
     private suspend fun onEngine(list: List<EngineCall>) {
         for (call in list) {
@@ -248,13 +410,10 @@ class CallCoordinator(
             // Ended before it was seen: a call that failed at once (busy, no such extension,
             // nothing sent). A dialed one is still shown with its reason, or the user never learns
             // why nothing happened; an incoming one rang too briefly to show.
+            dialed.remove(call.id)
             if (call.direction == CallDirection.Outgoing) {
                 val reason = EndReason.of(state, call.direction, answered = false)
-                tracked.update {
-                    it +
-                        (call.id to
-                            Tracked(call, endReason = reason, name = names.nameFor(call.remote)))
-                }
+                put(Tracked(call, endReason = reason, name = names.nameFor(call.remote)))
                 forgetLater(call.id)
             } else {
                 engine.forget(call.id)
@@ -277,8 +436,18 @@ class CallCoordinator(
             return
         }
         val name = names.nameFor(call.remote)
-        tracked.update { it + (call.id to Tracked(call, name = name)) }
-        scope.launch { addToSystem(call, name) }
+        // A call dialed with the camera: the user asked for it, and the engine sends it.
+        val asked = dialed.remove(call.id)
+        val tracked =
+            Tracked(
+                call,
+                name = name,
+                videoOffered = call.videoOffered && videoAllowed(),
+                cameraOn = (asked?.camera ?: false) && call.video != null,
+                cameraBlocked = asked?.blocked,
+            )
+        put(tracked)
+        scope.launch { addToSystem(tracked) }
     }
 
     private suspend fun refused(call: EngineCall, busy: Boolean, quiet: Boolean) {
@@ -296,19 +465,20 @@ class CallCoordinator(
 
     /** Busy when a call is in progress and call waiting is off. */
     private suspend fun shouldRejectAsBusy(): Boolean {
-        val inProgress = tracked.value.values.any { it.engine.state !is EngineCallState.Ended }
+        val inProgress = tracked.value.values.any { !it.isOver }
         return inProgress && !settings.observe(CallSettings.CallWaiting).first()
     }
 
     private suspend fun change(known: Tracked, call: EngineCall) {
         val before = known.engine.state
         val after = call.state
-        var next = known.with(engine = call)
+        // The engine moved: whatever was asked of it has had its answer.
+        var next = known.copy(engine = call, settling = false)
         if (before != after) {
             when (after) {
                 EngineCallState.Active -> {
                     if (known.connectedAt == null)
-                        next = next.with(answered = true, connectedAt = clock())
+                        next = next.copy(answered = true, connectedAt = clock())
                     if (
                         call.direction == CallDirection.Outgoing ||
                             before == EngineCallState.LocalHold
@@ -325,14 +495,106 @@ class CallCoordinator(
                             known.answered,
                             connectedForMs = known.connectedAt?.let { clock() - it },
                         )
-                    next = next.with(endReason = reason)
+                    next = next.copy(endReason = reason)
                     known.system?.disconnect(reason.toDisconnectCause())
                     forgetLater(call.id)
                 }
                 else -> Unit
             }
         }
-        tracked.update { it + (call.id to next) }
+        next = followCamera(next, before, known.engine.video)
+        put(next)
+        followVideo(call.id)
+    }
+
+    /**
+     * Keeps the engine's video what the user wants of it, after the engine moved: the decisions of
+     * docs/video.md that belong to the camera.
+     */
+    private suspend fun followCamera(
+        call: Tracked,
+        before: EngineCallState,
+        videoBefore: CallVideo?,
+    ): Tracked {
+        val after = call.engine.state
+        val video = call.engine.video
+        val id = call.engine.id
+        // Hold: the video stops with the audio; what it was is kept for the resume.
+        if (after == EngineCallState.LocalHold && before == EngineCallState.Active) {
+            val held = videoBefore?.let {
+                Directions(send = it.sending && call.cameraOn, it.receiving)
+            }
+            return call.copy(held = held?.takeIf { it.any })
+        }
+        // Resume: the directions held before come back, unless the engine brought them already.
+        if (after == EngineCallState.Active && before == EngineCallState.LocalHold) {
+            val held = call.held
+            val now = Directions(video?.sending == true, video?.receiving == true)
+            val ask = held != null && held != now
+            if (ask) engine.setVideo(id, held.send, held.receive)
+            return call.copy(held = null, settling = ask)
+        }
+        if (after is EngineCallState.Ended) return call
+        // No video left (the other side declined it, or dropped it): no camera to keep on.
+        if (video == null && videoBefore != null && call.cameraOn) {
+            return call.copy(cameraOn = false)
+        }
+        if (after != EngineCallState.Active) return call
+        val ask =
+            when {
+                // Up at last: what the user changed while it rang, or was held, is asked now.
+                before == EngineCallState.Dialing ||
+                    before == EngineCallState.Ringing ||
+                    before == EngineCallState.RemoteHold ->
+                    when {
+                        video != null && video.sending != call.cameraOn ->
+                            Directions(call.cameraOn, video.receiving)
+                        video == null && call.cameraOn -> Directions(send = true, receive = true)
+                        else -> null
+                    }
+                // Privacy: video the other side added is shown with this side's camera off,
+                // whatever the engine accepted. Only the user turns the camera on.
+                video?.sending == true && videoBefore?.sending != true && !call.cameraOn ->
+                    Directions(send = false, receive = video.receiving)
+                else -> null
+            } ?: return call
+        engine.setVideo(id, ask.send, ask.receive)
+        return call.copy(settling = true)
+    }
+
+    /**
+     * The system's side of a call's video: its type follows whether the call shows video, and video
+     * that starts on the earpiece moves the audio to the speaker, once (a headset or Bluetooth
+     * route is kept, and a route the user picks after is theirs). Nothing changes while the call is
+     * on hold, for it comes back as it was, nor while it rings: its video is not negotiated until
+     * it is answered, and it rings as what was offered.
+     */
+    private suspend fun followVideo(id: CallId) {
+        val known = tracked.value[id] ?: return
+        val handle = known.system ?: return
+        if (known.isOver || known.isHeld || known.settling) return
+        if (known.engine.state == EngineCallState.Incoming) return
+        val shows = known.engine.video?.isActive == true
+        var next = known
+        if (shows != known.systemVideo) {
+            handle.setVideo(shows)
+            next = next.copy(systemVideo = shows)
+        }
+        if (!shows) {
+            // Video ended: the route is left as it is, and the next video looks at it again.
+            next = next.copy(routedForVideo = false)
+        } else if (!known.routedForVideo) {
+            val route = handle.route.value
+            if (route != null) {
+                next = next.copy(routedForVideo = true)
+                if (route.kind == AudioRouteKind.Earpiece) {
+                    handle.routes.value
+                        .firstOrNull { it.kind == AudioRouteKind.Speaker }
+                        ?.let { handle.requestRoute(it) }
+                }
+            }
+        }
+        if (next != known) put(next)
     }
 
     private fun forgetLater(id: CallId) {
@@ -342,7 +604,13 @@ class CallCoordinator(
         }
     }
 
-    private suspend fun addToSystem(call: EngineCall, name: String?) {
+    private suspend fun addToSystem(first: Tracked) {
+        val call = first.engine
+        val name = first.name
+        // Ringing with video offered, or dialed with the camera: a video call to the system.
+        val video =
+            if (call.direction == CallDirection.Incoming) first.videoOffered
+            else call.video?.isActive == true
         val handle =
             system.add(
                 SystemCallRequest(
@@ -350,6 +618,7 @@ class CallCoordinator(
                     displayName = name ?: call.remoteName ?: call.remote.user ?: call.remote.host,
                     address = call.remote.uri,
                     incoming = call.direction == CallDirection.Incoming,
+                    video = video,
                 ),
                 events = EventsFor(call.id),
             ) ?: return
@@ -371,24 +640,45 @@ class CallCoordinator(
                 // The system owns the route; the engine's streams are moved to follow it. Without
                 // this the route changes and the sound stays where the engine first put it.
                 handle.route
-                    .map { it?.kind?.toEngineDevice() }
-                    .distinctUntilChanged()
-                    .collect { device ->
-                        if (device != null) lock.withLock { engine.setAudioDevice(call.id, device) }
+                    .distinctUntilChanged { old, new -> old?.kind == new?.kind }
+                    .collect { route ->
+                        lock.withLock {
+                            route?.kind?.toEngineDevice()?.let {
+                                engine.setAudioDevice(call.id, it)
+                            }
+                            // A route known at last: video may want the speaker.
+                            followVideo(call.id)
+                        }
                     }
             }
-            tracked.update { it + (call.id to known.with(system = handle, routeJob = routeJob)) }
+            put(known.copy(system = handle, routeJob = routeJob, systemVideo = video))
+            followVideo(call.id)
         }
     }
 
-    private suspend fun answerLocked(id: CallId, fromSystem: Boolean) {
+    private suspend fun answerLocked(id: CallId, fromSystem: Boolean, video: Boolean) {
         val known = tracked.value[id] ?: return
         if (known.engine.state != EngineCallState.Incoming) return
         tracked.value.values
             .filter { it.engine.id != id && it.engine.state == EngineCallState.Active }
             .forEach { engine.hold(it.engine.id, true) }
-        if (!fromSystem) known.system?.answer()
-        engine.answer(id)
+        val offered = known.videoOffered
+        // Another device's answer never turns the camera on.
+        val wantsCamera = video && offered && !fromSystem
+        val withCamera = wantsCamera && camera.granted()
+        val showsVideo =
+            withCamera || (offered && settings.observe(VideoSettings.AcceptRemote).first())
+        put(
+            known.copy(
+                cameraOn = withCamera,
+                cameraBlocked =
+                    if (wantsCamera && !withCamera) CameraBlocked.NoPermission else null,
+                systemVideo = if (fromSystem) known.systemVideo else showsVideo,
+            ),
+        )
+        // The system first, so it has moved the audio to the call before the media starts.
+        if (!fromSystem) known.system?.answer(video = showsVideo)
+        engine.answer(id, video = withCamera)
     }
 
     private suspend fun endLocked(id: CallId) {
@@ -399,7 +689,9 @@ class CallCoordinator(
 
     /** What the system asks of one call, carried out in the same order as everything else. */
     private inner class EventsFor(private val id: CallId) : SystemCallEvents {
-        override suspend fun onAnswer() = lock.withLock { answerLocked(id, fromSystem = true) }
+        override suspend fun onAnswer() = lock.withLock {
+            answerLocked(id, fromSystem = true, video = false)
+        }
 
         override suspend fun onDisconnect() = lock.withLock { endLocked(id) }
 
@@ -407,6 +699,12 @@ class CallCoordinator(
 
         override suspend fun onSetInactive() = lock.withLock { engine.hold(id, true) }
     }
+}
+
+/** [degrees] taken to the nearest quarter turn, from 0 to 270. */
+internal fun quarterTurn(degrees: Int): Int {
+    val turned = Math.floorMod(degrees, 360)
+    return (turned + 45) / 90 % 4 * 90
 }
 
 /** The engine's kind of device for the system's; `null` for one the engine cannot be told of. */

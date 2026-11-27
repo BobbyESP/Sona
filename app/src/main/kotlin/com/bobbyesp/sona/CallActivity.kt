@@ -87,15 +87,20 @@ class CallActivity : ComponentActivity() {
         answerIfAsked(intent)
     }
 
-    /** The notification's *Answer* opens this screen, answering as it does. */
+    /**
+     * The notification's *Answer* opens this screen, answering as it does: with the camera for a
+     * call that offered video, whose *Answer* the system draws as one.
+     */
     private fun answerIfAsked(intent: Intent?) {
         val call = intent?.getStringExtra(EXTRA_ANSWER) ?: return
-        coordinator.answer(CallId(call))
+        coordinator.answer(CallId(call), video = intent.getBooleanExtra(EXTRA_ANSWER_VIDEO, false))
         intent.removeExtra(EXTRA_ANSWER)
+        intent.removeExtra(EXTRA_ANSWER_VIDEO)
     }
 
     companion object {
         private const val EXTRA_ANSWER = "answer"
+        private const val EXTRA_ANSWER_VIDEO = "answer_video"
         private const val EXTRA_CALL_BACK = "call_back"
         private const val EXTRA_ACCOUNT = "account"
         private val CALL_APPEARS_WITHIN = 3.seconds
@@ -109,8 +114,8 @@ class CallActivity : ComponentActivity() {
     object Intents : CallScreenIntents {
         override fun screen(context: Context): Intent = intent(context)
 
-        override fun answer(context: Context, call: CallId): Intent =
-            intent(context).putExtra(EXTRA_ANSWER, call.value)
+        override fun answer(context: Context, call: CallId, video: Boolean): Intent =
+            intent(context).putExtra(EXTRA_ANSWER, call.value).putExtra(EXTRA_ANSWER_VIDEO, video)
 
         override fun callBack(context: Context, address: String, account: String?): Intent =
             intent(context).putExtra(EXTRA_CALL_BACK, address).putExtra(EXTRA_ACCOUNT, account)

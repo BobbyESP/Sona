@@ -5,6 +5,8 @@
     <string name="settings_area_calls_summary">Waiting, do not disturb, staying reachable</string>
     <string name="settings_area_audio">Audio</string>
     <string name="settings_area_audio_summary">Codecs and echo</string>
+    <string name="settings_area_video">Video</string>
+    <string name="settings_area_video_summary">Video calls, codecs, quality on Wi-Fi and mobile data</string>
     <string name="settings_area_network">Network</string>
     <string name="settings_area_network_summary">Mobile data or Wi-Fi only</string>
     <string name="settings_area_directory">Contacts and history</string>

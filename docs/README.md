@@ -4,6 +4,7 @@
 |---|---|
 | [architecture.md](architecture.md) | Modules and the rules the build enforces, layers, MVI, contribution points, capabilities, settings, DI, navigation, theme |
 | [calling.md](calling.md) | The SIP engine contract and Linphone, the call coordinator and its state machine, Telecom, audio routing, services, readiness, notifications, the call activity |
+| [video.md](video.md) | Video calls: the engine primitives, the coordinator's video decisions, statistics and call quality, the network limits, cameras, surfaces |
 | [ux.md](ux.md) | Principles, the map of destinations, every screen, components, motion, accessibility, and the full catalogue of options |
 | [roadmap.md](roadmap.md) | Phases with what "done" means, the Asterisk lab and its call matrix, testing, risks |
 | [releasing.md](releasing.md) | The CI and release workflows, the signing key and its secrets, how to make a release |

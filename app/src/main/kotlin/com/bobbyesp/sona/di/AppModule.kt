@@ -14,11 +14,14 @@ import com.bobbyesp.sona.accounts.domain.SetAccountEnabled
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.CallerNames
 import com.bobbyesp.sona.calling.domain.EngineConfigBuilder
+import com.bobbyesp.sona.calling.domain.NetworkMonitor
+import com.bobbyesp.sona.calling.platform.AndroidNetworkMonitor
 import com.bobbyesp.sona.calling.platform.CallNotifications
 import com.bobbyesp.sona.calling.platform.CallScreenIntents
 import com.bobbyesp.sona.calling.platform.MissedCallNotifications
 import com.bobbyesp.sona.calling.platform.ServiceController
 import com.bobbyesp.sona.calling.platform.callReadinessChecks
+import com.bobbyesp.sona.calling.platform.cameraPermission
 import com.bobbyesp.sona.core.common.AppInfo
 import com.bobbyesp.sona.core.common.DefaultDispatchers
 import com.bobbyesp.sona.core.common.DispatcherProvider
@@ -125,7 +128,9 @@ val appModule = module {
             refused = get<CallCoordinator>().refused,
         )
     }
-    factory { EngineConfigBuilder(get()) }
+    // The network in use: the video limits follow it (Wi-Fi or mobile data).
+    single<NetworkMonitor> { AndroidNetworkMonitor(androidContext(), get<ApplicationScope>()) }
+    factory { EngineConfigBuilder(get(), get()) }
     single {
         EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
     }
@@ -140,6 +145,7 @@ val appModule = module {
             get(),
             get<ApplicationScope>(),
             names = CallerNames { address -> get<Directory>().nameFor(address) },
+            camera = androidContext().cameraPermission(),
         )
     }
     single<CallScreenIntents> { CallActivity.Intents }

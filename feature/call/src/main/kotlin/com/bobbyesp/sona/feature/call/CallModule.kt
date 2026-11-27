@@ -13,4 +13,5 @@ val callModule = module {
     single { CallSettingsContributor } bind SettingsContributor::class
     single { AudioSettingsContributor } bind SettingsContributor::class
     single { NetworkSettingsContributor } bind SettingsContributor::class
+    single { VideoSettingsContributor } bind SettingsContributor::class
 }
