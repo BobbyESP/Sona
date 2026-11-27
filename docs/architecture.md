@@ -122,9 +122,9 @@ feature would edit old ones. Instead each such screen declares a contract in `:c
 | Contract | Screen that shows it | Contributed today by | Later by |
 |---|---|---|---|
 | `NavSection` | the `NavDisplay` | every feature | every feature |
-| `TopLevelDestination` | navigation bar / rail | dialer, history, contacts | messaging, voicemail |
+| `TopLevelDestination` | navigation bar / rail | dialer, history, contacts, messages | voicemail |
 | `CallActionProvider` (planned) | the call screen's controls | call (mute, hold, keypad, audio route) | transfer, add call, record, chat |
-| `PartyActionProvider` (planned) | a contact, a history entry, a dialer suggestion | call (audio call), contacts (edit, favorite) | messaging, presence (watch) |
+| `PartyActionProvider` | a contact's numbers, a history entry, a conversation's top bar (`PartyActionButtons`, fed by the shell's `LocalPartyActionProviders`) | messages (*Message*) | calls (video call), presence (watch), a dialer suggestion |
 | `SettingsContributor` | settings root and settings search | every feature with options | every feature with options |
 | `ReadinessCheck` | onboarding and *Call readiness* | calling (mic, notifications, full-screen intents, battery, registration) | — |
 

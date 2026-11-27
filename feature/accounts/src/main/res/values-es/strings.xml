@@ -41,6 +41,13 @@
     <string name="field_default">Predeterminada para llamadas</string>
 
     <string name="overrides_title">Llamadas con esta cuenta</string>
+    <string name="overrides_messages_title">Mensajes con esta cuenta</string>
+    <string name="override_largest_message">Mensaje más largo que admite el servidor</string>
+    <string name="size_700_b">700 bytes</string>
+    <string name="size_1_kb">1 KB</string>
+    <string name="size_4_kb">4 KB</string>
+    <string name="size_16_kb">16 KB</string>
+    <string name="size_60_kb">60 KB</string>
     <string name="override_codecs">Códecs</string>
     <string name="override_dtmf">Los tonos del teclado se envían como</string>
     <string name="override_inherit">Usa el ajuste de la app (%1$s)</string>

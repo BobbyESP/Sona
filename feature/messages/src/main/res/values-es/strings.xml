@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Messages tab -->
+    <string name="messages_title">Mensajes</string>
+    <string name="messages_new">Nuevo mensaje</string>
+    <string name="messages_empty_title">Aún no hay mensajes</string>
+    <string name="messages_empty_description">Escribe a una extensión de tu servidor: los textos, fotos y archivos pasan por él, y por ningún otro sitio.</string>
+    <string name="messages_search">Buscar mensajes</string>
+    <string name="messages_search_close">Cerrar la búsqueda</string>
+    <string name="messages_search_clear">Borrar la búsqueda</string>
+    <string name="messages_no_results">Ninguna conversación coincide</string>
+    <plurals name="messages_unread">
+        <item quantity="one">%1$d mensaje sin leer</item>
+        <item quantity="many">%1$d mensajes sin leer</item>
+        <item quantity="other">%1$d mensajes sin leer</item>
+    </plurals>
+    <string name="messages_delete">Eliminar</string>
+    <string name="messages_delete_title">¿Eliminar la conversación con %1$s?</string>
+    <string name="messages_delete_text">Se eliminan de este teléfono todos sus mensajes y archivos. El otro teléfono conserva los suyos.</string>
+    <string name="messages_cancel">Cancelar</string>
+    <string name="messages_back">Atrás</string>
+    <string name="messages_pick_title">Elige una conversación</string>
+    <string name="messages_pick_description">Sus mensajes se abren aquí, junto a la lista.</string>
+
+    <!-- New message -->
+    <string name="new_to">Para</string>
+    <string name="new_to_placeholder">Nombre, extensión o dirección</string>
+    <string name="new_write_to">Escribir a %1$s</string>
+    <string name="new_contacts">Contactos</string>
+    <string name="new_from">Desde</string>
+    <string name="new_no_account">Añade antes una cuenta: los mensajes pasan por tu servidor</string>
+    <string name="new_not_an_address">Esto no es un número ni una dirección SIP</string>
+    <string name="new_account_gone">Esta cuenta ya no existe</string>
+
+    <!-- A conversation -->
+    <string name="conversation_typing">escribiendo…</string>
+    <string name="conversation_placeholder">Mensaje</string>
+    <string name="conversation_send">Enviar</string>
+    <string name="conversation_attach">Adjuntar</string>
+    <string name="conversation_dismiss">Descartar</string>
+    <string name="conversation_preparing">Preparando el archivo…</string>
+    <string name="conversation_plain_peer">Las confirmaciones de entrega y lectura, el aviso de escritura y los archivos funcionan cuando %1$s también usa Sona. Hasta entonces, los textos van como mensajes SIP sencillos.</string>
+    <string name="conversation_more">Opciones</string>
+    <string name="conversation_copy">Copiar</string>
+    <string name="conversation_copied">Copiado</string>
+    <string name="conversation_retry">Reintentar</string>
+    <string name="conversation_delete">Eliminar</string>
+    <string name="conversation_details">Detalles</string>
+    <string name="conversation_close">Cerrar</string>
+    <string name="conversation_sip">SIP: %1$s</string>
+    <string name="conversation_download">Descargar (%1$s)</string>
+    <string name="conversation_decline">Rechazar</string>
+    <string name="conversation_cancel_transfer">Cancelar</string>
+    <string name="conversation_no_app">Ninguna app de este teléfono lo abre</string>
+    <string name="conversation_camera_refused">Sin la cámara, aún puedes enviar fotos desde la galería</string>
+    <string name="conversation_camera_unavailable">No hay sitio para la foto en este teléfono</string>
+    <string name="attach_media">Fotos y vídeos</string>
+    <string name="attach_camera">Cámara</string>
+    <string name="attach_file">Archivo</string>
+
+    <!-- A message's details -->
+    <string name="details_status">Estado</string>
+    <string name="details_when">Cuándo</string>
+    <string name="details_file">Archivo</string>
+    <string name="details_size">Tamaño y tipo</string>
+    <string name="details_problem">Qué pasó</string>
+    <string name="details_sip">Detalles SIP</string>
+    <string name="details_id">Id de Sona</string>
+
+    <!-- A picture on the whole screen -->
+    <string name="picture_share">Compartir</string>
+    <string name="picture_save">Guardar una copia</string>
+    <string name="picture_saved">Guardada</string>
+    <string name="picture_not_saved">No se pudo guardar la foto ahí</string>
+
+    <!-- What this feature adds wherever a party is shown -->
+    <string name="action_message">Mensaje</string>
+
+    <!-- Settings › Messages -->
+    <string name="settings_read_receipts">Enviar confirmaciones de lectura</string>
+    <string name="settings_read_receipts_summary">Otros teléfonos con Sona ven cuándo lees sus mensajes</string>
+    <string name="settings_read_receipts_keywords">confirmación lectura leído visto privacidad</string>
+    <string name="settings_typing">Enviar aviso de escritura</string>
+    <string name="settings_typing_summary">Otros teléfonos con Sona ven mientras les escribes</string>
+    <string name="settings_typing_keywords">escribiendo escritura privacidad</string>
+    <string name="settings_auto_download">Descargar automáticamente hasta</string>
+    <string name="settings_auto_download_summary">Los archivos más grandes esperan a que toques Descargar</string>
+    <string name="settings_auto_download_keywords">descarga automática archivos fotos datos</string>
+    <string name="settings_original">Enviar fotos con la calidad original</string>
+    <string name="settings_original_summary">Desactivado, las fotos se reducen y comprimen antes, así llegan mucho antes</string>
+    <string name="settings_original_keywords">calidad foto imagen comprimir reducir</string>
+    <string name="settings_largest_attachment">Adjunto más grande</string>
+    <string name="settings_largest_attachment_summary">Cada 500 bytes de un archivo son un mensaje a tu servidor</string>
+    <string name="settings_largest_attachment_keywords">adjunto archivo tamaño límite</string>
+    <string name="settings_largest_message">Mensaje más largo que admite el servidor</string>
+    <string name="settings_largest_message_summary">Asterisk admite 700 bytes por UDP. Cada cuenta puede tener el suyo, en sus ajustes</string>
+    <string name="settings_largest_message_keywords">tamaño límite bytes asterisk udp tcp 413 513</string>
+
+    <!-- Sizes, as the settings name them -->
+    <string name="limit_never">Nunca</string>
+    <string name="limit_500_kb">500 KB</string>
+    <string name="limit_2_mb">2 MB</string>
+    <string name="limit_5_mb">5 MB</string>
+    <string name="limit_10_mb">10 MB</string>
+    <string name="limit_20_mb">20 MB</string>
+    <string name="limit_700_b">700 bytes</string>
+    <string name="limit_1_kb">1 KB</string>
+    <string name="limit_4_kb">4 KB</string>
+    <string name="limit_16_kb">16 KB</string>
+    <string name="limit_60_kb">60 KB</string>
+</resources>

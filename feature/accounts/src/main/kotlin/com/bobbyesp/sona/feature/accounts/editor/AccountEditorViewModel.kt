@@ -17,6 +17,8 @@ import com.bobbyesp.sona.core.model.Secret
 import com.bobbyesp.sona.core.model.settings.AudioSettings
 import com.bobbyesp.sona.core.model.settings.CallSettings
 import com.bobbyesp.sona.core.model.settings.DtmfMethod
+import com.bobbyesp.sona.core.model.settings.MessageSettings
+import com.bobbyesp.sona.core.model.settings.MessageSizeLimit
 import com.bobbyesp.sona.core.model.settings.Overrides
 import com.bobbyesp.sona.core.model.settings.Ranking
 import com.bobbyesp.sona.core.model.settings.SettingsStore
@@ -59,6 +61,7 @@ internal data class EditorState(
     /** The app's own values of what an account may override, to say what *app default* means. */
     val appCodecs: Ranking = AudioSettings.Codecs.default,
     val appDtmf: DtmfMethod = CallSettings.Dtmf.default,
+    val appLargestMessage: MessageSizeLimit = MessageSettings.LargestMessage.default,
 )
 
 internal sealed interface EditorIntent {
@@ -131,12 +134,18 @@ internal class AccountEditorViewModel(
         }
         existingId?.let(::followStatus)
         launch {
-            combine(settings.observe(AudioSettings.Codecs), settings.observe(CallSettings.Dtmf)) {
-                    codecs,
-                    dtmf ->
-                    codecs to dtmf
+            combine(
+                    settings.observe(AudioSettings.Codecs),
+                    settings.observe(CallSettings.Dtmf),
+                    settings.observe(MessageSettings.LargestMessage),
+                ) { codecs, dtmf, largest ->
+                    Triple(codecs, dtmf, largest)
                 }
-                .collect { (codecs, dtmf) -> setState { copy(appCodecs = codecs, appDtmf = dtmf) } }
+                .collect { (codecs, dtmf, largest) ->
+                    setState {
+                        copy(appCodecs = codecs, appDtmf = dtmf, appLargestMessage = largest)
+                    }
+                }
         }
     }
 

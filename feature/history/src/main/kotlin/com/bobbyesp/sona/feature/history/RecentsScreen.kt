@@ -79,9 +79,12 @@ import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.RecentTapAction
+import com.bobbyesp.sona.core.navigation.Navigator
 import com.bobbyesp.sona.core.ui.TopLevelEmptyState
 import com.bobbyesp.sona.core.ui.TopLevelScaffold
 import com.bobbyesp.sona.core.ui.contribution.LocalCallScreen
+import com.bobbyesp.sona.core.ui.contribution.PartyActionButtons
+import com.bobbyesp.sona.core.ui.contribution.PartyRef
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
 import com.bobbyesp.sona.core.ui.rememberCallStarter
 import com.bobbyesp.sona.directory.domain.CallOutcome
@@ -102,6 +105,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 internal fun RecentsRoute(
     onAddContact: (CallRecord) -> Unit,
+    navigator: Navigator,
     viewModel: RecentsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -129,6 +133,13 @@ internal fun RecentsRoute(
             else viewModel.onSendIntent(intent)
         },
         onAddContact = onAddContact,
+        partyActions = { party ->
+            PartyActionButtons(
+                party = party,
+                navigator = navigator,
+                onAction = { viewModel.onSendIntent(RecentsIntent.CloseDetails) },
+            )
+        },
     )
 }
 
@@ -153,6 +164,7 @@ internal fun RecentsScreen(
     onIntent: (RecentsIntent) -> Unit,
     onAddContact: (CallRecord) -> Unit,
     modifier: Modifier = Modifier,
+    partyActions: @Composable (PartyRef) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     val deletedMessage =
@@ -256,6 +268,7 @@ internal fun RecentsScreen(
             onCall = { onIntent(RecentsIntent.CallBack(group.latest)) },
             onAddContact = { onAddContact(group.latest) },
             onDelete = { onIntent(RecentsIntent.Delete(group)) },
+            partyActions = partyActions,
         )
     }
     state.confirm?.let { record ->
@@ -395,7 +408,8 @@ private fun CallRecord.summary(): String {
 
 /**
  * The details of an entry: who, one split button whose main part calls and whose menu holds the
- * rest (add to contacts, delete), and every call of the group with its SIP status.
+ * rest (add to contacts, delete), what other features add for the party ([partyActions]: *Message*,
+ * *Video call*), and every call of the group with its SIP status.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -405,6 +419,7 @@ private fun DetailsSheet(
     onCall: () -> Unit,
     onAddContact: () -> Unit,
     onDelete: () -> Unit,
+    partyActions: @Composable (PartyRef) -> Unit,
 ) {
     val record = group.latest
     var menu by rememberSaveable { mutableStateOf(false) }
@@ -491,6 +506,13 @@ private fun DetailsSheet(
                     )
                 }
             }
+            partyActions(
+                PartyRef(
+                    address = record.address.uri,
+                    name = record.name,
+                    account = record.account?.value,
+                ),
+            )
             Text(
                 stringResource(R.string.history_details_calls),
                 style = MaterialTheme.typography.titleSmallEmphasized,

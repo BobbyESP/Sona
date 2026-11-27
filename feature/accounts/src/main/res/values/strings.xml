@@ -40,6 +40,13 @@
     <string name="field_default">Default for calls</string>
 
     <string name="overrides_title">Calls with this account</string>
+    <string name="overrides_messages_title">Messages with this account</string>
+    <string name="override_largest_message">Largest message the server relays</string>
+    <string name="size_700_b">700 bytes</string>
+    <string name="size_1_kb">1 KB</string>
+    <string name="size_4_kb">4 KB</string>
+    <string name="size_16_kb">16 KB</string>
+    <string name="size_60_kb">60 KB</string>
     <string name="override_codecs">Codecs</string>
     <string name="override_dtmf">Keypad tones are sent as</string>
     <string name="override_inherit">Uses the app\'s setting (%1$s)</string>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <!-- A message notification's Reply and Mark as read. Only the app's own notifications
+             reach it: it is not exported, and its intents name it. -->
+        <receiver
+            android:name=".MessageActionReceiver"
+            android:exported="false" />
+    </application>
+
+</manifest>

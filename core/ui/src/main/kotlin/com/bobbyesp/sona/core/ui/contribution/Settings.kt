@@ -5,6 +5,7 @@ package com.bobbyesp.sona.core.ui.contribution
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Contacts
 import androidx.compose.material.icons.rounded.GraphicEq
@@ -64,6 +65,14 @@ object SettingsAreas {
             R.string.settings_area_network,
             R.string.settings_area_network_summary,
             Icons.Rounded.Wifi,
+        )
+    val Messages =
+        SettingsArea(
+            "messages",
+            16,
+            R.string.settings_area_messages,
+            R.string.settings_area_messages_summary,
+            Icons.AutoMirrored.Rounded.Chat,
         )
     val Directory =
         SettingsArea(

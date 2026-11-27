@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A message's status, in a word -->
+    <string name="status_sending">Enviando</string>
+    <string name="status_sent">Enviado</string>
+    <string name="status_delivered">Entregado</string>
+    <string name="status_read">Leído</string>
+    <string name="status_failed">No enviado</string>
+    <string name="status_received">Recibido</string>
+
+    <!-- A file on its way -->
+    <string name="transfer_offering">Ofreciendo…</string>
+    <string name="transfer_waiting">Esperando a que %1$s lo descargue</string>
+    <string name="transfer_sending">Enviando · %1$d %%</string>
+    <string name="transfer_confirming">Comprobando que llegó entero…</string>
+    <string name="transfer_offered">Descargar (%1$s)</string>
+    <string name="transfer_receiving">Recibiendo · %1$d %%</string>
+    <string name="transfer_verifying">Comprobando el archivo…</string>
+    <string name="transfer_declined_by">%1$s no lo descargó</string>
+    <string name="transfer_declined">No descargado</string>
+    <string name="transfer_cancelled">Cancelado</string>
+
+    <!-- A list's preview of a message that is a file -->
+    <string name="preview_picture">Foto</string>
+    <string name="preview_file">Archivo: %1$s</string>
+
+    <!-- Why a message was not sent, or a file did not arrive -->
+    <string name="failure_account_offline">%1$s no está conectada, así que no se envió nada</string>
+    <string name="failure_no_such_peer">No hay ninguna extensión %1$s en %2$s</string>
+    <string name="failure_unsupported">El servidor no reenvía este tipo de mensaje</string>
+    <string name="failure_refused">El servidor rechazó el mensaje. Revisa el usuario y la contraseña de esta cuenta</string>
+    <string name="failure_no_answer">%1$s no respondió</string>
+    <string name="failure_peer_offline">%1$s no está conectado ahora mismo</string>
+    <string name="failure_unreachable">%1$s (%2$s) no respondió</string>
+    <string name="failure_too_large">El servidor admite mensajes más cortos: baja Mensaje más largo que admite el servidor en los ajustes de esta cuenta</string>
+    <string name="failure_rejected">El servidor no aceptó el mensaje</string>
+    <string name="failure_timed_out">%1$s dejó de responder, así que el archivo no llegó</string>
+    <string name="failure_corrupted">El archivo llegó dañado, así que se descartó</string>
+    <string name="failure_peer_failed">El teléfono de %1$s no pudo recibir el archivo</string>
+    <string name="failure_storage">Este teléfono no pudo guardar el archivo. Libera espacio y vuelve a intentarlo</string>
+    <string name="failure_file_missing">El archivo que se iba a enviar ya no está en este teléfono</string>
+
+    <!-- Why nothing was added when sending -->
+    <string name="send_no_conversation">La cuenta de esta conversación ya no existe, así que no se puede enviar nada desde ella</string>
+    <string name="send_too_long">Este mensaje es demasiado largo para el servidor. Envíalo en mensajes más cortos</string>
+    <string name="send_file_too_large">Este archivo ocupa %1$s; lo más grande que se puede enviar es %2$s (Ajustes › Mensajes)</string>
+    <string name="send_file_unreadable">No se pudo leer este archivo</string>
+</resources>

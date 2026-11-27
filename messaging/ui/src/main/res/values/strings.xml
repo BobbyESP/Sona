@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A message's status, in a word -->
+    <string name="status_sending">Sending</string>
+    <string name="status_sent">Sent</string>
+    <string name="status_delivered">Delivered</string>
+    <string name="status_read">Read</string>
+    <string name="status_failed">Not sent</string>
+    <string name="status_received">Received</string>
+
+    <!-- A file on its way -->
+    <string name="transfer_offering">Offering…</string>
+    <string name="transfer_waiting">Waiting for %1$s to download</string>
+    <string name="transfer_sending">Sending · %1$d %%</string>
+    <string name="transfer_confirming">Checking it arrived whole…</string>
+    <string name="transfer_offered">Download (%1$s)</string>
+    <string name="transfer_receiving">Receiving · %1$d %%</string>
+    <string name="transfer_verifying">Checking the file…</string>
+    <string name="transfer_declined_by">%1$s did not download it</string>
+    <string name="transfer_declined">Not downloaded</string>
+    <string name="transfer_cancelled">Cancelled</string>
+
+    <!-- A list's preview of a message that is a file -->
+    <string name="preview_picture">Photo</string>
+    <string name="preview_file">File: %1$s</string>
+
+    <!-- Why a message was not sent, or a file did not arrive -->
+    <string name="failure_account_offline">%1$s is not connected, so nothing was sent</string>
+    <string name="failure_no_such_peer">There is no extension %1$s on %2$s</string>
+    <string name="failure_unsupported">The server does not relay this kind of message</string>
+    <string name="failure_refused">The server refused the message. Check this account\'s username and password</string>
+    <string name="failure_no_answer">%1$s did not answer</string>
+    <string name="failure_peer_offline">%1$s is not online right now</string>
+    <string name="failure_unreachable">%1$s (%2$s) did not answer</string>
+    <string name="failure_too_large">The server takes shorter messages: lower Largest message the server relays in this account\'s settings</string>
+    <string name="failure_rejected">The server did not take the message</string>
+    <string name="failure_timed_out">%1$s stopped answering, so the file did not arrive</string>
+    <string name="failure_corrupted">The file arrived damaged, so it was discarded</string>
+    <string name="failure_peer_failed">%1$s\'s phone could not take the file</string>
+    <string name="failure_storage">This phone could not save the file. Free some space and try again</string>
+    <string name="failure_file_missing">The file to send is no longer on this phone</string>
+
+    <!-- Why nothing was added when sending -->
+    <string name="send_no_conversation">This conversation\'s account is gone, so nothing can be sent from it</string>
+    <string name="send_too_long">This message is too long for the server. Send it in shorter messages</string>
+    <string name="send_file_too_large">This file is %1$s; the largest that can be sent is %2$s (Settings › Messages)</string>
+    <string name="send_file_unreadable">This file could not be read</string>
+</resources>

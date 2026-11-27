@@ -80,9 +80,12 @@ import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
+import com.bobbyesp.sona.core.navigation.Navigator
 import com.bobbyesp.sona.core.ui.TopLevelEmptyState
 import com.bobbyesp.sona.core.ui.TopLevelScaffold
 import com.bobbyesp.sona.core.ui.contribution.LocalCallScreen
+import com.bobbyesp.sona.core.ui.contribution.PartyActionButtons
+import com.bobbyesp.sona.core.ui.contribution.PartyRef
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
 import com.bobbyesp.sona.core.ui.rememberCallStarter
 import com.bobbyesp.sona.core.ui.rememberContactsAccess
@@ -96,6 +99,7 @@ import org.koin.compose.viewmodel.koinViewModel
 internal fun ContactsRoute(
     onNew: () -> Unit,
     onEdit: (Contact) -> Unit,
+    navigator: Navigator,
     viewModel: ContactsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -118,6 +122,14 @@ internal fun ContactsRoute(
         onNew = onNew,
         onEdit = onEdit,
         onAllowPhone = contactsAccess::request,
+        partyActions = { party ->
+            PartyActionButtons(
+                party = party,
+                navigator = navigator,
+                compact = true,
+                onAction = { viewModel.onSendIntent(ContactsIntent.Close) },
+            )
+        },
     )
 }
 
@@ -135,6 +147,7 @@ internal fun ContactsScreen(
     onEdit: (Contact) -> Unit,
     onAllowPhone: () -> Unit,
     modifier: Modifier = Modifier,
+    partyActions: @Composable (PartyRef) -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     TopLevelScaffold(
@@ -175,6 +188,7 @@ internal fun ContactsScreen(
             problem = state.problem?.problemText(),
             onIntent = onIntent,
             onEdit = { onEdit(contact) },
+            partyActions = partyActions,
         )
     }
 }
@@ -420,8 +434,9 @@ private fun ContactRow(
 }
 
 /**
- * A contact: who, each number with its own call button, and the contact's actions in one button
- * group that moves what does not fit into a menu.
+ * A contact: who, each number with its own call button and what other features add for it
+ * ([partyActions]: *Message*, *Video call*), and the contact's actions in one button group that
+ * moves what does not fit into a menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -430,6 +445,7 @@ private fun ContactSheet(
     problem: String?,
     onIntent: (ContactsIntent) -> Unit,
     onEdit: () -> Unit,
+    partyActions: @Composable (PartyRef) -> Unit,
 ) {
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     ModalBottomSheet(
@@ -467,14 +483,17 @@ private fun ContactSheet(
                         colors = segmentedListColors(),
                         overlineContent = { Text(number.label) },
                         trailingContent = {
-                            FilledTonalIconButton(
-                                onClick = { onIntent(ContactsIntent.Call(number.value)) },
-                                shapes = IconButtonDefaults.shapes(),
-                            ) {
-                                Icon(
-                                    Icons.Rounded.Call,
-                                    contentDescription = stringResource(R.string.contacts_call),
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                partyActions(PartyRef(address = number.value, name = contact.name))
+                                FilledTonalIconButton(
+                                    onClick = { onIntent(ContactsIntent.Call(number.value)) },
+                                    shapes = IconButtonDefaults.shapes(),
+                                ) {
+                                    Icon(
+                                        Icons.Rounded.Call,
+                                        contentDescription = stringResource(R.string.contacts_call),
+                                    )
+                                }
                             }
                         },
                         content = { ListHeadline(number.value) },

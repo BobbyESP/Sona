@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification glyph: Sona's waveform in a speech bubble, white on transparent. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M5,3.5 L19,3.5 Q21,3.5 21,5.5 L21,15 Q21,17 19,17 L9,17 L5,20.5 L5,17 Q3,17 3,15 L3,5.5 Q3,3.5 5,3.5 Z"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M8,9.25 L8,11.25 M12,7.5 L12,13 M16,9.25 L16,11.25"
+        android:strokeWidth="1.8"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round" />
+</vector>

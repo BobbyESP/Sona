@@ -5,6 +5,7 @@ package com.bobbyesp.sona.di
 
 import com.bobbyesp.sona.BuildConfig
 import com.bobbyesp.sona.CallActivity
+import com.bobbyesp.sona.MainActivity
 import com.bobbyesp.sona.accounts.data.accountsRepository
 import com.bobbyesp.sona.accounts.domain.AccountEngineSync
 import com.bobbyesp.sona.accounts.domain.AccountsRepository
@@ -49,13 +50,17 @@ import com.bobbyesp.sona.directory.domain.find
 import com.bobbyesp.sona.directory.domain.prune
 import com.bobbyesp.sona.messaging.data.AndroidAttachmentFiles
 import com.bobbyesp.sona.messaging.data.AndroidAttachmentPreparer
+import com.bobbyesp.sona.messaging.data.AndroidCameraCaptures
 import com.bobbyesp.sona.messaging.data.messageStore
 import com.bobbyesp.sona.messaging.data.offerCaption
 import com.bobbyesp.sona.messaging.domain.AttachmentFiles
 import com.bobbyesp.sona.messaging.domain.AttachmentPreparer
+import com.bobbyesp.sona.messaging.domain.CameraCaptures
 import com.bobbyesp.sona.messaging.domain.MessageStore
 import com.bobbyesp.sona.messaging.domain.Messenger
 import com.bobbyesp.sona.messaging.domain.PeerNames
+import com.bobbyesp.sona.messaging.platform.ConversationIntents
+import com.bobbyesp.sona.messaging.platform.MessageNotifications
 import com.bobbyesp.sona.shell.ShellViewModel
 import com.bobbyesp.sona.sip.api.SipEngine
 import com.bobbyesp.sona.sip.api.SipMessaging
@@ -179,6 +184,14 @@ val appModule = module {
                 },
             captions = androidContext().offerCaption(),
         )
+    }
+    single<CameraCaptures> {
+        AndroidCameraCaptures(androidContext(), get<DispatcherProvider>().io)
+    }
+    // Notifications of what arrives while its conversation is not on screen; a tap opens it.
+    single<ConversationIntents> { ConversationIntents(MainActivity::conversationIntent) }
+    single {
+        MessageNotifications(androidContext(), get(), get(), get<ApplicationScope>())
     }
 
     // Calls: the coordinator, Android's Telecom, and the services and notifications that go with.
