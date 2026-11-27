@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="call_incoming_video">Videollamada entrante</string>
+    <string name="call_answer_video">Responder con vídeo</string>
+    <string name="call_answer_audio_only">Responder solo audio</string>
+    <string name="call_video">Vídeo</string>
+    <string name="call_camera_on">Activar cámara</string>
+    <string name="call_camera_off">Desactivar cámara</string>
+    <string name="call_switch_camera">Cambiar de cámara</string>
+    <string name="call_more">Más</string>
+    <string name="call_statistics">Estadísticas de la llamada</string>
+    <string name="call_resume">Reanudar</string>
+    <string name="call_dismiss">Descartar</string>
+    <string name="call_open_settings">Ajustes</string>
+    <string name="call_your_camera">Tu cámara</string>
+    <string name="call_their_video">Vídeo de %1$s</string>
+    <string name="call_camera_is_off">Tu cámara está desactivada</string>
+    <string name="call_no_video_from">%1$s no está enviando vídeo</string>
+    <string name="call_video_paused">Vídeo en pausa</string>
+    <string name="call_video_fit">Toca dos veces para ajustar o llenar la pantalla</string>
+    <string name="call_controls_hint">Toca para mostrar los controles</string>
+    <string name="call_remote_turned_on_video">%1$s ha activado el vídeo</string>
+    <string name="call_weak_connection">Conexión débil: vídeo reducido</string>
+    <string name="call_turn_off_video">Desactivar vídeo</string>
+    <string name="call_quality_unknown">Conexión aún sin medir</string>
+    <string name="call_video_call">Videollamada</string>
+    <string name="call_video_call_unavailable">Las videollamadas están desactivadas en los ajustes</string>
+
+    <string name="stats_close">Cerrar estadísticas</string>
+    <string name="stats_video">Vídeo</string>
+    <string name="stats_audio">Audio</string>
+    <string name="stats_transport">Conexión</string>
+    <string name="stats_codec">Códec</string>
+    <string name="stats_sent">Enviado</string>
+    <string name="stats_received">Recibido</string>
+    <string name="stats_bitrate">Tasa de bits</string>
+    <string name="stats_bitrate_hint">Subida y bajada, en el último minuto</string>
+    <string name="stats_frame_rate_hint">Enviados y recibidos, en el último minuto</string>
+    <string name="stats_loss">Pérdida aquí · allí</string>
+    <string name="stats_jitter">Jitter</string>
+    <string name="stats_round_trip">Ida y vuelta</string>
+    <string name="stats_jitter_buffer">Búfer de jitter</string>
+    <string name="stats_fec">Reparados por FEC</string>
+    <string name="stats_bandwidth">Ancho de banda estimado</string>
+    <string name="stats_sip_transport">Transporte SIP</string>
+    <string name="stats_ice">ICE</string>
+    <string name="stats_ip">IP</string>
+    <string name="stats_encryption">Cifrado</string>
+    <string name="stats_unencrypted">Ninguno: medios sin cifrar</string>
+    <string name="stats_waiting">Esperando las primeras cifras…</string>
+    <string name="stats_none">Este motor no da estadísticas</string>
+</resources>

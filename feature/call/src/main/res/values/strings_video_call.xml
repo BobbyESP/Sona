@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The call screen's video: answering, controls, banners -->
+    <string name="call_incoming_video">Incoming video call</string>
+    <string name="call_answer_video">Answer with video</string>
+    <string name="call_answer_audio_only">Answer audio only</string>
+    <string name="call_video">Video</string>
+    <string name="call_camera_on">Turn on camera</string>
+    <string name="call_camera_off">Turn off camera</string>
+    <string name="call_switch_camera">Switch camera</string>
+    <string name="call_more">More</string>
+    <string name="call_statistics">Call statistics</string>
+    <string name="call_resume">Resume</string>
+    <string name="call_dismiss">Dismiss</string>
+    <string name="call_open_settings">Settings</string>
+    <string name="call_your_camera">Your camera</string>
+    <string name="call_their_video">%1$s\'s video</string>
+    <string name="call_camera_is_off">Your camera is off</string>
+    <string name="call_no_video_from">%1$s is not sending video</string>
+    <string name="call_video_paused">Video paused</string>
+    <string name="call_video_fit">Double tap to fit or fill the screen</string>
+    <string name="call_controls_hint">Tap to show the controls</string>
+    <string name="call_remote_turned_on_video">%1$s turned on video</string>
+    <string name="call_weak_connection">Weak connection: video lowered</string>
+    <string name="call_turn_off_video">Turn off video</string>
+    <string name="call_quality_unknown">Connection not measured yet</string>
+    <string name="call_video_call">Video call</string>
+    <string name="call_video_call_unavailable">Video calls are off in the settings</string>
+
+    <!-- The statistics panel -->
+    <string name="stats_close">Close statistics</string>
+    <string name="stats_video">Video</string>
+    <string name="stats_audio">Audio</string>
+    <string name="stats_transport">Connection</string>
+    <string name="stats_codec">Codec</string>
+    <string name="stats_sent">Sent</string>
+    <string name="stats_received">Received</string>
+    <string name="stats_bitrate">Bitrate</string>
+    <string name="stats_bitrate_hint">Up and down, over the last minute</string>
+    <string name="stats_frame_rate_hint">Sent and received, over the last minute</string>
+    <string name="stats_loss">Loss here · there</string>
+    <string name="stats_jitter">Jitter</string>
+    <string name="stats_round_trip">Round trip</string>
+    <string name="stats_jitter_buffer">Jitter buffer</string>
+    <string name="stats_fec">Repaired by FEC</string>
+    <string name="stats_bandwidth">Estimated bandwidth</string>
+    <string name="stats_sip_transport">SIP transport</string>
+    <string name="stats_ice">ICE</string>
+    <string name="stats_ip">IP</string>
+    <string name="stats_encryption">Encryption</string>
+    <string name="stats_unencrypted">None: media in clear</string>
+    <string name="stats_waiting">Waiting for the first numbers…</string>
+    <string name="stats_none">No statistics from this engine</string>
+</resources>
