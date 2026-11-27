@@ -92,6 +92,14 @@ internal fun callVideoOf(local: CallParams, remote: CallParams?, camera: CameraF
     )
 }
 
+/**
+ * Whether the local preview runs: while a view is [attached] for a call still going ([callGoing])
+ * and the camera may be used ([cameraAllowed]), whatever is sent. The preview sends nothing;
+ * without a view it stops, so the camera is not kept open for nobody.
+ */
+internal fun previewRuns(attached: Boolean, callGoing: Boolean, cameraAllowed: Boolean): Boolean =
+    attached && callGoing && cameraAllowed
+
 /** A definition as a size; `null` when Linphone has none yet (undefined, or 0×0). */
 internal fun VideoDefinition?.toSize(): VideoSize? {
     if (this == null || isUndefined || width <= 0 || height <= 0) return null

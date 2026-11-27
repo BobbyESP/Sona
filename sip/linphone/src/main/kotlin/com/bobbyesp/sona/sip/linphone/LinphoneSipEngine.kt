@@ -3,7 +3,9 @@
  */
 package com.bobbyesp.sona.sip.linphone
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.TextureView
@@ -500,6 +502,8 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     private fun show(call: CallId, remote: TextureView?, preview: TextureView?) {
         val current = core ?: return
         val previous = surfaces
+        // A screen letting go of a call no longer shown leaves the views of the one shown now.
+        if (remote == null && preview == null && previous != null && previous.call != call) return
         if (previous != null && previous.call != call)
             live[previous.call]?.nativeVideoWindowId = null
         surfaces = if (remote == null && preview == null) null else Surfaces(call, remote, preview)
@@ -509,18 +513,26 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     }
 
     /**
-     * The preview runs only while a view shows it and the camera is sent: a preview with nothing to
-     * show would keep the camera open, and one without the camera sent would show what the other
-     * side does not see. Runs on the core thread, after every change of the shown call.
+     * The preview runs while a view shows it, for a call still going, and the camera may be used:
+     * whether the camera is sent or not, so a ringing video call shows this side's camera behind
+     * it. Running the preview sends nothing. Without a view it stops, so the camera is not kept
+     * open. Runs on the core thread, after every change of the shown call.
      */
     private fun refreshPreview() {
         val current = core ?: return
         val shown = surfaces
         val on =
-            shown?.preview != null &&
-                _calls.value.firstOrNull { it.id == shown.call }?.video?.sending == true
+            previewRuns(
+                attached = shown?.preview != null,
+                callGoing = shown != null && shown.call in live,
+                cameraAllowed = cameraAllowed(),
+            )
+        if (on && !current.isVideoPreviewEnabled) ensureCamera(current)
         if (current.isVideoPreviewEnabled != on) current.isVideoPreviewEnabled = on
     }
+
+    private fun cameraAllowed(): Boolean =
+        context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
     /** A call that ends lets go of the views it was drawn on. Runs on the core thread. */
     private fun detachEnded(call: CallId) {

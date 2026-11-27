@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 /**
  * The demo flavor's video: test patterns painted on the call screen's views, so the whole video
  * screen runs without a camera or a server. The other side's view shows moving colour bars while
- * the fake other side sends; the preview shows a pattern of its own while this side's camera is on;
- * either is black otherwise, as a real stream would be.
+ * the fake other side sends; the preview shows a pattern of its own while a view shows it (behind a
+ * ringing video call too, as on Linphone); either is black otherwise, as a real stream would be.
  *
  * One background thread paints, about 30 times a second, and only while a view is attached: with
  * none, nothing runs.
@@ -72,9 +72,11 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
         try {
             var frame = 0L
             while (currentCoroutineContext().isActive) {
-                val video = engine.calls.value.firstOrNull { it.id == target.call }?.video
+                val call = engine.calls.value.firstOrNull { it.id == target.call }
+                val video = call?.video
                 remote.draw(if (video?.showsRemote == true) ::bars else null, frame)
-                preview.draw(if (video?.sending == true) ::waves else null, frame, video)
+                // As the Linphone engine: the preview runs while a view shows it, sent or not.
+                preview.draw(if (call != null) ::waves else null, frame, video)
                 frame++
                 delay(FRAME_MS)
             }

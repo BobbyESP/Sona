@@ -38,6 +38,14 @@ class LinphoneVideoTest {
         )
 
     @Test
+    fun `the preview runs behind a ringing call, without the camera sent, once a view is attached`() {
+        assertTrue(previewRuns(attached = true, callGoing = true, cameraAllowed = true))
+        assertFalse(previewRuns(attached = false, callGoing = true, cameraAllowed = true))
+        assertFalse(previewRuns(attached = true, callGoing = true, cameraAllowed = false))
+        assertFalse(previewRuns(attached = true, callGoing = false, cameraAllowed = true))
+    }
+
+    @Test
     fun `directions are what each side sends and receives`() {
         assertEquals(MediaDirection.SendRecv, videoDirectionOf(send = true, receive = true))
         assertEquals(MediaDirection.SendOnly, videoDirectionOf(send = true, receive = false))

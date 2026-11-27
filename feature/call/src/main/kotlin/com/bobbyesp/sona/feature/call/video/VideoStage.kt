@@ -284,8 +284,8 @@ internal fun RemoteVideoOnly(call: Call, paused: Boolean, modifier: Modifier = M
 
 /**
  * This side's camera alone, mirrored as the front camera is: what is behind an incoming video call
- * while it rings, when the camera may already be used. The engine runs it only once the camera is
- * sent, so until then it may stay dark (docs/video.md).
+ * while it rings, when the camera may already be used. The engine runs the preview while this view
+ * is attached, without sending anything (docs/video.md).
  */
 @Composable
 internal fun PreviewBackdrop(call: Call, modifier: Modifier = Modifier) {

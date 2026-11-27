@@ -37,8 +37,9 @@ video is a second stream on the same call, never a second kind of call.
 - `VideoSurfaces.attach(call, remote: Any?, preview: Any?)`, a port of its own, callable from any
   thread. On Android the handles are `TextureView`s (anything else is taken as none). The full
   flavor binds the Linphone engine (`SipEngine.linphoneVideoSurfaces()`): the remote view is the
-  call's native window, the preview the Core's, and the preview runs only while a preview view is
-  attached and the camera is sent; an ended call lets go of both. The demo flavor binds
+  call's native window, the preview the Core's, and the preview runs while a preview view is
+  attached to a call still going and the camera is allowed, whether it is sent or not (running it
+  sends nothing); detached, it stops. An ended call lets go of both. The demo flavor binds
   `DemoVideoSurfaces`, which paints colour bars (remote) and stripes (preview) from a background
   thread, only while a view is attached.
 - `EngineConfig.video: VideoConfig`: enabled, codecs, definition, max frame rate, upload and
@@ -224,8 +225,7 @@ and the coordinator decides. Its logic is in pure functions, tested on the JVM
 Only checkable on a device: Linphone's camera device names, the preview toggle during a call, the
 `null` update not sending a re-INVITE, Telecom's `requestCallType`, the angle Linphone expects for
 the display's rotation, the frost over a `TextureView`, Picture-in-Picture's entry and its
-actions, and the incoming call's camera behind it (the Linphone engine runs the preview only while
-the camera is sent, so it may stay dark until the call is answered with video).
+actions, and the incoming call's camera behind it.
 
 ## Asterisk
 
