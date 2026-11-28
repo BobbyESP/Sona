@@ -53,10 +53,8 @@ import com.bobbyesp.sona.messaging.ui.SendProblem
 import com.bobbyesp.sona.messaging.ui.text
 
 /**
- * Where a message is written: the attach button, a field that grows to six lines, and send (filled
- * once there is something to send). Above it, why the last thing was not sent, with its technical
- * line, and a bar while a file is being prepared. It sits over the conversation, frosted by the
- * caller, which keeps it above the keyboard and the navigation bar.
+ * The attach button, the field and send; above them, why the last thing was not sent, and file
+ * preparation progress. The caller frosts it and keeps it above the keyboard.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -183,14 +181,12 @@ internal fun PlainPeerNote(peer: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** What can be attached. */
 internal enum class AttachChoice {
     Media,
     Camera,
     File,
 }
 
-/** The attach sheet: photos and videos, the camera, any file. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AttachSheet(onChoose: (AttachChoice) -> Unit, onDismiss: () -> Unit) {

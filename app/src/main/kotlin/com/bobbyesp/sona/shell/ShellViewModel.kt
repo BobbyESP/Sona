@@ -81,8 +81,8 @@ class ShellViewModel(
     private val _request = MutableStateFlow<NavKey?>(null)
 
     /**
-     * A destination asked for from outside the screens (a message's notification), standing until
-     * the shell has shown it: the activity may be asked before the shell is drawn.
+     * A destination asked for from outside (a notification), kept until shown: it may arrive before
+     * the shell is drawn.
      */
     val request: StateFlow<NavKey?> = _request.asStateFlow()
 

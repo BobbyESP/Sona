@@ -570,7 +570,7 @@ private fun CallOverrides(state: EditorState, edit: (AccountDraft.() -> AccountD
     }
 }
 
-/** What messages on this account do differently from the app: the size its server relays. */
+/** This account's own message size: the one its server relays. */
 @Composable
 private fun MessageOverrides(state: EditorState, edit: (AccountDraft.() -> AccountDraft) -> Unit) {
     OverrideItem(

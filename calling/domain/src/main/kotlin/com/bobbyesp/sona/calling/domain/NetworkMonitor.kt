@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** The kind of network the phone uses now. */
 enum class NetworkKind {
     /** Wi-Fi, or a cable. */
     Wifi,
@@ -20,10 +19,7 @@ enum class NetworkKind {
  * Wi-Fi that is a phone's hotspot.
  */
 data class NetworkStatus(val kind: NetworkKind, val metered: Boolean) {
-    /**
-     * Video is sent within the mobile data limits: on mobile data, and on a metered Wi-Fi, which is
-     * mobile data a step away.
-     */
+    /** A metered Wi-Fi counts too: it is mobile data a step away. */
     val constrained: Boolean
         get() = kind == NetworkKind.Cellular || (kind == NetworkKind.Wifi && metered)
 
@@ -34,16 +30,12 @@ data class NetworkStatus(val kind: NetworkKind, val metered: Boolean) {
     }
 }
 
-/**
- * Which network the phone uses, as it changes. A port: the platform listens to Android's
- * connectivity (`:calling:platform`), and the engine's configuration is rebuilt from it, so a call
- * on mobile data sends within the mobile data limits.
- */
+/** Which network the phone uses, as it changes: calls on mobile data send within its limits. */
 interface NetworkMonitor {
     val status: StateFlow<NetworkStatus>
 }
 
-/** A network that changes only when told: for tests and previews. */
+/** For tests and previews: changes only when told. */
 class FakeNetworkMonitor(initial: NetworkStatus = NetworkStatus.Wifi) : NetworkMonitor {
     private val _status = MutableStateFlow(initial)
     override val status: StateFlow<NetworkStatus> = _status.asStateFlow()

@@ -82,7 +82,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** What a bubble can ask for; the screen carries it out. */
 internal interface BubbleActions {
     fun intent(intent: ConversationIntent)
 
@@ -93,7 +92,6 @@ internal interface BubbleActions {
     fun copy(text: String)
 }
 
-/** A day's heading: centered, quiet, read as a heading. */
 @Composable
 internal fun DayHeading(at: Long, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
@@ -113,10 +111,8 @@ internal fun DayHeading(at: Long, modifier: Modifier = Modifier) {
 }
 
 /**
- * A message: a bubble on the side of who wrote it, its corners towards the rest of its run
- * tightened, so a run reads as one block (Material 3 Expressive's shapes, from the theme). Under
- * the last of a run, its time and, for one sent from here, its status mark; under one that failed,
- * why, the SIP line, and *Retry*. A long press opens what can be done with it.
+ * A message's bubble, tightened at the corners towards the rest of its run. Under the last of a
+ * run, its time and status; under a failed one, why, the SIP line and *Retry*.
  */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
@@ -241,7 +237,6 @@ internal fun MessageBubble(
     }
 }
 
-/** What a tap does: a picture opens whole, a file opens in another app, an offer downloads. */
 private fun tapped(message: Message, uri: String?, actions: BubbleActions) {
     val file = message.attachment ?: return
     when {
@@ -252,13 +247,9 @@ private fun tapped(message: Message, uri: String?, actions: BubbleActions) {
     }
 }
 
-/** Of the room beside the other side's, a bubble takes at most this much. */
+/** The share of the width a bubble takes at most. */
 private const val BubbleWidth = 0.82f
 
-/**
- * The bubble's shape: the theme's extra-large corners, with those towards the run's other bubbles
- * (on the writer's side) the theme's extra-small.
- */
 @Composable
 private fun bubbleShape(outgoing: Boolean, position: BubblePosition): CornerBasedShape {
     val round = MaterialTheme.shapes.extraLarge
@@ -278,11 +269,7 @@ private fun bubbleShape(outgoing: Boolean, position: BubblePosition): CornerBase
     }
 }
 
-/**
- * A picture, inline: decoded at the size it is shown (Coil sizes the request to the layout), with
- * its progress ring while it travels. Not here yet (offered, or coming), it is a placeholder with
- * the picture's icon.
- */
+/** Decoded at the size it is shown; a placeholder until the file is here. */
 @Composable
 private fun PictureContent(
     message: Message,
@@ -351,7 +338,6 @@ private fun TransferRing(message: Message, file: Attachment) {
     }
 }
 
-/** Any other file, as a card: its kind's icon, its name, its size and where it is. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun FileContent(message: Message, file: Attachment, peer: String) {
@@ -399,7 +385,6 @@ private fun FileContent(message: Message, file: Attachment, peer: String) {
     }
 }
 
-/** What can be done with a file on its way: download or decline an offer, cancel a transfer. */
 @Composable
 private fun TransferButtons(message: Message, actions: BubbleActions) {
     val file = message.attachment ?: return
@@ -433,7 +418,6 @@ private fun TransferButtons(message: Message, actions: BubbleActions) {
     }
 }
 
-/** A long press: copy, retry, delete, details. */
 @Composable
 private fun MessageMenu(
     message: Message,
@@ -487,10 +471,6 @@ private fun MessageMenu(
     }
 }
 
-/**
- * A message's details: where it is, when, its file, and, when it failed, why with the SIP line, the
- * same as under its bubble, for whoever reads it here.
- */
 @Composable
 internal fun MessageDetailsDialog(
     message: Message,

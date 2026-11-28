@@ -61,10 +61,7 @@ import org.linphone.core.StreamType
 fun Context.createLinphoneEngine(appVersion: String): SipEngine =
     LinphoneSipEngine(applicationContext, appVersion)
 
-/**
- * Where [this] engine, made by [createLinphoneEngine], draws its calls' video: the same engine,
- * behind the port that takes the views. Bound beside the engine in the full flavor.
- */
+/** This engine's [VideoSurfaces]; it must come from [createLinphoneEngine]. */
 fun SipEngine.linphoneVideoSurfaces(): VideoSurfaces =
     this as? LinphoneSipEngine
         ?: error("Not the Linphone engine: its video surfaces are its own ($this)")
@@ -80,10 +77,8 @@ fun SipEngine.linphoneVideoSurfaces(): VideoSurfaces =
  * any Linphone service; the accounts are whatever [setAccounts] last gave, rebuilt from the app's
  * storage at every start. See docs/calling.md.
  *
- * **Video never starts on its own.** Linphone neither initiates nor accepts video by itself: the
- * camera is sent only when the coordinator dials, answers or asks for it, and video the other side
- * adds is deferred and taken receive-only (docs/video.md). The views it is drawn on come through
- * [VideoSurfaces], on the same thread.
+ * **Video never starts on its own** (docs/video.md): the camera is sent only when the coordinator
+ * asks, and video the other side adds is deferred, then taken receive-only.
  */
 internal class LinphoneSipEngine(private val context: Context, appVersion: String) :
     SipEngine, VideoSurfaces {
@@ -137,7 +132,6 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     // Only touched on the core thread: the kind of device the system put each call's audio on.
     private val devices = mutableMapOf<CallId, AudioDeviceKind>()
 
-    /** The views a call's video is drawn on, as the screen last gave them. */
     private data class Surfaces(
         val call: CallId,
         val remote: TextureView?,
@@ -192,10 +186,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
                 message: String,
             ) = onCall(call, state)
 
-            /**
-             * Linphone's own reports, every few seconds per stream: the video's keep the sizes sent
-             * and received current for the screen, at no cost of Sona's.
-             */
+            /** The video reports keep the sizes on screen current. */
             override fun onCallStatsUpdated(core: Core, call: Call, stats: CallStats) {
                 if (stats.type != StreamType.Video) return
                 val id = call.sonaId()
@@ -249,7 +240,6 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
                 messaging.prepare(created)
                 created.addListener(coreListener)
                 created.start()
-                // The front camera first, as people expect of a video call.
                 cameraFor(created.videoDevicesList.toList(), CameraFacing.Front)?.let {
                     created.setVideoDevice(it)
                 }
@@ -425,10 +415,8 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
         other != null && other.id == id && other.type == type
 
     /**
-     * New directions are a re-INVITE from the call's current parameters. Camera off is
-     * `sendrecv`→`recvonly`: nothing is sent, which saves upload, and the other side shows its
-     * placeholder. Linphone refuses an update while another is in progress; the call then keeps its
-     * directions, which [calls] goes on saying.
+     * Camera off is `sendrecv`→`recvonly`: nothing is sent. Linphone refuses an update while
+     * another is in progress; the call then keeps its directions, as [calls] goes on saying.
      */
     override suspend fun setVideo(call: CallId, send: Boolean, receive: Boolean) =
         onCall(call) {
@@ -445,10 +433,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
             update(params)
         }
 
-    /**
-     * The other camera, by Linphone's device name. A `null` update applies the new device to the
-     * running stream without a re-INVITE (as Linphone's own app does it).
-     */
+    /** A `null` update applies the new camera without a re-INVITE, as Linphone's own app does. */
     override suspend fun switchCamera(call: CallId) =
         withContext(dispatcher) {
             val current = core ?: return@withContext
@@ -466,10 +451,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     override suspend fun setDeviceRotation(degrees: Int) =
         withContext(dispatcher) { core?.deviceRotation = degrees }
 
-    /**
-     * Read on the core thread once a second, only while collected: Linphone keeps these numbers up
-     * to date anyway, and nothing is copied out of it when nobody looks. Ends with the call.
-     */
+    /** Polled only while collected; ends with the call. */
     override fun statistics(call: CallId): Flow<CallStatistics> = flow {
         while (true) {
             val sample =
@@ -490,15 +472,11 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     private fun transportOf(account: AccountId?) =
         account?.let { bound[it]?.spec }?.let { (it.outboundProxy ?: it.registrar).transport }
 
-    /**
-     * Posted to the core thread: the screen calls it from the main one. Anything but a
-     * `TextureView` is taken as no view.
-     */
+    /** Posted to the Core thread: the screen calls this from the main one. */
     override fun attach(call: CallId, remote: Any?, preview: Any?) {
         handler.post { show(call, remote as? TextureView, preview as? TextureView) }
     }
 
-    /** Runs on the core thread. */
     private fun show(call: CallId, remote: TextureView?, preview: TextureView?) {
         val current = core ?: return
         val previous = surfaces
@@ -513,10 +491,8 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     }
 
     /**
-     * The preview runs while a view shows it, for a call still going, and the camera may be used:
-     * whether the camera is sent or not, so a ringing video call shows this side's camera behind
-     * it. Running the preview sends nothing. Without a view it stops, so the camera is not kept
-     * open. Runs on the core thread, after every change of the shown call.
+     * The preview runs while a view shows it, sent or not (a ringing video call shows it), and
+     * sends nothing. Without a view it stops, to release the camera.
      */
     private fun refreshPreview() {
         val current = core ?: return
@@ -534,7 +510,6 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     private fun cameraAllowed(): Boolean =
         context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
-    /** A call that ends lets go of the views it was drawn on. Runs on the core thread. */
     private fun detachEnded(call: CallId) {
         if (surfaces?.call != call) return
         surfaces = null
@@ -545,8 +520,8 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
     }
 
     /**
-     * A camera to send from: Linphone falls back to a still picture when it found none, which it
-     * does when it looked before the camera permission was given. Runs on the core thread.
+     * Linphone falls back to a still picture if it looked for cameras before the permission was
+     * given.
      */
     private fun ensureCamera(core: Core) {
         if (cameraFacingOf(core.videoDevice) != null) return
@@ -556,7 +531,6 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
         }
     }
 
-    /** [this] call's video in [state], as Sona tells it. Runs on the core thread. */
     private fun Call.videoNow(state: Call.State): CallVideo? {
         if (state.ringingHere()) return null
         val negotiated = state.negotiated()
@@ -567,15 +541,12 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
         )
     }
 
-    /** The caller offered video, and video is on. Runs on the core thread. */
     private fun Call.offersVideo(): Boolean =
         config.video.enabled && remoteParams?.isVideoEnabled == true
 
     /**
-     * The other side adds video (a re-INVITE): deferred, then taken receive-only, so it is seen and
-     * this side's camera stays off until the user turns it on. Declined (Linphone's own answer,
-     * without video) when the settings do not accept it. Any other update Linphone answers itself.
-     * Runs on the core thread, from the listener.
+     * Video added by the other side is deferred, then taken receive-only, or declined if the
+     * settings refuse it. Linphone answers any other update itself.
      */
     private fun onUpdatedByRemote(call: Call) {
         val remote = call.remoteParams ?: return

@@ -12,19 +12,17 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-/** A row of a conversation: a day's heading, or a message. Keys are stable across updates. */
+/** A row of a conversation, with a key that is stable across updates. */
 @Immutable
 internal sealed interface ThreadItem {
     val key: String
 
-    /** The heading of a day: *Today*, *Yesterday*, the date. */
     data class Day(val day: LocalDate, val at: Long) : ThreadItem {
         override val key: String = "day-$day"
     }
 
     /**
-     * A message, where it sits in its run ([position]) and whether its time and status are shown
-     * under it ([last] of its run).
+     * A message. [position] is its place in its run; the [last] of a run shows time and status.
      *
      * @property uri Where its file can be read (`content://…`), once it is on this phone.
      */
@@ -40,10 +38,7 @@ internal sealed interface ThreadItem {
     }
 }
 
-/**
- * Where a bubble is among the messages one side wrote in a row: the corners towards its neighbours
- * are tightened, so a run reads as one block.
- */
+/** A bubble's place in its run. */
 internal enum class BubblePosition {
     Single,
     First,
@@ -55,9 +50,8 @@ internal enum class BubblePosition {
 internal const val RUN_GAP_MILLIS = 5 * 60 * 1000L
 
 /**
- * The conversation as it is drawn, oldest first: a heading at each new day, and each message with
- * its place in its run. A run is what one side wrote the same day, each within [RUN_GAP_MILLIS] of
- * the one before.
+ * Oldest first, with a heading at each day. A run is what one side wrote the same day, each message
+ * within [RUN_GAP_MILLIS] of the one before.
  *
  * @param uriOf Where a message's file is, if it is here.
  */
@@ -91,7 +85,6 @@ internal fun List<Message>.toThread(
     return out
 }
 
-/** Whether *Retry* can do something for [this]: a text or offer that failed, or a transfer. */
 internal val Message.canRetry: Boolean
     get() {
         val file = attachment
@@ -101,7 +94,6 @@ internal val Message.canRetry: Boolean
         return outgoing && status == MessageStatus.Failed
     }
 
-/** Whether [this] failed in a way the user should read about under it. */
 internal val Message.hasFailed: Boolean
     get() =
         failure != null &&

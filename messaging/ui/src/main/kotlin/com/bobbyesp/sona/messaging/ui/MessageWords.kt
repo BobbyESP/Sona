@@ -11,7 +11,6 @@ import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** Where a message is, in a word: *Sending*, *Delivered*, *Not sent*. */
 val MessageStatus.label: Sentence
     get() =
         Sentence(
@@ -26,9 +25,8 @@ val MessageStatus.label: Sentence
         )
 
 /**
- * Where a message's file is, as a line under it: *Waiting for 102 to download*, *Sending · 40 %*;
- * `null` for a message without a file, or a file that is simply there (sent or received whole). A
- * failure is said by the failure's own sentence, not here.
+ * The line about a file's transfer; `null` without a file, for one that is simply there, and for a
+ * failure, which has its own sentence.
  *
  * @param peer How the other side is named.
  */
@@ -52,7 +50,6 @@ fun Message.transferLine(peer: String): Sentence? {
     }
 }
 
-/** Whether the file of [this] is on its way: a progress ring or bar is shown over it. */
 val Message.isTransferring: Boolean
     get() =
         when (attachment?.state) {
@@ -66,8 +63,8 @@ val Message.isTransferring: Boolean
         }
 
 /**
- * What a list shows of a message on one line: its text, or for a file *Photo* or its name. A
- * picture has no name worth reading (`IMG_2041.jpg`); any other file is known by it.
+ * A message on one line: its text, *Photo*, or the file's name (a picture's name is rarely worth
+ * reading).
  */
 fun Message.preview(): Sentence? {
     val file = attachment ?: return null
@@ -75,12 +72,11 @@ fun Message.preview(): Sentence? {
     else Sentence(R.string.preview_file, listOf(file.name))
 }
 
-/** [preview], or the text itself. */
 @Composable fun Message.previewText(): String = preview()?.text() ?: text
 
 /**
- * A size as people read it, in [locale]'s numbers: `512 B`, `184 KB`, `1.2 MB` (`1,2 MB` in
- * Spanish). Kilobytes are 1024 bytes, as the limits in the settings are.
+ * A size in [locale]'s numbers (`1.2 MB`, `1,2 MB`), in 1024-byte kilobytes like the limits in the
+ * settings.
  */
 fun fileSize(bytes: Long, locale: Locale = Locale.getDefault()): String {
     val kb = 1024.0

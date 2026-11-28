@@ -51,17 +51,12 @@ internal data class CallUiState(
      * call ended must still close, and an effect sent before it listened would be lost.
      */
     val closed: Boolean = false,
-    /** Video calls can be made: the engine has them and the settings allow them. */
     val videoAvailable: Boolean = false,
-    /** The quality indicator's grade; `null` until something was measured. */
     val quality: CallQuality? = null,
-    /**
-     * The controls are shown. In a video call they fade after a few seconds and a tap brings them.
-     */
+    /** In a video call they fade after a few seconds; a tap brings them back. */
     val controlsVisible: Boolean = true,
-    /** The *More* menu is open. */
     val moreOpen: Boolean = false,
-    /** The statistics panel is open: only then are [statistics] and [history] kept up to date. */
+    /** Only while open are [statistics] and [history] updated. */
     val statisticsOpen: Boolean = false,
     val statistics: CallStatistics? = null,
     val history: StatsSeries = StatsSeries(),
@@ -72,10 +67,7 @@ internal data class CallUiState(
     /** The other side's picture froze: the last frame dims under "Video paused". */
     val videoPaused: Boolean = false,
 ) {
-    /**
-     * Whether the controls fade by themselves: in an answered video call, while nothing the user
-     * opened (a menu, the keypad, the statistics) is on screen.
-     */
+    /** In an answered video call, while nothing the user opened is on screen. */
     val controlsAutoHide: Boolean
         get() =
             call?.isVideo == true &&
@@ -89,7 +81,6 @@ internal sealed interface CallIntent {
     /** Answers; with an offer of video, *Answer audio only* (the other side is still seen). */
     data object Answer : CallIntent
 
-    /** *Answer with video*: the camera on. */
     data object AnswerWithVideo : CallIntent
 
     data object Decline : CallIntent
@@ -114,7 +105,6 @@ internal sealed interface CallIntent {
 
     data object SwitchCamera : CallIntent
 
-    /** The weak connection banner's *Turn off video*: the voice goes on alone. */
     data object TurnOffVideo : CallIntent
 
     data object DismissBanner : CallIntent
@@ -128,10 +118,9 @@ internal sealed interface CallIntent {
     /** A tap on the picture: shows the controls, or hides them when shown. */
     data object TapScreen : CallIntent
 
-    /** The display turned, in degrees (0, 90, 180, 270). */
     data class Rotation(val degrees: Int) : CallIntent
 
-    /** The screen is shown (started) or not: the statistics are measured only while it is. */
+    /** Statistics are measured only while the screen is shown. */
     data class Shown(val shown: Boolean) : CallIntent
 }
 
@@ -140,10 +129,9 @@ internal sealed interface CallIntent {
  * coordinator intents. When the last call is gone (an ended one stays a moment, to say how it
  * ended), [CallUiState.closed] tells the screen to close.
  *
- * While the screen is shown it reads the shown call's statistics once a second (the engine measures
- * only for a collector): the quality indicator, the weak connection and frozen video watches, and
- * the statistics panel's numbers and minute of history, which reach the state only while the panel
- * is open, so a closed panel recomposes nothing.
+ * While the screen is shown, reads the call's statistics for the quality indicator, the weak
+ * connection and frozen video watches, and the panel. The panel's numbers reach the state only
+ * while it is open, so a closed one recomposes nothing.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class CallViewModel(
@@ -286,7 +274,6 @@ internal class CallViewModel(
         keepControls()
     }
 
-    /** Shows the controls, and fades them again in a few seconds where they fade. */
     private fun keepControls() {
         hideJob?.cancel()
         if (!currentState.controlsVisible) setState { copy(controlsVisible = true) }
@@ -313,7 +300,6 @@ internal class CallViewModel(
         coordinator.setDeviceRotation(degrees)
     }
 
-    /** What changed in the shown call's video: the banners and the controls follow. */
     private fun followVideo(before: Call?, now: Call, autoHid: Boolean) {
         if (remoteTurnedOnVideo(before, now)) {
             setState { copy(remoteTurnedOnVideo = true) }

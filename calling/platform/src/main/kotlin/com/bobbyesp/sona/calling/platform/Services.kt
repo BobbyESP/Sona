@@ -41,10 +41,8 @@ private const val TAG = "SonaServices"
  * that matters most: one ringing, else one active, else the latest.
  *
  * Its type is `phoneCall`, plus `microphone` once a call was dialed or answered, plus `camera`
- * while a call's camera is on and Sona may use it (docs/video.md). Android only lets a service use
- * the microphone or the camera when it starts from a user action or a visible activity; if it
- * refuses, the call goes on with less (the camera first, then the microphone) and the refusal is
- * logged (docs/calling.md).
+ * while one is in use. Android may refuse the last two: the call goes on without them
+ * (docs/calling.md).
  */
 class CallService : LifecycleService(), KoinComponent {
     private val coordinator: CallCoordinator by inject()
@@ -261,9 +259,8 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
         const val EXTRA_CALL = "call"
 
         /**
-         * [action] on [call], as a broadcast to this receiver: for a surface outside the
-         * notification (Picture-in-Picture's actions). [request] tells apart the pending intents of
-         * one surface.
+         * A broadcast of [action] on [call], for surfaces outside the notification; [request] tells
+         * their pending intents apart.
          */
         fun pendingIntent(
             context: Context,

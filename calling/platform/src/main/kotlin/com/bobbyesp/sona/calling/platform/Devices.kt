@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.stateIn
 
-/** Whether Sona may use the camera, as Android says now. */
 fun Context.cameraPermission(): CameraPermission {
     val context = applicationContext
     return CameraPermission {
@@ -32,10 +31,7 @@ fun Context.cameraPermission(): CameraPermission {
     }
 }
 
-/**
- * The network Android routes Sona's traffic over by default: its default network's callback, for as
- * long as someone collects (the engine's configuration), and nothing registered otherwise.
- */
+/** Android's default network callback, registered only while someone collects. */
 class AndroidNetworkMonitor(context: Context, scope: CoroutineScope) : NetworkMonitor {
     private val manager = context.getSystemService(ConnectivityManager::class.java)
 

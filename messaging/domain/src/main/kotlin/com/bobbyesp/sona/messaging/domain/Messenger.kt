@@ -41,24 +41,19 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Texts, pictures and files between extensions, over SIP `MESSAGE`: the one place that sends,
- * receives and keeps them. It lives in the application's scope, like the call coordinator: start it
- * once at app start, **before the engine**, so nothing the engine receives waits unread. Screens
- * observe its flows and call its functions; notifications follow [events]. See docs/messaging.md.
+ * The one place that sends, receives and keeps texts and files over SIP `MESSAGE`
+ * (docs/messaging.md). It lives in the application's scope: [start] it once, **before the engine**,
+ * so nothing received waits unread.
  *
- * - **Plain peers** get the text as typed, cut at word boundaries when longer than the account's
- *   server relays. **Sona peers** (they sent an envelope) get texts with ids, and receipts and
- *   typing when the settings allow; only they can take a file.
- * - **Nothing is lost on a restart.** What is sending, offered or in transfer is in the store, and
- *   [start] resumes it once the account is registered again.
- * - **Every failure is explained**: a [MessageFailure] with the server's status for *Show SIP
- *   details*.
+ * - Plain peers get the text as typed, in parts if long. Sona peers (they sent an envelope) also
+ *   get ids, receipts and typing as the settings allow, and only they take files.
+ * - What is unfinished is in the store, and resumed after a restart.
  *
- * Everything that changes a message goes through one lock; the network is never waited for inside
- * it. The texts of a conversation go out one after the other, in the order they were written.
+ * Changes to messages go through one lock, which never waits for the network. A conversation's
+ * texts go out one at a time, in order.
  *
- * @param clock The time messages are stamped with, in epoch milliseconds.
- * @param newId The Sona ids of texts and files: random base32 in the app.
+ * @param clock The time in epoch milliseconds.
+ * @param newId The Sona ids of texts and files.
  */
 class Messenger(
     private val engine: SipEngine,
@@ -104,39 +99,33 @@ class Messenger(
             offerAgain = { deliver(it, resumed = false) },
         )
 
-    /** Every conversation, the most recent first, with who the peer is and what is unread. */
     val conversations: Flow<List<ConversationSummary>> =
         combine(store.conversations, nameOf) { list, name ->
             list.map { it.copy(name = name(it.conversation.peer) ?: it.conversation.peerName) }
         }
 
-    /** One conversation as [conversations] has it; `null` once it is deleted. */
     fun conversation(id: ConversationId): Flow<ConversationSummary?> =
         conversations.map { list -> list.firstOrNull { it.id == id } }.distinctUntilChanged()
 
-    /** The messages of [id], oldest first. */
     fun messages(id: ConversationId): Flow<List<Message>> = store.messages(id)
 
-    /** What is unread in every conversation: the Messages tab's badge. */
     val totalUnread: Flow<Int> = store.unread
 
     private val typingPeers = MutableStateFlow<Set<ConversationId>>(emptySet())
     private val typingJobs = ConcurrentHashMap<ConversationId, Job>()
     private val typingSent = ConcurrentHashMap<ConversationId, Long>()
 
-    /** Whether the peer of [id] is writing now (a Sona peer says so; shown for 6 seconds). */
+    /** Whether the peer of [id] is writing; shown for 6 seconds after it says so. */
     fun typing(id: ConversationId): Flow<Boolean> =
         typingPeers.map { id in it }.distinctUntilChanged()
 
-    /** Delivered receipts waiting to go together, by conversation. Touched under [lock]. */
+    /** Delivered receipts waiting to go together. Touched under [lock]. */
     private val deliveredQueue = mutableMapOf<ConversationId, MutableSet<String>>()
 
-    /** The texts of each conversation go out one at a time, in order. */
     private val outboxes = ConcurrentHashMap<ConversationId, Mutex>()
 
     /**
-     * Starts receiving, and resumes what a previous run left unfinished. Once, at app start, before
-     * the engine starts.
+     * Receives, and resumes what was left unfinished. Once, at app start, before the engine starts.
      */
     fun start(): Job = scope.launch {
         launch {
@@ -148,10 +137,7 @@ class Messenger(
         launch { resume() }
     }
 
-    /**
-     * The conversation of [account] with [peer], made if there is none: for *New conversation*, a
-     * contact's *Message*, a call's. `null` when the account does not exist.
-     */
+    /** The conversation with [peer], made if needed; `null` when the account does not exist. */
     suspend fun open(account: AccountId, peer: SipAddress): ConversationId? {
         val owner = accountList.filterNotNull().first().firstOrNull { it.id == account }
         owner ?: return null
@@ -160,10 +146,7 @@ class Messenger(
             .id
     }
 
-    /**
-     * Says which conversation is on screen, or `null` when none is (the screen left, the app went
-     * to the background). What arrives in it is read at once, and its notification is not needed.
-     */
+    /** [id] is the conversation on screen, if any: what arrives in it is read at once. */
     fun setVisibleConversation(id: ConversationId?) {
         visible.value = id
         if (id != null) scope.launch { markRead(id) }
@@ -171,7 +154,6 @@ class Messenger(
 
     // --- Texts -----------------------------------------------------------------------------------
 
-    /** Writes [text] in [conversation] and sends it. */
     suspend fun sendText(conversation: ConversationId, text: String): SendOutcome {
         if (text.isBlank()) return SendOutcome.Empty
         val owner = store.conversation(conversation) ?: return SendOutcome.NoConversation
@@ -200,8 +182,8 @@ class Messenger(
     }
 
     /**
-     * Prepares the file at [source] (a `content://` address the user picked), offers it in
-     * [conversation] and sends it once the other phone accepts.
+     * Offers the file at [source], a `content://` address the user picked, and sends it once the
+     * other phone accepts.
      */
     suspend fun sendFile(conversation: ConversationId, source: String): SendOutcome {
         val owner = store.conversation(conversation) ?: return SendOutcome.NoConversation
@@ -250,8 +232,8 @@ class Messenger(
     }
 
     /**
-     * Tries again what failed: a text or an offer is sent again from the part that failed; a file
-     * transfer, sent or received, resumes where it stopped.
+     * A text or an offer is sent again from the part that failed; a file transfer resumes where it
+     * stopped.
      */
     suspend fun retry(id: MessageId) {
         val message = store.message(id) ?: return
@@ -274,31 +256,24 @@ class Messenger(
         deliver(id, resumed = false)
     }
 
-    /** Downloads a file offered in a conversation, larger than the automatic limit. */
     suspend fun download(id: MessageId) = transfers.download(id)
 
-    /** Refuses a file offered: the sender is told. */
     suspend fun decline(id: MessageId) = transfers.decline(id)
 
-    /** Stops a file's transfer, either way: the other side is told. */
     suspend fun cancel(id: MessageId) = transfers.cancel(id)
 
-    /** Deletes messages, their files with them; a transfer in progress is stopped first. */
+    /** A transfer in progress is stopped first. */
     suspend fun delete(ids: Collection<MessageId>) {
         for (id in ids) store.message(id)?.let { transfers.forget(it) }
         lock.withLock { store.delete(ids) }
     }
 
-    /** Deletes a conversation, every message and file in it. */
     suspend fun deleteConversation(id: ConversationId) {
         store.messages(id).first().forEach { transfers.forget(it) }
         lock.withLock { store.deleteConversation(id) }
     }
 
-    /**
-     * Marks what arrived in [conversation] read, and tells a Sona peer so when the user allows read
-     * receipts.
-     */
+    /** A Sona peer is told, if read receipts are on. */
     suspend fun markRead(conversation: ConversationId) {
         val newly = lock.withLock { store.markRead(conversation) }
         if (newly.isEmpty()) return
@@ -310,8 +285,8 @@ class Messenger(
     }
 
     /**
-     * The user is writing in [conversation]: a Sona peer is told, at most every 4 seconds, when the
-     * user allows typing indicators. Call it on every change of the text field.
+     * Call on every change of the text field; the peer is told at most every 4 seconds, if typing
+     * indicators are on.
      */
     fun notifyTyping(conversation: ConversationId) {
         val now = clock()
@@ -326,7 +301,6 @@ class Messenger(
         }
     }
 
-    /** A `content://` address to open or share [attachment]'s file, once it is in storage. */
     fun uriOf(attachment: Attachment): String? = attachment.file?.let(files::uriOf)
 
     // --- Sending, in order ----------------------------------------------------------------------
@@ -336,7 +310,6 @@ class Messenger(
         outboxes.getOrPut(conversation) { Mutex() }.withLock { deliverNow(id, resumed) }
     }
 
-    /** Sends what is left of a text or an offer, part by part. */
     private suspend fun deliverNow(id: MessageId, resumed: Boolean) {
         val message = store.message(id) ?: return
         if (message.status != MessageStatus.Sending) return
@@ -381,7 +354,7 @@ class Messenger(
         }
     }
 
-    /** The bodies a text or an offer goes in, as they were first cut. */
+    /** As first cut, so a resumed text goes on with the same parts. */
     private fun bodiesOf(message: Message, owner: Conversation): List<String> {
         val limit = message.sizeLimit ?: DEFAULT_LIMIT
         val attachment = message.attachment
@@ -446,8 +419,8 @@ class Messenger(
     }
 
     /**
-     * What [envelope] says of the peer: an envelope makes it a Sona peer, answered once with `hi`
-     * (unless it said `hi` itself); a plain text from an unknown one makes it plain.
+     * An envelope makes the peer Sona, answered once with `hi` (unless it said `hi`); a plain text
+     * from an unknown peer makes it plain.
      */
     private suspend fun learn(
         conversation: Conversation,
@@ -517,7 +490,6 @@ class Messenger(
         announce(conversation, message)
     }
 
-    /** Tells the screens and the notifications; what arrives on screen is read at once. */
     private suspend fun announce(conversation: Conversation, message: Message) {
         val onScreen = visible.value == conversation.id
         _events.emit(
@@ -611,7 +583,6 @@ class Messenger(
 
     // --- Shared ----------------------------------------------------------------------------------
 
-    /** The longest body [account]'s server relays: its own setting, or the app's. */
     private suspend fun sizeLimit(account: AccountId): Int {
         val owner = accountList.value?.firstOrNull { it.id == account } ?: accounts.get(account)
         val overrides = owner?.overrides ?: Overrides()
@@ -631,9 +602,9 @@ class Messenger(
 }
 
 /**
- * [address] as conversations tell peers apart: an extension of [account]'s own server is on the
- * account's domain whatever host the server wrote (its address, or its name), without a port;
- * another server's address keeps its host, in lowercase, and its port.
+ * [address] as conversations tell peers apart. An extension of [account]'s server goes on the
+ * account's domain without a port, whatever host the server wrote; any other keeps its port and its
+ * host, lowercased.
  */
 internal fun peerOf(address: SipAddress, account: Account): SipAddress {
     val host = address.host

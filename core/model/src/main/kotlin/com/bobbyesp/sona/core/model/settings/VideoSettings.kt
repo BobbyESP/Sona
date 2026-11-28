@@ -3,7 +3,6 @@
  */
 package com.bobbyesp.sona.core.model.settings
 
-/** A video codec Sona can offer, with the name SDP gives it. */
 enum class VideoCodec(val mime: String, val label: String) {
     Vp8("VP8", "VP8"),
     H264("H264", "H.264"),
@@ -33,7 +32,6 @@ enum class VideoBitrate(val kbps: Int) {
     Unlimited(0),
 }
 
-/** The most frames a second the camera is sent at. */
 enum class VideoFrameRate(val fps: Int) {
     Fps15(15),
     Fps24(24),
@@ -56,8 +54,7 @@ object VideoSettings {
         )
 
     /**
-     * Video the other side turns on is shown: taken receive-only, this side's camera stays off
-     * until the user turns it on. Off, it is declined and the call stays audio.
+     * Video the other side turns on is received, with this side's camera off. Off, it is declined.
      */
     val AcceptRemote = Setting.Toggle("video.accept_remote", default = true)
 

@@ -24,10 +24,6 @@ import com.bobbyesp.sona.core.ui.contribution.SettingItem
 import com.bobbyesp.sona.core.ui.contribution.SettingsAreas
 import com.bobbyesp.sona.core.ui.contribution.SettingsContributor
 
-/**
- * How calls carry video, in the settings' *Video* area: whether at all, the codecs, and what is
- * sent on Wi-Fi and on mobile data (docs/video.md, The network).
- */
 internal object VideoSettingsContributor : SettingsContributor {
     override val area = SettingsAreas.Video
 

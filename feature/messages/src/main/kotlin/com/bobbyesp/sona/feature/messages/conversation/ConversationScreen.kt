@@ -206,7 +206,7 @@ internal fun ConversationRoute(
 private fun Context.hasCamera(): Boolean =
     checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
-/** Opens [uri] in the app the user picks, which may read it for as long as it has it open. */
+/** The chosen app may read it for as long as it has it open. */
 private fun Context.openWithAnotherApp(uri: String, mime: String): Boolean {
     val view =
         Intent(Intent.ACTION_VIEW)
@@ -222,11 +222,7 @@ private fun Context.openWithAnotherApp(uri: String, mime: String): Boolean {
     }
 }
 
-/**
- * A conversation: the top bar (who, the address in monospace, the account's dot when there are
- * several, *typing…*, and the actions other features add for this party), the messages with the
- * newest at the bottom, and the composer, both bars frosted over the messages that pass beneath.
- */
+/** A conversation, with both bars frosted over the messages that pass beneath. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ConversationScreen(
@@ -357,8 +353,7 @@ private fun TopBarTitle(header: ConversationHeader, typing: Boolean) {
 }
 
 /**
- * The messages, newest at the bottom: a reversed lazy list, so it opens at the newest and stays
- * there as messages arrive, with stable keys so a message that changes (sent, read) is the same
+ * A reversed list opens at the newest and stays there; stable keys keep a changed message on its
  * row.
  */
 @Composable

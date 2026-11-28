@@ -91,11 +91,7 @@ internal fun ConversationsRoute(
     )
 }
 
-/**
- * Messages: the conversations, the most recent first, each with who, the last message (its status
- * mark when it was sent from here, a file's icon), when, and how many are unread. Search grows from
- * a pill; a swipe deletes a conversation, after asking; *New message* is the floating action.
- */
+/** The conversations, the most recent first. A swipe deletes one, after asking. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ConversationsScreen(
@@ -301,7 +297,6 @@ private fun ConversationItem(
     )
 }
 
-/** The newest message on one line: its status mark if it went out from here, a file's icon. */
 @Composable
 private fun LastMessageLine(message: Message, emphasized: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -329,7 +324,6 @@ private fun LastMessageLine(message: Message, emphasized: Boolean) {
     }
 }
 
-/** What the detail pane shows beside the list on a wide window before a conversation is open. */
 @Composable
 internal fun NoConversationOpen() {
     Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {

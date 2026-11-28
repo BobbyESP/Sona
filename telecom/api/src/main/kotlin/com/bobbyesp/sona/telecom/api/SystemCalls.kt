@@ -27,8 +27,8 @@ data class SystemCallRequest(
     val address: String,
     val incoming: Boolean,
     /**
-     * A video call to the system: dialed with the camera, or ringing with video offered. A watch or
-     * a car shows it as one, and the system prefers the speaker for it.
+     * Dialed with the camera, or ringing with video offered: the system shows it as a video call
+     * and prefers the speaker.
      */
     val video: Boolean = false,
 )
@@ -67,10 +67,7 @@ interface SystemCall {
 
     suspend fun requestRoute(route: AudioRoute)
 
-    /**
-     * Tells the system the call shows video now, or no longer does: its type follows the picture on
-     * screen, either side's.
-     */
+    /** Keeps the system's call type in step with whether the call shows video, from either side. */
     suspend fun setVideo(video: Boolean)
 }
 

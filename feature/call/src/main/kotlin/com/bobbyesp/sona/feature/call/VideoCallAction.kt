@@ -38,9 +38,8 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * *Video call*, wherever a party is shown: dials with the camera on, after asking for the
- * microphone and the camera, and opens the call screen. Not offered on an engine without video or
- * with video calls off in the settings; a call that could not start says why.
+ * *Video call* on any party: asks for the permissions, dials with the camera and opens the call
+ * screen. Not offered while video is unavailable.
  */
 internal object VideoCallAction : PartyActionProvider {
     override val order: Int = 10

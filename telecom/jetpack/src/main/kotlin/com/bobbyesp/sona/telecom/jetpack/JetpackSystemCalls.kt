@@ -156,8 +156,8 @@ private fun callTypeOf(video: Boolean): Int =
     else CallAttributesCompat.CALL_TYPE_AUDIO_CALL
 
 /**
- * Telecom refusing a request is logged, never a crash: the call goes on without it. A refusal is
- * either thrown or answered as a [CallControlResult.Error]; both are logged the same.
+ * A request Telecom refuses, thrown or answered as a [CallControlResult.Error], is logged: the call
+ * goes on.
  */
 private suspend fun guarded(what: String, request: suspend () -> Any?) {
     try {

@@ -6,10 +6,9 @@ package com.bobbyesp.sona.sip.linphone
 import java.lang.reflect.Proxy
 
 /**
- * A stand-in for one of Linphone's interfaces (`CallParams`, `CallStats`…), answering [values] by
- * their Java getter's name (`isVideoEnabled`, `getVideoDirection`) and zero, `false` or `null` for
- * the rest. Linphone's interfaces are plain Java; only their implementations call native code, so
- * the mappers are tested on the JVM against these.
+ * A stand-in for a Linphone interface, answering [values] by getter name, and zero, `false` or
+ * `null` otherwise. The interfaces are plain Java (only their implementations call native code), so
+ * the mappers are tested on the JVM.
  */
 internal inline fun <reified T : Any> stand(vararg values: Pair<String, Any?>): T {
     val answers = values.toMap()

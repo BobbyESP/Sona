@@ -8,7 +8,6 @@ import androidx.compose.ui.res.stringResource
 import com.bobbyesp.sona.calling.domain.CallQuality
 import com.bobbyesp.sona.calling.domain.CameraBlocked
 
-/** Why the camera is off although it was asked for, as a sentence for the call screen. */
 @Composable
 fun CameraBlocked.text(): String =
     when (this) {
@@ -22,7 +21,6 @@ val CameraBlocked.detail: String
             CameraBlocked.NoPermission -> "android.permission.CAMERA: not granted"
         }
 
-/** The quality indicator's words, for its content description and the statistics panel. */
 @Composable
 fun CallQuality.label(): String =
     stringResource(

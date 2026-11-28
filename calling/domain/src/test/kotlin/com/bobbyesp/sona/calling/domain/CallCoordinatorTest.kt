@@ -94,7 +94,6 @@ class CallCoordinatorTest {
     private val World.foreground
         get() = calls.foreground.value
 
-    /** A video call to 600, answered with the other side's camera: both ways. */
     private suspend fun TestScope.videoCall(world: World): CallId {
         val id = world.dial("600", video = true)
         world.engine.remoteAnswers(id)
@@ -102,7 +101,6 @@ class CallCoordinatorTest {
         return id
     }
 
-    /** An audio call to 600, answered. */
     private suspend fun TestScope.audioCall(world: World): CallId {
         val id = world.dial("600")
         world.engine.remoteAnswers(id)

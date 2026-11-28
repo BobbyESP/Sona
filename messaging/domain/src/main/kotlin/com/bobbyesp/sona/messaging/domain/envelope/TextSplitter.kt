@@ -4,19 +4,13 @@
 package com.bobbyesp.sona.messaging.domain.envelope
 
 /**
- * Cuts a text into parts of at most a number of UTF-8 bytes, for a server that relays short bodies
- * only. Put together in order, the parts are the text, every character kept: a Sona peer joins them
- * back, and a plain peer reads them one after another.
- *
- * A part ends after a space or a line break when one fits; a word longer than a part is cut where a
- * character begins. Never inside a UTF-8 sequence or a surrogate pair, and, where it can, not
- * inside what reads as one character: before a combining mark, a variation selector, an emoji
- * modifier or a zero-width joiner, after a joiner, between the two letters of a flag or within a
- * `\r\n`.
+ * Cuts a text into parts of at most a number of UTF-8 bytes, losing no character. A part ends after
+ * a space or line break when one fits, never inside a UTF-8 sequence or surrogate pair, and where
+ * possible not inside what reads as one character (combining marks, emoji sequences, flags,
+ * `\r\n`).
  */
 object TextSplitter {
 
-    /** The parts of [text], each at most [maxBytes] bytes of UTF-8; none for an empty text. */
     fun split(text: String, maxBytes: Int): List<String> {
         require(maxBytes >= MAX_CODE_POINT_BYTES) { "A part must hold any character" }
         val parts = mutableListOf<String>()
@@ -54,7 +48,6 @@ object TextSplitter {
         return parts
     }
 
-    /** The UTF-8 size of [text], as it goes on the wire. */
     fun utf8Size(text: String): Int {
         var total = 0
         var index = 0
@@ -75,7 +68,6 @@ object TextSplitter {
             else -> 4
         }
 
-    /** Whether a part may end before [index] without breaking what reads as one character. */
     private fun canCut(text: String, index: Int): Boolean {
         if (index <= 0 || index >= text.length) return true
         val before = text.codePointBefore(index)

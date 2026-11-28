@@ -43,22 +43,13 @@ internal class LinphoneConfigurer(private val appVersion: String) {
     }
 
     /**
-     * Video, and what the network allows the media (docs/video.md, The network). Most of it reaches
-     * the next call or re-INVITE; the bandwidth caps and DSCP marks, the next stream started.
+     * Video and the media's network settings (docs/video.md, The network). Bandwidth caps and DSCP
+     * marks apply from the next stream started, the rest from the next call or re-INVITE.
      *
-     * - **Never initiated, never taken by Linphone itself**: video added by the other side is
-     *   deferred and answered receive-only by the engine (`LinphoneSipEngine`), so this side's
-     *   camera is never turned on by a re-INVITE.
-     * - **Adaptive rate** with the `advanced` algorithm, which reads RTCP (loss, delay trend,
-     *   TMMBR) and steps the bitrate, the frame rate, then the definition down and back up. The
-     *   video preset is left `default` for it: `custom` would pin the definition.
-     * - **Losses repaired**: retransmission on NACK and FEC are offered; a peer without them
-     *   answers without them.
-     * - **Adaptive jitter buffers** for both streams.
-     * - **Caps**: the preferred definition and frame rate, and the upload and download bandwidth
-     *   (kbit/s, audio included, `0` for none), as `EngineConfigBuilder` chose them for the
-     *   network.
-     * - **DSCP** on the media packets, EF for voice and AF41 for video.
+     * - Linphone neither initiates nor accepts video: the engine takes added video receive-only, so
+     *   a re-INVITE never turns the camera on.
+     * - The video preset stays `default` for the `advanced` adaptive rate algorithm to step the
+     *   definition: `custom` would pin it.
      */
     fun video(core: Core, video: VideoConfig) {
         core.isVideoCaptureEnabled = video.enabled
@@ -87,7 +78,6 @@ internal class LinphoneConfigurer(private val appVersion: String) {
         video.codecs?.let { videoCodecs(core, it) }
     }
 
-    /** The video codecs the next offer or answer is built from, as [codecs] does for audio. */
     private fun videoCodecs(core: Core, wanted: List<String>) {
         val plan = codecPlan(core.videoPayloadTypes.toList(), wanted) { it.mimeType }
         plan.forEach { (payload, enabled) -> payload.enable(enabled) }

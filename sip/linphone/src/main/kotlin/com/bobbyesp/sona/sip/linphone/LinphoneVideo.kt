@@ -11,10 +11,7 @@ import org.linphone.core.CallParams
 import org.linphone.core.MediaDirection
 import org.linphone.core.VideoDefinition
 
-/*
- * Video in both vocabularies, Linphone's and Sona's: directions, the call's video, the cameras.
- * Everything here is a pure function, tested on the JVM; the engine only feeds it.
- */
+/* Video in Linphone's and Sona's vocabularies, as pure functions. */
 
 /** The SDP direction for what this side [send]s and [receive]s; `null`: no video stream at all. */
 internal fun videoDirectionOf(send: Boolean, receive: Boolean): MediaDirection? =
@@ -26,12 +23,11 @@ internal fun videoDirectionOf(send: Boolean, receive: Boolean): MediaDirection? 
     }
 
 /**
- * The video direction to answer an incoming call with, or `null` to answer without video.
+ * The direction to answer an incoming call with; `null` answers without video.
  *
- * @param enabled Video calls are on.
  * @param camera The user answered with the camera.
- * @param offered The INVITE offered video: without an offer an answer cannot add it.
- * @param acceptRemote Offered video is taken receive-only when the camera stays off.
+ * @param offered Without an offer, an answer cannot add video.
+ * @param acceptRemote Offered video is received when the camera stays off.
  */
 internal fun answerDirectionOf(
     enabled: Boolean,
@@ -46,10 +42,7 @@ internal fun answerDirectionOf(
         else -> null
     }
 
-/**
- * Whether the call's media were negotiated in this state, so its current parameters say what was
- * agreed. Before that an outgoing call has only what it asked for, and a ringing one only an offer.
- */
+/** Whether the media are negotiated, so the current parameters say what was agreed. */
 internal fun CallState.negotiated(): Boolean =
     when (this) {
         CallState.Idle,
@@ -62,16 +55,14 @@ internal fun CallState.negotiated(): Boolean =
         else -> true
     }
 
-/** Whether an incoming call is still ringing: its video is only an offer, not shown yet. */
 internal fun CallState.ringingHere(): Boolean =
     this == CallState.IncomingReceived ||
         this == CallState.PushIncomingReceived ||
         this == CallState.IncomingEarlyMedia
 
 /**
- * A call's video, from this side's parameters ([local]: the current ones once negotiated, the asked
- * ones before) and the other side's ([remote], `null` before its answer). `null` when the call has
- * no video stream.
+ * [local] are the current parameters once negotiated, the asked ones before; [remote] is `null`
+ * before an answer. `null` without a video stream.
  */
 internal fun callVideoOf(local: CallParams, remote: CallParams?, camera: CameraFacing): CallVideo? {
     if (!local.isVideoEnabled) return null
@@ -92,24 +83,19 @@ internal fun callVideoOf(local: CallParams, remote: CallParams?, camera: CameraF
     )
 }
 
-/**
- * Whether the local preview runs: while a view is [attached] for a call still going ([callGoing])
- * and the camera may be used ([cameraAllowed]), whatever is sent. The preview sends nothing;
- * without a view it stops, so the camera is not kept open for nobody.
- */
+/** The preview sends nothing; it stops without an attached view, so the camera is not kept open. */
 internal fun previewRuns(attached: Boolean, callGoing: Boolean, cameraAllowed: Boolean): Boolean =
     attached && callGoing && cameraAllowed
 
-/** A definition as a size; `null` when Linphone has none yet (undefined, or 0×0). */
+/** `null` while Linphone has no size: undefined, or 0×0. */
 internal fun VideoDefinition?.toSize(): VideoSize? {
     if (this == null || isUndefined || width <= 0 || height <= 0) return null
     return VideoSize(width, height)
 }
 
 /**
- * Which way a Linphone camera faces, from its name (`… Front`, `… Back`), or `null` when the name
- * does not say. Linphone names its devices this way on Android; its own app picks the front camera
- * by the same word.
+ * From the names Linphone gives cameras on Android (`… Front`, `… Back`), as its own app does;
+ * `null` when the name does not say.
  */
 internal fun cameraFacingOf(device: String?): CameraFacing? {
     if (device == null || device.isStaticImage()) return null

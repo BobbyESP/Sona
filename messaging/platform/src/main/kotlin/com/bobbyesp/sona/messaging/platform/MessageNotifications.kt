@@ -32,12 +32,9 @@ fun interface ConversationIntents {
 }
 
 /**
- * Tells the user about messages that arrive while their conversation is not on screen: one
- * notification per conversation, in Android's messaging style with the sender's name, with *Reply*
- * (typed in the notification) and *Mark as read*. It goes away once the conversation is read, here
- * or wherever else.
- *
- * Nothing is shown without the notifications permission, and nothing fails without it either.
+ * One messaging-style notification per conversation for what arrives while it is not on screen,
+ * with *Reply* and *Mark as read*; taken down once read. Without the notifications permission
+ * nothing is shown, and nothing fails.
  */
 class MessageNotifications(
     private val context: Context,
@@ -47,7 +44,6 @@ class MessageNotifications(
 ) {
     private val manager = NotificationManagerCompat.from(context)
 
-    /** The conversations with a notification up. */
     private val posted = ConcurrentHashMap.newKeySet<Long>()
 
     /**
@@ -75,7 +71,6 @@ class MessageNotifications(
         }
     }
 
-    /** *Reply*, typed in the notification: sent, then the conversation is read. */
     fun reply(conversation: ConversationId, text: String, done: () -> Unit) {
         scope.launch {
             try {
@@ -88,7 +83,6 @@ class MessageNotifications(
         }
     }
 
-    /** *Mark as read*. */
     fun markRead(conversation: ConversationId, done: () -> Unit) {
         scope.launch {
             try {
@@ -196,7 +190,6 @@ class MessageNotifications(
         )
     }
 
-    /** A message as the notification says it: its text, or what its file is. */
     private fun Message.words(): String {
         val file = attachment ?: return text
         return if (file.isPicture) context.getString(R.string.notification_picture)

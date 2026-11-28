@@ -18,19 +18,16 @@ import org.linphone.core.PayloadType
 import org.linphone.core.SrtpSuite
 
 /*
- * A call's statistics as Linphone keeps them, in Sona's words and units. Everything here is a pure
- * function, tested on the JVM against stand-ins of Linphone's interfaces.
+ * Linphone's call statistics in Sona's words and units.
  *
- * Linphone's names are its RTCP's: the "sender" loss rate and jitter are read from the report this
- * side sends (what it measured of what it receives: local), the "receiver" ones from the report it
- * received (what the other side measured of what this side sends: remote). Jitter and round trip
- * come in seconds; Sona shows milliseconds.
+ * Linphone names them after RTCP: "sender" loss and jitter come from the report this side sends
+ * (local), "receiver" ones from the report it receives (remote). Jitter and round trip come in
+ * seconds.
  */
 
 /**
- * The statistics of a call with these current [params], from its streams' [audio] and [video] stats
- * (`null` for a stream it does not have). [transport] is the account's, which Linphone does not
- * keep per call.
+ * [audio] or [video] is `null` without that stream. [transport] is the account's: Linphone keeps
+ * none per call.
  */
 internal fun callStatisticsOf(
     params: CallParams,
@@ -67,7 +64,6 @@ internal fun callStatisticsOf(
     )
 }
 
-/** One stream's numbers, in Sona's units. */
 internal fun streamStatisticsOf(stats: CallStats, payload: PayloadType?): StreamStatistics =
     StreamStatistics(
         codec = payload?.mimeType,
@@ -106,10 +102,9 @@ internal fun Address.Family.toSona(): IpFamily? =
         Address.Family.Unspec -> null
     }
 
-/** `SRTP`, `ZRTP`, `DTLS`; `null` for media in clear. */
 internal fun MediaEncryption.toName(): String? = takeIf { it != MediaEncryption.None }?.name
 
-/** The suite as SDP names it (`AES_CM_128_HMAC_SHA1_80`, RFC 4568 and 7714); `null` if none. */
+/** As SDP names it (RFC 4568 and 7714); `null` if it has none. */
 internal fun SrtpSuite.sdpName(): String? =
     when (this) {
         SrtpSuite.AESCM128HMACSHA180 -> "AES_CM_128_HMAC_SHA1_80"
@@ -123,7 +118,6 @@ internal fun SrtpSuite.sdpName(): String? =
         SrtpSuite.Invalid -> null
     }
 
-/** A rate Linphone gives in percent, kept between 0 and 100. */
 private fun Float.percent(): Float = coerceIn(0f, 100f)
 
 private const val MS = 1000f

@@ -7,9 +7,8 @@ import com.bobbyesp.sona.sip.api.MessageSendResult
 import com.bobbyesp.sona.sip.api.SipStatus
 
 /**
- * Why a message was not sent, or a file did not arrive, with what the server said: the sentence
- * comes from [reason] (in `:messaging:ui`), the technical line for *Show SIP details* from
- * [technical].
+ * Why a message was not sent, or a file did not arrive: [reason] gives the sentence
+ * (`:messaging:ui`), [technical] the line for *Show SIP details*.
  */
 data class MessageFailure(
     val reason: FailureReason,
@@ -23,7 +22,6 @@ data class MessageFailure(
 
 /** See docs/messaging.md, Failures, in words and in SIP. */
 enum class FailureReason {
-    /** The account is not registered: nothing was sent. */
     AccountOffline,
 
     /** `404`, `484`, `604`: there is no such extension on the server. */
@@ -32,7 +30,7 @@ enum class FailureReason {
     /** `415`: the server does not relay this kind of message. */
     Unsupported,
 
-    /** `401`, `403`, `407`: the server refused it; the account's credentials are in question. */
+    /** `401`, `403`, `407`: the account's credentials are in question. */
     Refused,
 
     /** `408`, or no answer at all from the server. */
@@ -46,8 +44,6 @@ enum class FailureReason {
 
     /** `413`, `513`: the server takes smaller messages than the account's size setting. */
     TooLarge,
-
-    /** Any other answer. */
     Rejected,
 
     /** A file stopped arriving: five requests for what was missing went unanswered. */
@@ -58,15 +54,10 @@ enum class FailureReason {
 
     /** The other phone could not take the file ([MessageFailure.detail] has its reason). */
     PeerFailed,
-
-    /** This phone could not write the file. */
     Storage,
-
-    /** The file to send is no longer in the app's storage. */
     FileMissing,
 }
 
-/** The failure for a send that was not taken; `null` when it was. */
 internal fun MessageSendResult.toFailure(): MessageFailure? =
     when (this) {
         is MessageSendResult.Accepted -> null
@@ -95,10 +86,7 @@ internal fun MessageSendResult.toFailure(): MessageFailure? =
         }
     }
 
-/**
- * Whether trying again later may work: no answer, nothing could be sent, or a server that says so
- * (`408`, `500`, `503`, `504`). A refusal for what the message is (`404`, `415`) is final.
- */
+/** Whether trying again may work. A refusal for what the message is (`404`, `415`) is final. */
 internal val MessageSendResult.isTransient: Boolean
     get() =
         when (this) {

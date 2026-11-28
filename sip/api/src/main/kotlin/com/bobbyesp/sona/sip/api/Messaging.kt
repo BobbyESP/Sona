@@ -8,59 +8,48 @@ import com.bobbyesp.sona.core.model.SipAddress
 import kotlinx.coroutines.flow.Flow
 
 /**
- * SIP `MESSAGE` (RFC 3428) out of a dialog: a body from an account to an address, through the
- * account's server, and the bodies the server brings. Nothing more: what a body means (a text, a
- * chunk of a file, a receipt) is the messaging domain's, which writes and reads it.
+ * SIP `MESSAGE` (RFC 3428) out of a dialog, through the account's server. What a body means (text,
+ * file chunk, receipt) is the messaging domain's, which also keeps it within length limits.
  *
- * Every body is `text/plain`, the only type Asterisk relays (see docs/messaging.md). How long one
- * may be is the domain's to respect: the engine sends what it is given.
- *
- * An engine without [Capability.Messaging] answers every [send] with [MessageSendResult.Failed] and
- * never receives anything.
+ * Every body is `text/plain`, the only type Asterisk relays (docs/messaging.md). Without
+ * [Capability.Messaging], [send] answers [MessageSendResult.Failed] and nothing is received.
  */
 interface SipMessaging {
     /**
-     * Sends [body] from [account] to [to] and suspends until the server's final answer: a `2xx`
-     * (for Asterisk always `202 Accepted`, which means *taken*, not *delivered*), a failure, or
-     * none (the engine's own timeout). Never throws for what the network does.
-     *
-     * An account that is not registered is answered [MessageSendResult.AccountUnavailable] at once:
-     * nothing is sent.
+     * Sends [body] and suspends until the server's final answer or the engine's timeout; never
+     * throws for what the network does. For Asterisk, `202 Accepted` means *taken*, not
+     * *delivered*. From an account that is not registered nothing is sent:
+     * [MessageSendResult.AccountUnavailable].
      */
     suspend fun send(account: AccountId, to: SipAddress, body: String): MessageSendResult
 
     /**
-     * Every `MESSAGE` received, in the order it came, from the moment the engine exists. Nothing is
-     * lost while nobody collects: the bodies wait in a buffer for the one collector there is (the
-     * messaging coordinator, started before the engine). A second collector would split them.
+     * Every `MESSAGE` received, in order, buffered until collected. It takes a single collector
+     * (the messaging coordinator, started before the engine): a second one would split them.
      */
     val received: Flow<ReceivedMessage>
 }
 
-/** The server's final answer to a `MESSAGE`. */
 sealed interface MessageSendResult {
     /** The server took it (`200 OK`, `202 Accepted`); [status] when the engine knows which. */
     data class Accepted(val status: SipStatus? = null) : MessageSendResult
 
     /**
-     * Not taken. [status] is the server's answer when there was one (`404`, `415`, `480`, `503`);
-     * without one the server did not answer, or nothing could be sent, and [detail] says which.
+     * Not taken. Without a [status], the server did not answer or nothing could be sent; [detail]
+     * says which.
      */
     data class Failed(val status: SipStatus?, val detail: String? = null) : MessageSendResult
 
-    /** The account is unknown to the engine, disabled, or not registered: nothing was sent. */
+    /** The account is unknown, disabled or not registered: nothing was sent. */
     data object AccountUnavailable : MessageSendResult
 }
 
 /**
  * A `MESSAGE` that arrived.
  *
- * @property account The account it came to; `null` when the engine could not tell (no account
- *   matched its address).
- * @property from Who sent it, from its `From` header, without parameters.
- * @property fromName The `From` header's display name, when it had one.
- * @property to Whom it was addressed to, from its `To` header.
- * @property contentType As the sender declared it; `text/plain` for everything Asterisk relays.
+ * @property account The account it came to; `null` when none matched its address.
+ * @property from The `From` header's address, without parameters.
+ * @property contentType As the sender declared it.
  * @property atMillis When it arrived, in epoch milliseconds.
  */
 data class ReceivedMessage(

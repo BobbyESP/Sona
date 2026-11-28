@@ -14,31 +14,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 
 /**
- * `MESSAGE` in memory, scripted by the test or the demo that owns it. Every body sent is kept in
- * [sent] and answered by [server], which by default takes it as Asterisk does (`202 Accepted`):
- * ```
- * fake.server = { message -> MessageSendResult.Failed(SipStatus(404, "Not Found")) }
- * fake.deliver(from = SipAddress("101", "lab.local"), body = "hello")
- * ```
+ * In-memory `MESSAGE`, scripted by a test or the demo. Bodies are kept in [sent] and answered by
+ * [server], by default as Asterisk does (`202 Accepted`); [deliver] makes one arrive. A [server]
+ * that delivers into another fake makes a network, and can lose bodies.
  *
- * Two of them make a network: a test gives one's [server] a function that [deliver]s into the
- * other, and decides on the way what the server answers and what is lost.
- *
- * @param registered Whether an account can send: the fake engine's registrations.
- * @param clock The time a body received is stamped with, when it is not given.
+ * @param registered Whether an account can send.
+ * @param clock Stamps a received body given without a time.
  */
 class FakeMessaging(
     private val registered: (AccountId) -> Boolean = { true },
     private val clock: () -> Long = { 0L },
 ) : SipMessaging {
 
-    /** A body as it was sent. */
     data class Sent(val account: AccountId, val to: SipAddress, val body: String)
 
-    /** Every body sent, oldest first, for asserting what went out. */
     val sent: MutableList<Sent> = mutableListOf()
 
-    /** What the server answers to each body sent; it may suspend, as a real server takes time. */
+    /** May suspend, as a real server takes time. */
     @Volatile var server: suspend (Sent) -> MessageSendResult = { ACCEPTED }
 
     private val inbox = Channel<ReceivedMessage>(Channel.UNLIMITED)
@@ -52,7 +44,6 @@ class FakeMessaging(
         return server(message)
     }
 
-    /** A `MESSAGE` arrives for [account] from [from]. */
     fun deliver(
         from: SipAddress,
         body: String,
@@ -75,7 +66,6 @@ class FakeMessaging(
         )
     }
 
-    /** The bodies sent to [to], in order: what the other side was told. */
     fun sentTo(to: SipAddress): List<String> =
         synchronized(sent) { sent.filter { it.to == to }.map { it.body } }
 

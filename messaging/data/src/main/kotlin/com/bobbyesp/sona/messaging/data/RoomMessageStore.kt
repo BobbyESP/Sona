@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-/** The messages the app keeps. Room stays an implementation detail. */
 fun SonaDatabase.messageStore(): MessageStore = RoomMessageStore(messageDao())
 
 internal class RoomMessageStore(private val dao: MessageDao) : MessageStore {
@@ -149,7 +148,7 @@ internal class RoomMessageStore(private val dao: MessageDao) : MessageStore {
 private inline fun <reified E : Enum<E>> enumOr(name: String?, fallback: E): E =
     enumValues<E>().firstOrNull { it.name == name } ?: fallback
 
-/** `null` for a row that means nothing anymore (an address that does not parse). */
+/** `null` for a row that cannot be read (an address that does not parse). */
 internal fun ConversationEntity.toConversation(): Conversation? {
     val peer = SipAddress.parse(peerUri) ?: return null
     return Conversation(

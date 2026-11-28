@@ -6,16 +6,12 @@ package com.bobbyesp.sona.core.navigation.keys
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-/**
- * A conversation, by its id in the messages' store. Opened from the Messages list, a message's
- * notification, and the *New message* screen once it knows who to write to.
- */
+/** A conversation, by its id in the messages' store. */
 @Serializable data class Conversation(val conversationId: Long) : NavKey
 
 /**
- * Writing to someone new. A party's *Message* opens it with the [address] already chosen (`102`,
- * `sip:ana@lab.local`) and, from a history entry, the [accountId] the call was on; with neither, it
- * starts at the search for a contact or a number.
+ * Writing to someone new. A party's *Message* opens it with [address] chosen, and with [accountId]
+ * for a history entry; with neither, it starts at the search.
  */
 @Serializable
 data class NewConversation(val address: String? = null, val accountId: String? = null) : NavKey

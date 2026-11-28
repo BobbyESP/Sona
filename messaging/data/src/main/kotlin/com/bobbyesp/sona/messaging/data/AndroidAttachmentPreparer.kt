@@ -27,15 +27,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
- * Makes a file the user picked ready to send: reads its name and type from the content resolver,
- * copies it into `files/messages/sent/` (so it can still be sent, and sent again, after the
- * picker's grant is gone) and works out its SHA-256 on the way. A picture is turned upright,
- * resized to [MAX_SIDE] px on its longest side and saved as JPEG at [QUALITY], unless the original
- * is asked for: at about 500 bytes of file per `MESSAGE`, every kilobyte saved is two fewer
- * messages.
+ * Copies a picked file into `files/messages/sent/`, so it can be sent again after the picker's
+ * grant is gone, hashing it on the way. A picture is turned upright, resized to [MAX_SIDE] px and
+ * saved as JPEG unless the original is asked for: at about 500 bytes of file per `MESSAGE`, size
+ * matters.
  *
- * Streams throughout: only a picture being resized is ever whole in memory, and only at the size it
- * is decoded to.
+ * Streams throughout: only a picture being resized is whole in memory.
  */
 class AndroidAttachmentPreparer(
     private val context: Context,
@@ -77,7 +74,6 @@ class AndroidAttachmentPreparer(
             }
         }
 
-    /** The name the picker gives, made safe, and the size it declares. */
     private fun describe(uri: Uri): Pair<String, Long?> {
         var name: String? = null
         var size: Long? = null
@@ -106,7 +102,7 @@ class AndroidAttachmentPreparer(
                 .getMimeTypeFromExtension(name.substringAfterLast('.', "").lowercase())
             ?: "application/octet-stream"
 
-    /** The file as it is, copied and hashed; refused past [limit] bytes, whatever was declared. */
+    /** Refused past [limit] bytes, whatever size was declared. */
     private fun copied(
         uri: Uri,
         name: String,
@@ -144,7 +140,7 @@ class AndroidAttachmentPreparer(
         )
     }
 
-    /** The picture upright, at most [MAX_SIDE] px, as JPEG; `null` when it cannot be decoded. */
+    /** `null` when the picture cannot be decoded. */
     private fun resized(uri: Uri, name: String, folder: File): PreparedAttachment? {
         val (width, height) = bounds(uri) ?: return null
         val options =

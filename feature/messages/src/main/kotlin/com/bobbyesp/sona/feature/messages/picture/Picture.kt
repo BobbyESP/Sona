@@ -70,7 +70,6 @@ internal data class PictureState(
     val gone: Boolean = false,
 )
 
-/** One picture of a conversation, by its message; follows it, so a deleted one closes. */
 internal class PictureViewModel(conversationId: Long, messageId: Long, messenger: Messenger) :
     BaseViewModel<Nothing, PictureState, Nothing>(PictureState()) {
 
@@ -100,9 +99,8 @@ internal fun PictureRoute(viewModel: PictureViewModel, onBack: () -> Unit) {
 }
 
 /**
- * A picture on the whole screen: pinch to zoom, drag to look around once zoomed, a double tap to go
- * back to the whole picture. *Share* hands it to another app by a grant; *Save* writes a copy where
- * the user picks, off the main thread.
+ * A picture on the whole screen, zoomable. *Share* lets another app read it by a grant; *Save*
+ * writes a copy where the user picks.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -207,7 +205,6 @@ private fun ZoomablePicture(uri: String, description: String?) {
     )
 }
 
-/** Hands the picture to another app (a chat, an e-mail), which may read it by the grant. */
 private fun Context.share(uri: String, mime: String) {
     val parsed = uri.toUri()
     val send =
@@ -219,7 +216,7 @@ private fun Context.share(uri: String, mime: String) {
     startActivity(Intent.createChooser(send, null))
 }
 
-/** Copies [from] to [to], on the IO dispatcher: a picture can be megabytes. */
+/** Off the main thread: a picture can be megabytes. */
 private suspend fun Context.copy(from: Uri, to: Uri): Boolean =
     withContext(Dispatchers.IO) {
         try {

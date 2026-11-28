@@ -29,19 +29,14 @@ import org.linphone.core.Factory
 import org.linphone.core.Reason
 
 /**
- * `MESSAGE` on liblinphone: one basic chat room per account and peer, plain `text/plain` bodies, no
- * CPIM, no IMDN, no is-composing (Sona's own receipts and typing travel in the bodies; see
- * docs/messaging.md). Everything here runs on the engine's Core thread ([dispatcher]); the engine
- * lends it its Core and its accounts, and forwards what the Core's listener hears.
+ * `MESSAGE` on liblinphone: a basic chat room per account and peer, `text/plain` bodies, no CPIM,
+ * IMDN or is-composing (receipts and typing travel in the bodies; docs/messaging.md). All of it
+ * runs on the Core thread ([dispatcher]).
  *
- * **Linphone keeps nothing the app depends on.** Its database stays on (calls are tested with it),
- * but no message stays there: an outgoing one is created not to be stored, and an incoming one is
- * deleted from Linphone's history once it is handed over. What Linphone keeps is an empty chat room
- * per peer, which nothing reads. The app's Room database is the only record.
+ * **The app's database is the only record.** Linphone's stays on (calls are tested with it), but
+ * outgoing messages are not stored in it and incoming ones are deleted once handed over; only an
+ * empty chat room per peer stays.
  *
- * @param core The engine's Core, while it runs.
- * @param lines The engine's accounts, each with what it was given.
- * @param registered Whether an account can send now.
  * @param later Runs a block on the Core thread once the current callback has returned.
  */
 internal class LinphoneMessaging(
@@ -52,16 +47,14 @@ internal class LinphoneMessaging(
     private val later: (() -> Unit) -> Unit,
 ) : SipMessaging {
 
-    /** An account as the engine bound it. */
     class Line(val account: Account, val spec: AccountSpec)
 
     private val inbox = Channel<ReceivedMessage>(Channel.UNLIMITED)
 
     override val received: Flow<ReceivedMessage> = inbox.receiveAsFlow()
 
-    // Only touched on the core thread: the messages waiting for the server's answer, held so their
-    // listener lives as long as they do; and the last ones received, so a message reported twice
-    // (once alone, once aggregated) is handed over once.
+    // Core thread only. Messages awaiting an answer are held so their listener lives as long; the
+    // last ones received, so one reported twice (alone and aggregated) is handed over once.
     private val inFlight = mutableMapOf<ChatMessage, CompletableDeferred<MessageSendResult>>()
     private val recent = ArrayDeque<String>()
 
@@ -75,8 +68,8 @@ internal class LinphoneMessaging(
         val answer = withContext(dispatcher) { sendNow(account, to, body) }
         return withTimeoutOrNull(ANSWER_TIMEOUT) { answer.await() }
             ?: withContext(dispatcher) {
-                // Linphone answers a request nobody answers itself (408, after 32 s): this is only
-                // for a message it never said anything more about.
+                // Linphone answers an unanswered request itself (408, after 32 s): this covers a
+                // message it never reports on.
                 inFlight.entries
                     .firstOrNull { it.value === answer }
                     ?.let { inFlight.remove(it.key) }
@@ -85,7 +78,6 @@ internal class LinphoneMessaging(
             }
     }
 
-    /** Sends [body] and gives what will hold the answer. Runs on the core thread. */
     private fun sendNow(
         account: AccountId,
         to: SipAddress,
@@ -130,7 +122,6 @@ internal class LinphoneMessaging(
 
     private fun failed(detail: String) = MessageSendResult.Failed(status = null, detail = detail)
 
-    /** The basic chat room of [account] with [peer]: the one Linphone has, or a new one. */
     private fun roomFor(core: Core, account: Account, peer: Address): ChatRoom? {
         val params = core.createConferenceParams(null)
         params.isChatEnabled = true
@@ -146,7 +137,6 @@ internal class LinphoneMessaging(
             ?: core.createChatRoom(params, participants)
     }
 
-    /** A message the Core received. Runs on the core thread, from the engine's listener. */
     fun onReceived(room: ChatRoom, message: ChatMessage) {
         if (message.isOutgoing) return
         val id = message.messageId

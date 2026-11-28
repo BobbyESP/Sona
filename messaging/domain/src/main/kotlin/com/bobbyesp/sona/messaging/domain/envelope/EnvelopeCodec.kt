@@ -10,34 +10,18 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * Sona's envelopes in and out of a `text/plain` body. A body is an envelope when its **last line**
- * is a `sona:1:` line, all printable ASCII; what is above it is the text of a part, or an offer's
- * words for a person. Ids are ten characters of base32; bytes travel as base64url without padding.
+ * Sona's envelopes in and out of a `text/plain` body. An envelope is a body whose **last line** is
+ * a `sona:1:` line in printable ASCII (formats: docs/messaging.md, Envelopes).
  *
- * ```
- * <text>⏎sona:1:t:<id>:<n>/<of>        part n of a text
- * <caption>⏎sona:1:offer:<json>        a file offered
- * sona:1:accept:<id>  sona:1:decline:<id>  sona:1:done:<id>  sona:1:cancel:<id>
- * sona:1:c:<id>:<index>:<bytes>        a chunk of a file
- * sona:1:miss:<id>:0-12,40,77-80       chunks still missing
- * sona:1:ack:<id>:<received>           progress
- * sona:1:fail:<id>:<reason>            the file could not be received
- * sona:1:rcpt:d:<ids>  sona:1:rcpt:r:<ids>  delivered, read
- * sona:1:typing  sona:1:hi
- * ```
- *
- * Decoding never fails: a body that is not exactly this is a [Envelope.Plain], shown as it came.
- * Encoding writes what it is given; the functions that build envelopes for a size limit
- * ([textParts], [chunkSize], [missFitting], [receiptsFitting], [offer]) keep every body within it.
+ * Decoding never fails: whatever is not exactly an envelope is [Envelope.Plain]. [textParts],
+ * [chunkSize], [missFitting], [receiptsFitting] and [offer] keep bodies within a size limit.
  */
 object EnvelopeCodec {
     const val PREFIX = "sona:1:"
     const val ID_LENGTH = 10
 
-    /** The most parts a text may be sent in. */
     const val MAX_TEXT_PARTS = 99
 
-    /** Decodes [body]; anything that is not a valid envelope is [Envelope.Plain]. */
     fun decode(body: String): Envelope = parse(body) ?: Envelope.Plain(body)
 
     fun encode(envelope: Envelope): String =
@@ -64,7 +48,7 @@ object EnvelopeCodec {
             Envelope.Hi -> PREFIX + "hi"
         }
 
-    /** A new id: ten characters of base32, about 50 bits of chance. */
+    /** Ten base32 characters: about 50 random bits. */
     fun newId(random: Random = Random.Default): String = buildString {
         repeat(ID_LENGTH) { append(BASE32[random.nextInt(BASE32.length)]) }
     }
@@ -74,9 +58,8 @@ object EnvelopeCodec {
     // --- Within a size limit ---------------------------------------------------------------
 
     /**
-     * The bodies that carry [text] within [limit] bytes: for a Sona peer, parts of the text [id]
-     * with their envelope line; for a plain one ([id] `null`), the parts alone. `null` when it
-     * takes more than [MAX_TEXT_PARTS] parts.
+     * The bodies that carry [text] within [limit] bytes, with an envelope line unless [id] is
+     * `null` (a plain peer). `null` past [MAX_TEXT_PARTS] parts.
      */
     fun textParts(text: String, limit: Int, id: String?): List<String>? {
         if (id == null) {
@@ -89,13 +72,11 @@ object EnvelopeCodec {
         }
     }
 
-    /** The bytes of file in each chunk, for bodies of at most [limit] bytes. */
     fun chunkSize(limit: Int): Int = (limit - CHUNK_OVERHEAD) / 4 * 3
 
-    /** How many chunks of [chunkSize] a file of [size] bytes takes. */
     fun chunksOf(size: Long, chunkSize: Int): Int = ((size + chunkSize - 1) / chunkSize).toInt()
 
-    /** As many of [missing] (in order) as one `miss` of [id] can ask for within [limit] bytes. */
+    /** As many of [missing], in order, as one `miss` can ask for within [limit] bytes. */
     fun missFitting(id: String, missing: List<IntRange>, limit: Int): Envelope.Miss {
         var budget = limit - (PREFIX.length + "miss:".length + ID_LENGTH + 1)
         val kept = mutableListOf<IntRange>()
@@ -108,7 +89,6 @@ object EnvelopeCodec {
         return Envelope.Miss(id, kept)
     }
 
-    /** [ids] as receipts, as few as fit within [limit] bytes each. */
     fun receiptsFitting(read: Boolean, ids: List<String>, limit: Int): List<Envelope.Receipt> {
         val perReceipt = (limit - RECEIPT_OVERHEAD + 1) / (ID_LENGTH + 1)
         return ids.distinct().chunked(perReceipt.coerceAtLeast(1)).map {
@@ -117,11 +97,10 @@ object EnvelopeCodec {
     }
 
     /**
-     * The body offering [offer] within [limit] bytes, with [caption] above for a person: the name
-     * is shortened (in both) until it fits, keeping its extension. `null` when even the shortest
-     * does not fit.
+     * The body offering [offer]. The name is shortened, keeping its extension, until the body fits
+     * in [limit] bytes; `null` if it never does.
      *
-     * @param caption What to say of the file under a name, for a plain phone's reader.
+     * @param caption The words for a plain phone's reader.
      */
     fun offer(offer: FileOffer, limit: Int, caption: (name: String) -> String): String? {
         // The name the receiver will keep: what it reads is what the caption says.

@@ -32,7 +32,6 @@ import com.bobbyesp.sona.calling.domain.CallQuality
 import com.bobbyesp.sona.calling.ui.label
 import com.bobbyesp.sona.feature.call.R
 
-/** How many of the three bars a grade lights: none before anything was measured. */
 internal val CallQuality?.bars: Int
     get() =
         when (this) {
@@ -43,10 +42,10 @@ internal val CallQuality?.bars: Int
         }
 
 /**
- * The quality indicator: three bars, lit by [quality], with its word for TalkBack (never only a
- * color: the count of bars says it too). A tap opens the statistics, when [onClick] is given.
+ * Three bars lit by [quality]: their count, not only the color, tells the grade, and TalkBack gets
+ * its word.
  *
- * @param showLabel Writes the word beside the bars, where there is room (the audio screen).
+ * @param showLabel Writes the word beside the bars.
  */
 @Composable
 internal fun QualityIndicator(

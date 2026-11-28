@@ -22,8 +22,8 @@ internal enum class Corner {
 }
 
 /**
- * The top-left offset of a [tile] resting in [corner] of [area], [margin] from its edges. Left to
- * right; [rtl] puts the start on the right.
+ * The top-left offset of a [tile] resting in [corner] of [area], [margin] from its edges. With
+ * [rtl], the start is on the right.
  */
 internal fun cornerOffset(
     corner: Corner,
@@ -39,9 +39,8 @@ internal fun cornerOffset(
 }
 
 /**
- * The corner a [tile] let go at [offset] (its top-left) snaps to: the one its centre is nearest, so
- * it lands where the finger was taking it. A fling carries it further: [velocity] (px/s) moves the
- * centre by a short projection first.
+ * The corner nearest the centre of a [tile] let go at [offset], its top-left. A fling's [velocity]
+ * (px/s) first projects the centre ahead.
  */
 internal fun nearestCorner(
     offset: Offset,
@@ -62,12 +61,11 @@ internal fun nearestCorner(
     }
 }
 
-/** How far ahead a fling's velocity is projected, in seconds. */
 private const val FLING_PROJECTION_S = 0.15f
 
 /**
- * The size a picture of [video]'s aspect takes in [area]: whole and letterboxed ([fill] false), or
- * covering the area and cropped ([fill] true). An unknown size fills the area as it is.
+ * The size of [video]'s picture in [area]: letterboxed, or cropped to cover it when [fill]. An
+ * unknown size takes the area.
  */
 internal fun videoFrame(area: Size, video: VideoSize?, fill: Boolean): Size {
     if (video == null || video.width <= 0 || video.height <= 0) return area

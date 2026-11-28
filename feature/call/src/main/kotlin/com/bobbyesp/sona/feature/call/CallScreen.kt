@@ -150,7 +150,7 @@ fun CallRoute(
     val viewModel: CallViewModel = koinViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.closed) { if (state.closed) onClosed() }
-    // Measured while shown: Picture-in-Picture is still started, the home screen is not.
+    // Picture-in-Picture counts as shown: the activity is still started.
     LifecycleStartEffect(viewModel) {
         viewModel.onSendIntent(CallIntent.Shown(true))
         onStopOrDispose { viewModel.onSendIntent(CallIntent.Shown(false)) }
@@ -165,18 +165,14 @@ fun CallRoute(
 }
 
 /**
- * What the screen does that needs Android first: a permission asked at the moment it is needed, or
- * the app's settings opened. Each ends in an intent; the coordinator decides the rest.
+ * What needs Android first: a permission asked at the moment it is needed, or the app's settings.
+ * Each ends in an intent.
  */
 @Stable
 internal class CallActions(
-    /** Answers (audio, or *Answer audio only*), after asking for the microphone. */
     val answer: () -> Unit,
-    /** *Answer with video*, after asking for the microphone and the camera. */
     val answerWithVideo: () -> Unit,
-    /** The camera on (after asking for it) or off. */
     val camera: (Boolean) -> Unit,
-    /** The app's page in Android's settings, where a refused permission is given back. */
     val openAppSettings: () -> Unit,
 )
 
@@ -184,8 +180,8 @@ internal class CallActions(
 private fun rememberCallActions(onIntent: (CallIntent) -> Unit): CallActions {
     val context = LocalContext.current
     val send by rememberUpdatedState(onIntent)
-    // A refusal still answers: a call heard one way is better than one that rings on. And a
-    // camera refused still asks: the coordinator then keeps it off and says why.
+    // A refusal still answers: a call heard one way beats one that rings on. After a refused camera
+    // too, so the coordinator can say why it is off.
     val answerAsked =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             send(CallIntent.Answer)
@@ -248,8 +244,8 @@ internal fun CallScreen(
     KeepScreenOn(active = !call.isOver)
 
     SonaAccentTheme(accent = state.account?.color?.let(::Color)) {
-        // The activity draws nothing under this screen: the surface is what makes text and icons
-        // take the theme's color (black otherwise). Inside the accent theme, to take its color.
+        // The activity draws nothing below: without a surface, text and icons are black. Inside the
+        // accent theme, to take its colors.
         Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             when {
                 pictureInPicture ->
@@ -271,7 +267,6 @@ internal fun CallScreen(
     }
 }
 
-/** A call without video on: who, how it goes, the controls; as an incoming call, the answer. */
 @Composable
 private fun AudioCallScreen(
     state: CallUiState,
@@ -282,7 +277,7 @@ private fun AudioCallScreen(
     val context = LocalContext.current
     val ringing = call.state == CallState.Incoming
     val offersVideo = ringing && call.videoOffered && state.videoAvailable
-    // Behind an incoming video call, this side's camera, when the camera may be used already.
+    // This side's camera behind an incoming video call, only with the permission already granted.
     val backdrop = offersVideo && context.has(Manifest.permission.CAMERA)
     val behind = rememberBlurSource()
     val colors = MaterialTheme.colorScheme
@@ -294,8 +289,8 @@ private fun AudioCallScreen(
                 PreviewBackdrop(call, Modifier.fillMaxSize())
                 Box(Modifier.fillMaxSize().background(colors.surface.copy(alpha = BackdropVeil)))
             }
-            // Spread over the screen when it fits, scrolled when it does not (a large font, a
-            // phone lying down): nothing is cut.
+            // Scrolls only when it does not fit (a large font, a phone lying down), so nothing is
+            // cut.
             BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding()) {
                 Column(
                     modifier =
@@ -355,7 +350,6 @@ private fun AudioCallScreen(
     }
 }
 
-/** The account the call is on, how well it gets through, and the other call waiting, if any. */
 @Composable
 private fun Header(state: CallUiState, onIntent: (CallIntent) -> Unit) {
     val call = state.call
@@ -409,11 +403,10 @@ private fun Header(state: CallUiState, onIntent: (CallIntent) -> Unit) {
 }
 
 /**
- * What the screen has to say beyond the call's state, one at a time, the most pressing first: the
- * camera is off because Sona may not use it; the connection is too weak for the video; the other
- * side turned its camera on. Each with what can be done about it.
+ * One banner at a time, the most pressing first: camera blocked, weak connection, the other side's
+ * video.
  *
- * Frosted over [behind] when given (the video screen); a solid container otherwise.
+ * Frosted over [behind] when given; solid otherwise.
  */
 @Composable
 internal fun CallBanners(
@@ -562,8 +555,8 @@ private fun Caller(call: Call) {
 }
 
 /**
- * Someone's mark: the first letter of [title] on a Material shape, turning and breathing while
- * [ringing] (both read while drawing, so a frame never recomposes).
+ * The first letter of [title] on a Material shape, animated while [ringing]. The animation is read
+ * while drawing, so a frame never recomposes.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -931,10 +924,7 @@ private fun AudioRouteKind?.icon(): ImageVector =
         else -> Icons.Rounded.PhoneInTalk
     }
 
-/**
- * A control of the call: a toggle whose shape squares when on, so its state reads from afar. Its
- * label wraps at a large font rather than being cut.
- */
+/** A toggle whose shape squares when on, so its state reads from afar. */
 @Composable
 private fun CallControl(
     icon: ImageVector,
@@ -1009,8 +999,8 @@ private fun KeepScreenOn(active: Boolean) {
 }
 
 /**
- * Reports how the display is turned, in degrees, now and on every change (a quarter turn that
- * changes no configuration included: 90 to 270), so the picture sent stays upright.
+ * Reports the display's rotation in degrees. It takes a [DisplayManager] listener: a half turn (90
+ * to 270) changes no configuration.
  */
 @Composable
 private fun DisplayRotation(onRotation: (Int) -> Unit) {
@@ -1040,7 +1030,7 @@ private fun DisplayRotation(onRotation: (Int) -> Unit) {
 
 private const val QUARTER_TURN = 90
 
-/** How much of the surface lies over the camera behind an incoming video call. */
+/** Opacity of the surface over the preview behind an incoming video call. */
 private const val BackdropVeil = 0.6f
 
 /** An ended call's reason in a sentence; [who] is the other side's extension or name. */
@@ -1075,5 +1065,4 @@ fun callPermissions(): Array<String> =
         arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.POST_NOTIFICATIONS)
     else arrayOf(Manifest.permission.RECORD_AUDIO)
 
-/** What a video call needs: what a call does, and the camera. */
 internal fun videoCallPermissions(): Array<String> = callPermissions() + Manifest.permission.CAMERA

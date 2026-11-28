@@ -75,18 +75,16 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * A video call's pictures: the other side's filling the stage, this side's camera on a floating
- * tile that is dragged to a corner and snaps there on the theme's spatial spring; a tap on the tile
- * swaps the two. The views are [TextureView]s handed to [VideoSurfaces] for as long as the call is
- * on screen, and handed back when it goes.
+ * The other side's picture fills the stage; this side's camera is a tile, dragged to snap to a
+ * corner and tapped to swap the two. The [TextureView]s go to [VideoSurfaces] while on screen.
  *
- * Both pictures keep their place in the composition when they swap (only their modifiers change),
- * so a swap moves a view and never builds one again: the engine keeps drawing on the same window.
+ * A swap only changes modifiers, so no view is rebuilt and the engine keeps drawing on the same
+ * window.
  *
  * @param fill Whether the big picture covers the stage (cropped) or fits in it whole.
  * @param swapped Whether this side's camera is the big picture.
  * @param tileInsets What the tile keeps clear of: the system bars, and the controls.
- * @param showTile `false` in Picture-in-Picture, which shows the other side alone.
+ * @param showTile `false` shows the other side alone.
  */
 @Composable
 internal fun VideoStage(
@@ -239,7 +237,6 @@ internal fun VideoStage(
             }
         }
 
-        // This side's camera, while it is sent: on the tile, or big when swapped.
         if (showTile && video != null) {
             val localBig = swapped
             Box((if (localBig) big else tile).clipToBounds()) {
@@ -265,7 +262,7 @@ internal fun VideoStage(
     }
 }
 
-/** Only the other side's picture: Picture-in-Picture, and the incoming call's backdrop. */
+/** The other side's picture alone, for Picture-in-Picture. */
 @Composable
 internal fun RemoteVideoOnly(call: Call, paused: Boolean, modifier: Modifier = Modifier) {
     VideoStage(
@@ -285,9 +282,8 @@ internal fun RemoteVideoOnly(call: Call, paused: Boolean, modifier: Modifier = M
 }
 
 /**
- * This side's camera alone, mirrored as the front camera is: what is behind an incoming video call
- * while it rings, when the camera may already be used. The engine runs the preview while this view
- * is attached, without sending anything (docs/video.md).
+ * This side's camera, mirrored, behind a ringing video call. The engine runs the preview while the
+ * view is attached, sending nothing (docs/video.md).
  */
 @Composable
 internal fun PreviewBackdrop(call: Call, modifier: Modifier = Modifier) {
@@ -309,8 +305,8 @@ internal fun PreviewBackdrop(call: Call, modifier: Modifier = Modifier) {
 }
 
 /**
- * Lays its one child out at [video]'s aspect within the space it is given, centred: whole, or
- * covering it when [fill] (the parent clips what overflows). An unknown size takes the space.
+ * Centres its child at [video]'s aspect: whole, or covering the space when [fill] (the parent
+ * clips). An unknown size takes the space.
  */
 @Composable
 internal fun AspectVideo(
@@ -330,7 +326,6 @@ internal fun AspectVideo(
     }
 }
 
-/** Who is not sending: their mark on its Material shape, as the audio screen shows them. */
 @Composable
 private fun Placeholder(call: Call?, text: String, small: Boolean) {
     val colors = MaterialTheme.colorScheme
@@ -369,7 +364,6 @@ private fun Placeholder(call: Call?, text: String, small: Boolean) {
     }
 }
 
-/** The last frame, dimmed, under "Video paused". */
 @Composable
 private fun Paused(small: Boolean) {
     val colors = MaterialTheme.colorScheme
@@ -378,8 +372,7 @@ private fun Paused(small: Boolean) {
         Modifier.fillMaxSize().background(colors.scrim.copy(alpha = PausedDim)),
         contentAlignment = Alignment.Center,
     ) {
-        // On a surface of its own: the scrim is black in both themes, and no one text color of
-        // the scheme reads on it in both.
+        // The scrim is black in both themes: no one text color of the scheme reads on it in both.
         Surface(shape = CircleShape, color = colors.surfaceContainerHigh) {
             Row(
                 modifier = Modifier.padding(if (small) 8.dp else 12.dp),
@@ -395,7 +388,6 @@ private fun Paused(small: Boolean) {
 
 private data class Insets(val left: Float, val top: Float, val right: Float, val bottom: Float)
 
-/** The tile, upright on an upright stage and lying on a wide one. */
 private fun tileSize(stage: Size, short: Float, long: Float): Size =
     if (stage.width >= stage.height) Size(long, short) else Size(short, long)
 

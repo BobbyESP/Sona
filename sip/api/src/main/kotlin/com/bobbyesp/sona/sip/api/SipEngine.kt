@@ -58,9 +58,8 @@ interface SipEngine {
     suspend fun dial(account: AccountId, to: SipAddress, video: Boolean = false): DialResult
 
     /**
-     * Answers an incoming call, with this side's camera on when [video]. Without it, video the
-     * caller offered is still taken receive-only when [VideoConfig.acceptRemoteVideo] says so: the
-     * caller is seen, this side's camera stays off.
+     * Answers an incoming call, with this side's camera on when [video]. Without it, offered video
+     * is still received if [VideoConfig.acceptRemoteVideo].
      */
     suspend fun answer(call: CallId, video: Boolean = false)
 
@@ -84,26 +83,23 @@ interface SipEngine {
     suspend fun setAudioDevice(call: CallId, device: AudioDeviceKind)
 
     /**
-     * Asks for [call]'s video directions (a re-INVITE): [send] this side's camera, [receive] the
-     * other side's picture. Both `false` drops the video stream and keeps the voice; turning the
-     * camera off is `send = false`, so nothing is sent and the other side shows its placeholder. An
-     * engine without [Capability.VideoCalls] ignores it.
+     * Re-INVITEs for new video directions. Both `false` drops the stream and keeps the voice.
+     * Ignored without [Capability.VideoCalls].
      */
     suspend fun setVideo(call: CallId, send: Boolean, receive: Boolean)
 
-    /** Sends [call] from the phone's other camera, front or back, without renegotiating. */
+    /** Switches to the other camera, without renegotiating. */
     suspend fun switchCamera(call: CallId)
 
     /**
-     * How the display is turned, in degrees (0, 90, 180, 270), so the picture sent stays upright.
-     * One for the whole engine: it is the phone that turns.
+     * How the display is turned (0, 90, 180 or 270 degrees), so the picture sent stays upright. One
+     * for the whole engine.
      */
     suspend fun setDeviceRotation(degrees: Int)
 
     /**
-     * [call]'s numbers once a second, the first at once, until the call ends. Measured only while
-     * collected (the statistics panel, the quality indicator): nobody looking costs nothing. Empty
-     * for a call the engine does not have, and on an engine without [Capability.CallStats].
+     * [call]'s numbers once a second, the first at once, until it ends; measured only while
+     * collected. Empty for an unknown call, and without [Capability.CallStats].
      */
     fun statistics(call: CallId): Flow<CallStatistics>
 
@@ -119,7 +115,6 @@ interface SipEngine {
 
     suspend fun clearTrace()
 
-    /** `MESSAGE` out of a dialog, on the same accounts. See [SipMessaging]. */
     val messaging: SipMessaging
 }
 
@@ -174,7 +169,6 @@ data class EngineConfig(
     val wifiOnly: Boolean = false,
     /** Keep the SIP messages in [SipEngine.trace] as they go by. */
     val captureTrace: Boolean = false,
-    /** How calls carry video, and what the network in use allows them. */
     val video: VideoConfig = VideoConfig(),
 )
 

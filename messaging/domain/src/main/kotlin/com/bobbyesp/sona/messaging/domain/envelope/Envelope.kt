@@ -4,19 +4,16 @@
 package com.bobbyesp.sona.messaging.domain.envelope
 
 /**
- * What a `MESSAGE` body means: a plain text, or one of Sona's envelopes. A body is an envelope when
- * its last line is a valid `sona:1:` line, all ASCII; anything else, a malformed envelope included,
- * is [Plain] and shown as it came. The wire format is [EnvelopeCodec]'s, and docs/messaging.md,
- * Envelopes.
+ * What a `MESSAGE` body means: a plain text, or one of Sona's envelopes. The wire format is
+ * [EnvelopeCodec]'s (docs/messaging.md, Envelopes).
  */
 sealed interface Envelope {
     /** A body that is not an envelope: shown as it came. */
     data class Plain(val text: String) : Envelope
 
     /**
-     * Part [part] of [of] (from 1) of the text [id]: the parts of a text, put together in order,
-     * are the text. The part travels above the envelope line, so it may hold anything, new lines
-     * included.
+     * Part [part] of [of], from 1, of the text [id]. It travels above the envelope line, so it may
+     * hold anything.
      */
     data class Text(val id: String, val part: Int, val of: Int, val text: String) : Envelope
 
@@ -40,10 +37,8 @@ sealed interface Envelope {
         override fun toString(): String = "Chunk($id, $index, ${bytes.size} bytes)"
     }
 
-    /** The chunks of [id] the receiver still lacks, asked for again. */
     data class Miss(val id: String, val ranges: List<IntRange>) : Envelope
 
-    /** The receiver has [received] chunks of [id]. */
     data class Ack(val id: String, val received: Int) : Envelope
 
     /** The file [id] arrived whole: its SHA-256 matched. */
@@ -52,13 +47,11 @@ sealed interface Envelope {
     /** The file [id] could not be received; [reason] is a short word (`hash`, `timeout`). */
     data class Fail(val id: String, val reason: String) : Envelope
 
-    /** Either side stopped the transfer of [id]. */
     data class Cancel(val id: String) : Envelope
 
     /** The texts (or files) [ids] were delivered to, or [read] on, the other phone. */
     data class Receipt(val read: Boolean, val ids: List<String>) : Envelope
 
-    /** The other side is writing. */
     data object Typing : Envelope
 
     /** "I am Sona": the answer to the first envelope from a peer not yet known. */
@@ -69,9 +62,7 @@ sealed interface Envelope {
  * A file as its offer describes it.
  *
  * @property sha256 Lowercase hex, 64 characters.
- * @property chunk The bytes of file in each chunk but the last; [chunks] is `size / chunk`, rounded
- *   up.
- * @property width, [height] A picture's size, when it is one.
+ * @property chunk The bytes in each chunk but the last.
  */
 data class FileOffer(
     val id: String,
@@ -87,12 +78,9 @@ data class FileOffer(
 
 /** Why a receiver could not take a file, as [Envelope.Fail] says it. */
 object FailReasons {
-    /** The SHA-256 of what arrived was not the one offered. */
     const val HASH = "hash"
 
-    /** Chunks stopped coming. */
     const val TIMEOUT = "timeout"
 
-    /** The receiver could not write the file. */
     const val STORAGE = "storage"
 }

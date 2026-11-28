@@ -14,25 +14,19 @@ import com.bobbyesp.sona.sip.api.VideoConfig
 import com.bobbyesp.sona.sip.api.VideoFrames
 import kotlin.random.Random
 
-/**
- * What the network between the two sides does to a call's media, as the fake plays it: the
- * statistics wander around these numbers.
- */
+/** The network the fake's statistics wander around. */
 data class FakeNetwork(val lossPercent: Float, val jitterMs: Float, val roundTripMs: Float) {
     companion object {
-        /** A good Wi-Fi: nearly nothing lost, little jitter. */
         val Good = FakeNetwork(lossPercent = 0.3f, jitterMs = 6f, roundTripMs = 45f)
 
-        /** A weak mobile link, the one that makes the quality indicator say Poor. */
+        /** Makes the quality indicator say Poor. */
         val Weak = FakeNetwork(lossPercent = 9f, jitterMs = 80f, roundTripMs = 520f)
     }
 }
 
 /**
- * One call's numbers as the fake measures them, a second at a time: a random walk pulled towards
- * the network's, from a seed, so a test sees the same numbers every run. Counters grow by what a
- * second of the call carries; the video's bitrate and frame rate shrink with loss, as adaptive rate
- * control would make them.
+ * A seeded random walk around the network's numbers, the same on every run. Loss shrinks the video,
+ * as adaptive rate control would.
  */
 internal class FakeMeter(seed: Int) {
     private val random = Random(seed)

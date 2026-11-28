@@ -8,23 +8,17 @@ import com.bobbyesp.sona.sip.api.MessageSendResult
 import com.bobbyesp.sona.sip.api.SipStatus
 import org.linphone.core.ChatMessage.State as MessageState
 
-/*
- * What Linphone says about a `MESSAGE`, in Sona's words. Pure functions, tested on the JVM, as
- * LinphoneMapper's are for calls and registrations.
- */
+/* What Linphone says about a `MESSAGE`, in Sona's words, as pure functions. */
 
 /**
- * The final answer for a message in [state], or `null` while it is not final (`Idle`, `InProgress`,
- * `Queued`, `PendingDelivery`): the sender keeps waiting.
+ * The final answer for a message in [state], or `null` while it is not final. Without IMDN, which
+ * Sona never asks for, a `2xx` ends at `Delivered`; `DeliveredToUser` and `Displayed` would mean
+ * the same here.
  *
- * A basic chat room without IMDN ends at `Delivered` once the server answered `2xx` (Asterisk's
- * `202 Accepted`); `DeliveredToUser` and `Displayed` would need IMDN, which Sona never asks for,
- * and mean the same here.
- *
- * @param code, [phrase] The status Linphone recorded for the transaction; `0` when there was none.
+ * @param code The SIP status Linphone recorded, `0` when none; [phrase] is its text.
  * @param sendFailed Linphone could not send at all (its local `503 io error`): no server answered,
- *   whatever the code says, as with registrations.
- * @param server Where the account sends, for the line that says what was tried.
+ *   whatever the code says.
+ * @param server Where the account sends, for the technical line.
  */
 internal fun messageResultOf(
     state: MessageState,
@@ -61,13 +55,11 @@ private fun String?.orDefault(code: Int): String =
     this?.takeIf { it.isNotBlank() } ?: if (code in 200..299) "OK" else "Error"
 
 /**
- * The account a message came to: the one Linphone matched it to, then the one whose identity it was
- * addressed to, then the only account there is. `null` when several accounts could be it and none
- * matched: the engine does not guess, and the messaging domain puts it on the default account.
+ * The account a message came to: the one Linphone matched, else the one it was addressed to, else
+ * the only one. `null` otherwise, and the messaging domain uses the default account.
  *
- * @param matched The account Linphone's chat room is on, if any of [identities].
- * @param identities Each account's user and domain, as `user@domain` without the scheme.
- * @param to The `To` header's user and domain, the same way.
+ * @param identities Each account as `user@domain`, without the scheme; [to] is written the same
+ *   way.
  */
 internal fun accountOfMessage(
     matched: AccountId?,

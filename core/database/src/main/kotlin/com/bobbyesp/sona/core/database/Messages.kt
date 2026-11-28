@@ -18,10 +18,7 @@ import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
-/*
- * Messages (schema 4, docs/messaging.md, Storage). The app's only record of them: Linphone keeps
- * nothing. Enums are kept by name, addresses as SIP URIs.
- */
+/* Messages (docs/messaging.md, Storage). Enums are kept by name, addresses as SIP URIs. */
 
 /** One per account and peer. */
 @Entity(
@@ -75,7 +72,6 @@ data class MessageEntity(
     val sizeLimit: Int?,
 )
 
-/** A message's file, and how its transfer goes. */
 @Entity(
     tableName = "attachments",
     foreignKeys =
@@ -160,7 +156,6 @@ data class MessageWithAttachment(
     @Relation(parentColumn = "id", entityColumn = "messageId") val attachment: AttachmentEntity?,
 )
 
-/** A conversation with what a list shows of it. */
 data class ConversationRow(
     @Embedded val conversation: ConversationEntity,
     val unread: Int,
@@ -272,7 +267,6 @@ interface MessageDao {
     @Query("DELETE FROM message_parts WHERE conversationId = :conversation AND envelopeId = :id")
     suspend fun deleteParts(conversation: Long, id: String)
 
-    /** A conversation, made when there is none; the one there is otherwise. */
     @Transaction
     suspend fun openConversation(entity: ConversationEntity): ConversationEntity {
         findConversation(entity.accountId, entity.peerUri)?.let {
@@ -282,7 +276,7 @@ interface MessageDao {
         return conversation(id) ?: findConversation(entity.accountId, entity.peerUri)!!
     }
 
-    /** A message and its file; its conversation moves up. Gives its id. */
+    /** Its conversation moves up. Returns the message's id. */
     @Transaction
     suspend fun add(message: MessageEntity, attachment: AttachmentEntity?): Long {
         val id = insertMessage(message.copy(id = 0))

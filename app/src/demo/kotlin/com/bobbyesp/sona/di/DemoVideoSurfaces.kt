@@ -29,13 +29,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * The demo flavor's video: test patterns painted on the call screen's views, so the whole video
- * screen runs without a camera or a server. The other side's view shows moving colour bars while
- * the fake other side sends; the preview shows a pattern of its own while a view shows it (behind a
- * ringing video call too, as on Linphone); either is black otherwise, as a real stream would be.
- *
- * One background thread paints, about 30 times a second, and only while a view is attached: with
- * none, nothing runs.
+ * The demo flavor's video: test patterns painted on the call screen's views, so the video screen
+ * runs without a camera or a server. One background thread paints about 30 times a second, and only
+ * while a view is attached.
  */
 internal class DemoVideoSurfaces(private val engine: SipEngine, scope: CoroutineScope) :
     VideoSurfaces {
@@ -65,7 +61,6 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
             else Attached(call, remoteView, previewView)
     }
 
-    /** Paints [target] until another attachment replaces it, then lets its surfaces go. */
     private suspend fun paint(target: Attached) {
         val remote = Target(target.remote)
         val preview = Target(target.preview)
@@ -86,7 +81,6 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
         }
     }
 
-    /** The other side: colour bars, a line sweeping across, a ball and a running clock. */
     private fun bars(canvas: Canvas, frame: Long, @Suppress("UNUSED_PARAMETER") video: CallVideo?) {
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
@@ -102,7 +96,6 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
         paint.color = Color.WHITE
         canvas.drawRect(sweep, 0f, sweep + width / 80f, height * 0.75f, paint)
 
-        // A ball bouncing from side to side, and up and down a little.
         val radius = minOf(width, height) / 12f
         val span = (width - 2 * radius).coerceAtLeast(1f)
         val travelled = frame * 5f % (2 * span)
@@ -121,7 +114,7 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
         )
     }
 
-    /** This side's camera: drifting stripes and a pulse, tinted by which camera is "on". */
+    /** Tinted by which camera is "on". */
     private fun waves(canvas: Canvas, frame: Long, video: CallVideo?) {
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
@@ -141,10 +134,7 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
         canvas.drawCircle(width / 2f, height / 2f, minOf(width, height) / 5f * pulse, paint)
     }
 
-    /**
-     * One view, drawn from this thread through a `Surface` of its texture. The view's texture comes
-     * and goes with the view (laid out, detached): each frame takes the one it has now, or skips.
-     */
+    /** The view's texture comes and goes with it: each frame takes the current one, or skips. */
     private class Target(private val view: TextureView?) {
         private var texture: SurfaceTexture? = null
         private var surface: Surface? = null

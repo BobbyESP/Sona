@@ -46,9 +46,8 @@ import com.bobbyesp.sona.sip.api.IceState
 import com.bobbyesp.sona.sip.api.StreamStatistics
 
 /**
- * The call's numbers, a second at a time: what the engine measures of each stream and how the call
- * travels, with the bitrate and the frame rate of the last minute drawn as sparklines. The host
- * puts it on a frosted surface; it is only composed while open, and only then are the numbers kept.
+ * The call's numbers per stream and transport, with sparklines of the last minute. Composed only
+ * while open; the host provides the surface.
  */
 @Composable
 internal fun StatisticsPanel(
@@ -170,10 +169,7 @@ private fun Section(title: Int, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp), content = content)
 }
 
-/**
- * One number and what it is. The two wrap onto two lines rather than cut either at a large font: a
- * label never pushes its value out of sight.
- */
+/** Label and value wrap onto two lines at a large font, so neither is cut. */
 @Composable
 private fun Line(label: Int, value: String) {
     FlowRow(
@@ -196,7 +192,6 @@ private fun Line(label: Int, value: String) {
     }
 }
 
-/** A sparkline of two series (up and down, sent and received), each in its own color. */
 @Composable
 private fun Spark(
     title: Int,
@@ -236,8 +231,8 @@ private fun Legend(color: Color) {
 }
 
 /**
- * The lines of [first] and [second] on one scale (their highest value at the top), the newest at
- * the right edge, a minute wide whatever is filled yet. Drawn, never composed per point.
+ * [first] and [second] on one scale, the newest at the right edge, [capacity] samples wide even
+ * while filling.
  */
 @Composable
 internal fun Sparkline(

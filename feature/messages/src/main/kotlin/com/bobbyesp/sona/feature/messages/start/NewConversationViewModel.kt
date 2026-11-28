@@ -19,22 +19,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 
-/** Why no conversation was opened. */
 internal enum class StartProblem {
-    /** There is no account to write from. */
     NoAccount,
-
-    /** What was typed is not a number nor an address. */
     NotAnAddress,
-
-    /** The account chosen is gone. */
     AccountGone,
 }
 
 internal data class NewConversationState(
     val loaded: Boolean = false,
     val query: String = "",
-    /** The contacts with a number, that the query leaves. */
     val contacts: List<Contact> = emptyList(),
     val accounts: List<Account> = emptyList(),
     /** The account the conversation will be on: the one asked for, else the default. */
@@ -42,7 +35,7 @@ internal data class NewConversationState(
     /** What the typed text would be written to (`sip:102@lab.local`); `null` when it is none. */
     val typedAddress: String? = null,
     val problem: StartProblem? = null,
-    /** A conversation is being opened: the screen waits rather than taking a second tap. */
+    /** While a conversation is opening, a second tap is not taken. */
     val opening: Boolean = false,
     /**
      * The conversation opened, for the screen to give way to. State rather than an effect: opened
@@ -50,7 +43,6 @@ internal data class NewConversationState(
      */
     val opened: ConversationId? = null,
 ) {
-    /** The account picker is shown only when there is a choice to make. */
     val choosesAccount: Boolean
         get() = accounts.size > 1
 
@@ -63,17 +55,14 @@ internal sealed interface NewConversationIntent {
 
     data class ChooseAccount(val id: AccountId) : NewConversationIntent
 
-    /** A contact's number was tapped. */
     data class Pick(val number: String) : NewConversationIntent
 
-    /** *Write to …* for what was typed. */
     data object WriteTyped : NewConversationIntent
 }
 
 /**
- * *New message*: who to write to, from the contacts or typed as the keypad takes it (`102`, `+34…`,
- * `ana@lab.local`), and from which account when there are several. Opened with an address (a
- * party's *Message*), it goes straight to the conversation when there is no account to choose.
+ * Who to write to, and from which account. Opened with an address, it goes straight to the
+ * conversation when there is no account to choose.
  */
 internal class NewConversationViewModel(
     key: NewConversation,
@@ -170,7 +159,6 @@ internal class NewConversationViewModel(
     }
 }
 
-/** Whether [query] is in the name or, as digits, in one of the numbers. */
 internal fun Contact.matches(query: String): Boolean {
     val text = query.trim()
     if (text.isEmpty()) return true

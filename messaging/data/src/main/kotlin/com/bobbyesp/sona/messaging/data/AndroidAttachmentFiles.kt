@@ -15,12 +15,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
- * The files of messages, in `files/messages/` of the app's own storage: `sent/` holds the copies
- * made to send, `received/` the files that arrived whole, `incoming/` one file per transfer still
- * coming in, written in place chunk by chunk. Nothing here reads a whole file into memory, and
- * nothing outside `files/messages/` is ever touched, whatever path is given.
- *
- * Shared with other apps only through [MessageFileProvider], one file at a time, by a grant.
+ * Message files, under `files/messages/`: `sent/`, `received/` and `incoming/`, written in place
+ * chunk by chunk. It never reads a whole file into memory, nor touches anything outside that
+ * folder, whatever path is given. Other apps reach them only through [MessageFileProvider].
  */
 class AndroidAttachmentFiles(
     private val context: Context,
@@ -150,5 +147,4 @@ class AndroidAttachmentFiles(
     }
 }
 
-/** Opens message files to other apps, one at a time and only by a grant. */
 class MessageFileProvider : FileProvider(R.xml.message_files)

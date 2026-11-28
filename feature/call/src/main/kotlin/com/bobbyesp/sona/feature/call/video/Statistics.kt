@@ -11,10 +11,7 @@ import com.bobbyesp.sona.sip.api.Transport
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/**
- * The statistics panel's last minute, for its sparklines: the bitrate up and down (both streams)
- * and the frame rate sent and received, a sample a second.
- */
+/** A minute of bitrate (both streams) and frame rate, for the panel's sparklines. */
 internal class StatsHistory(capacity: Int = SECONDS) {
     private val up = RingBuffer(capacity)
     private val down = RingBuffer(capacity)
@@ -46,12 +43,11 @@ internal class StatsHistory(capacity: Int = SECONDS) {
         )
 
     companion object {
-        /** A minute, at a sample a second. */
         const val SECONDS = 60
     }
 }
 
-/** A copy of [StatsHistory] at one moment, oldest first; never changed once made. */
+/** A snapshot of [StatsHistory], oldest first. */
 @Immutable
 internal class StatsSeries(
     val up: FloatArray = FloatArray(0),
@@ -61,12 +57,11 @@ internal class StatsSeries(
 )
 
 /*
- * The panel's numbers, as text. Units and figures are the same in every language (`kbit/s`, `ms`,
- * `fps`), so they are formatted here and tested, with a fixed locale for the decimal point.
+ * The panel's numbers as text. Units are the same in every language, so they are formatted here,
+ * with a fixed locale for the decimal point.
  */
 
 internal object StatsFormat {
-    /** `—`, for what is not measured yet. */
     const val NONE = "—"
 
     fun kbps(value: Float?): String =

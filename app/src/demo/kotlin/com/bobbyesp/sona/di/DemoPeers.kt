@@ -23,15 +23,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * The other phones of the demo, answering `MESSAGE`s on the fake engine as a server and a phone
- * would. They speak Sona's envelopes through the domain's own codec, so what the demo shows is what
- * two real phones would do:
- * - **100** is a Sona phone: it says hello, answers every text with receipts, typing and a reply,
- *   and accepts, downloads and confirms every file.
- * - **101** is a plain SIP phone: it echoes what it is sent as text, and nothing else.
+ * The demo's other phones, answering `MESSAGE`s on the fake engine with Sona's own codec:
  *
- * Any other extension's server takes the message (`202`) and nothing comes back, as Asterisk does
- * for a phone that is not registered.
+ * - **100** is a Sona phone: it greets, answers texts with receipts, typing and a reply, and
+ *   accepts and confirms files.
+ * - **101** is a plain SIP phone: it only echoes what it is sent, as text.
+ *
+ * Any other extension's server takes the message (`202`) and nothing comes back, as with Asterisk
+ * and a phone that is not registered.
  */
 class DemoPeers(
     private val context: Context,
@@ -42,7 +41,6 @@ class DemoPeers(
     private val transfers = mutableMapOf<String, Download>()
     private var greeted = false
 
-    /** A file 100 is downloading: in memory, as the demo's files are small. */
     private class Download(val offer: FileOffer) {
         val bytes = ByteArray(offer.size.toInt())
         val have = BitSet(offer.chunks)
@@ -88,7 +86,6 @@ class DemoPeers(
         }
     }
 
-    /** 100 heard a text: it says it got it, reads it, writes, and answers. */
     private fun answerText(sent: FakeMessaging.Sent, text: String, id: String?) {
         hello(sent)
         if (id != null) send(sent, Envelope.Receipt(read = false, ids = listOf(id)))

@@ -19,15 +19,13 @@ import com.bobbyesp.sona.messaging.domain.envelope.EnvelopeCodec
 @Immutable
 data class Sentence(@param:StringRes @get:StringRes val res: Int, val args: List<Any> = emptyList())
 
-/** The sentence, in the user's language. */
 @Composable fun Sentence.text(): String = stringResource(res, *args.toTypedArray())
 
 /**
- * What a failure is about, for its sentence to name it: *Lab Asterisk*, `205`, `192.168.1.10:5060
- * (UDP)`.
+ * What a failure is about, for its sentence to name it.
  *
  * @property account The account's label.
- * @property peer Who the message was for, as shown: `205`, or the whole address off the domain.
+ * @property peer The user (`205`), or the whole address off the account's domain.
  * @property server The account's server as people read it.
  */
 @Immutable data class FailureSubject(val account: String, val peer: String, val server: String)
@@ -57,7 +55,6 @@ fun MessageFailure.sentence(subject: FailureSubject): Sentence =
         FailureReason.FileMissing -> Sentence(R.string.failure_file_missing)
     }
 
-/** The failure in words, with its technical line. */
 @Composable
 fun MessageFailure.explain(subject: FailureSubject): FailureText =
     FailureText(sentence(subject).text(), technical)

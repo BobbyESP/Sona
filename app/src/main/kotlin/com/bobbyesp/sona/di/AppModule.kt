@@ -151,14 +151,12 @@ val appModule = module {
             refused = get<CallCoordinator>().refused,
         )
     }
-    // The network in use: the video limits follow it (Wi-Fi or mobile data).
     single<NetworkMonitor> { AndroidNetworkMonitor(androidContext(), get<ApplicationScope>()) }
     factory { EngineConfigBuilder(get(), get()) }
     single {
         EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
     }
 
-    // Messages: kept in Room and in the app's files, sent and received by the one messenger.
     single<SipMessaging> { get<SipEngine>().messaging }
     single<MessageStore> { get<SonaDatabase>().messageStore() }
     single<AttachmentFiles> {
@@ -188,7 +186,6 @@ val appModule = module {
     single<CameraCaptures> {
         AndroidCameraCaptures(androidContext(), get<DispatcherProvider>().io)
     }
-    // Notifications of what arrives while its conversation is not on screen; a tap opens it.
     single<ConversationIntents> { ConversationIntents(MainActivity::conversationIntent) }
     single {
         MessageNotifications(androidContext(), get(), get(), get<ApplicationScope>())

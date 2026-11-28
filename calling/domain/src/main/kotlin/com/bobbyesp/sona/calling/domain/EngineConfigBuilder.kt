@@ -33,17 +33,14 @@ import kotlinx.coroutines.flow.scan
  * for the engine. What an account overrides travels with the account instead (`AccountSpec`),
  * through the same two translations.
  *
- * The video limits also follow [network]: on mobile data (or a metered Wi-Fi) the configuration is
- * rebuilt with the mobile ones, and with the Wi-Fi ones when it is back (docs/video.md, The
- * network). Losing the network keeps what was in use: nothing is sent then anyway, and a flicker
- * through *no network* would push two configurations for nothing.
+ * The video limits follow [network] (docs/video.md, The network). Losing the network keeps the ones
+ * in use, so a short drop does not push two configurations.
  */
 class EngineConfigBuilder(
     private val settings: SettingsStore,
     private val network: NetworkMonitor,
     private val userAgent: String = "Sona",
 ) {
-    /** Whether the mobile data limits apply, as it changes. */
     private val constrained: Flow<Boolean> =
         network.status
             .scan(null as Boolean?) { before, now ->
@@ -112,7 +109,6 @@ class EngineConfigBuilder(
             .distinctUntilChanged()
 }
 
-/** The video limits of one kind of network. */
 internal data class VideoLimits(val quality: VideoQuality, val bitrate: VideoBitrate)
 
 /** *Settings › Video* as read, before the network chooses which limits apply. */
@@ -129,9 +125,8 @@ internal data class VideoChoices(
 )
 
 /**
- * The engine's video configuration for [choices], with the mobile data limits when [constrained].
- * On mobile data the other side is asked to send within the same cap (the data is the user's), and
- * calls without video use Linphone's low-bandwidth mode; on Wi-Fi only what is sent is capped.
+ * On mobile data the other side is asked to send within the same cap, since the data is the user's;
+ * on Wi-Fi only what is sent is capped.
  */
 internal fun videoConfigOf(choices: VideoChoices, constrained: Boolean): VideoConfig {
     val limits = if (constrained) choices.mobile else choices.wifi
@@ -150,7 +145,6 @@ internal fun videoConfigOf(choices: VideoChoices, constrained: Boolean): VideoCo
     )
 }
 
-/** The SDP names of the video codecs turned on, in the user's order. */
 private fun Ranking.toVideoCodecMimes(): List<String> = enabled.mapNotNull { name ->
     VideoCodec.entries.firstOrNull { it.name == name }?.mime
 }

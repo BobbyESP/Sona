@@ -4,9 +4,8 @@
 package com.bobbyesp.sona.core.model.settings
 
 /**
- * The longest body the server relays in one `MESSAGE`, in bytes. Asterisk copies a body into a
- * 1024-byte buffer and sends a request over 1300 bytes by TCP, so its safe size is the first; the
- * others are for servers that take more (FreeSWITCH, Kamailio, a direct peer). See
+ * The largest `MESSAGE` body to send, in bytes. Asterisk copies a body into a 1024-byte buffer and
+ * sends requests over 1300 bytes by TCP; the larger sizes are for servers that take more. See
  * docs/messaging.md.
  */
 enum class MessageSizeLimit(val bytes: Int) {
@@ -38,7 +37,6 @@ enum class AttachmentLimit(val bytes: Long) {
     Mb20(20L * 1024 * 1024),
 }
 
-/** Texts, pictures and files between extensions. */
 object MessageSettings {
     /** Tell another Sona phone when its messages were read here. */
     val ReadReceipts = Setting.Toggle("messages.read_receipts", default = true)

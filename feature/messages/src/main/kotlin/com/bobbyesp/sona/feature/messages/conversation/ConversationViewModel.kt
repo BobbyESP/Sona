@@ -26,9 +26,7 @@ import kotlinx.coroutines.flow.map
 /**
  * Who the conversation is with, as its top bar shows it.
  *
- * @property title The peer's name, or its user (`102`).
- * @property address Its whole address, in the monospace face SIP is read in.
- * @property account The account it is on; [severalAccounts] says whether to mark it.
+ * @property severalAccounts Whether to mark which [account] it is on.
  */
 @Immutable
 internal data class ConversationHeader(
@@ -38,7 +36,10 @@ internal data class ConversationHeader(
     val account: Account?,
     val severalAccounts: Boolean,
 ) {
-    /** Receipts, typing and files need the other phone to be Sona too: said, once, when not. */
+    /**
+     * Receipts, typing and files need a Sona peer; for one not known to be, the screen says so
+     * once.
+     */
     val plainPeer: Boolean
         get() = peerKind != PeerKind.Sona
 }
@@ -46,20 +47,18 @@ internal data class ConversationHeader(
 internal data class ConversationState(
     val loaded: Boolean = false,
     val header: ConversationHeader? = null,
-    /** The conversation as drawn, oldest first. */
+    /** Oldest first. */
     val items: List<ThreadItem> = emptyList(),
     val typing: Boolean = false,
-    /** What is being written. Kept here so it survives a rotation and drives typing. */
+    /** Kept here to survive a rotation and to drive the typing notice. */
     val draft: String = "",
     /** Why the last thing sent was not added, until the user does something else. */
     val problem: SendProblem? = null,
     /** A file is being read and prepared (a picture resized) before it goes. */
     val preparing: Boolean = false,
-    /** The message whose details are open. */
     val detailsOf: MessageId? = null,
     /** The conversation was deleted (here, or from the list beside): the screen leaves. */
     val gone: Boolean = false,
-    /** What failures are about, for their sentences. */
     val subject: FailureSubject = FailureSubject("", "", ""),
 ) {
     val details: Message?
@@ -71,20 +70,18 @@ internal data class ConversationState(
 }
 
 internal sealed interface ConversationIntent {
-    /** The screen is shown (resumed) or left (paused): what arrives while shown is read. */
+    /** What arrives while the screen is shown (resumed) is read. */
     data class Visible(val visible: Boolean) : ConversationIntent
 
     data class Draft(val text: String) : ConversationIntent
 
     data object Send : ConversationIntent
 
-    /** A file or a picture was chosen: its `content://` address. */
     data class Attach(val uri: String) : ConversationIntent
 
     /** *Camera* was chosen, and the permission is there. */
     data object TakePicture : ConversationIntent
 
-    /** The camera came back, with the picture or without. */
     data class PictureTaken(val uri: String, val taken: Boolean) : ConversationIntent
 
     data class Retry(val message: MessageId) : ConversationIntent
@@ -103,16 +100,14 @@ internal sealed interface ConversationIntent {
 }
 
 internal sealed interface ConversationEffect {
-    /** Opens the camera, to write its picture to [uri]. */
     data class OpenCamera(val uri: String) : ConversationEffect
 
-    /** No place could be made for the camera's picture. */
     data object CameraUnavailable : ConversationEffect
 }
 
 /**
- * One conversation: its messages, what is being written, and everything done to a message. It tells
- * the messenger while it is on screen, so what arrives is read at once and not notified.
+ * One conversation. It tells the messenger while it is on screen, so what arrives is read and not
+ * notified.
  */
 internal class ConversationViewModel(
     conversationId: Long,
@@ -208,7 +203,7 @@ internal class ConversationViewModel(
         launch {
             val outcome = messenger.sendText(id, text)
             if (outcome !is SendOutcome.Queued) {
-                // What was written is not lost: it is back in the field, with why.
+                // The text goes back to the field, so it is not lost.
                 setState { copy(draft = draft.ifEmpty { text }, problem = outcome.problem()) }
             }
         }

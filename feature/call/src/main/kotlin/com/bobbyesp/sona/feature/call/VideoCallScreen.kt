@@ -85,13 +85,12 @@ import com.bobbyesp.sona.feature.call.video.StatisticsPanel
 import com.bobbyesp.sona.feature.call.video.VideoStage
 
 /**
- * A call with video on: the pictures fill the screen and everything else floats over them, frosted
- * from what is beneath, and fades a few seconds after the last touch (a tap brings it back).
+ * A call with video on: the pictures fill the screen, and the controls float over them, fading a
+ * few seconds after the last touch.
  *
- * Upright, the controls are a bar along the bottom; on a wide or lying screen a rail along the end
- * edge. The statistics and the keypad open as a panel: from the bottom on a phone, beside the
- * picture on a wide window. Every control is an icon with its words for TalkBack, so nothing is cut
- * at a large font; what has words (the name, a banner) wraps.
+ * The controls are a bottom bar upright, an end rail lying down. The panels open from the bottom,
+ * or beside the picture on a wide window. Buttons are icons with words for TalkBack, so nothing is
+ * cut at a large font.
  */
 @Composable
 internal fun VideoCallScreen(
@@ -202,8 +201,8 @@ internal fun VideoCallScreen(
 }
 
 /**
- * A panel over the call: the statistics, the keypad. Frosted over what is beneath; beside it on a
- * wide window, from the bottom edge on a phone.
+ * The statistics or the keypad over the call: beside it on a wide window, from the bottom on a
+ * phone.
  */
 @Composable
 internal fun CallPanel(
@@ -231,7 +230,6 @@ internal fun CallPanel(
     }
 }
 
-/** The digits sent, and the keypad to send more. */
 @Composable
 private fun KeypadPanel(state: CallUiState, onIntent: (CallIntent) -> Unit) {
     Column(
@@ -264,7 +262,6 @@ private fun KeypadPanel(state: CallUiState, onIntent: (CallIntent) -> Unit) {
     }
 }
 
-/** Who, how long, how well, on one frosted line. A tap on the bars opens the statistics. */
 @Composable
 private fun TopLine(state: CallUiState, behind: BlurSource, onIntent: (CallIntent) -> Unit) {
     val call = state.call ?: return
@@ -322,11 +319,7 @@ private fun TopLine(state: CallUiState, behind: BlurSource, onIntent: (CallInten
     }
 }
 
-/**
- * The controls of a video call: mute, camera, switch camera (while the camera is on), where the
- * audio goes, *More* (statistics, keypad, hold), and hang up, which stays in reach when the rest
- * has to scroll.
- */
+/** The video call's controls. Hang up stays in reach when the others have to scroll. */
 @Composable
 private fun VideoControls(
     state: CallUiState,
@@ -423,7 +416,6 @@ private fun VideoControls(
     }
 }
 
-/** *More*: what does not earn a place on the bar. */
 @Composable
 private fun MoreControl(state: CallUiState, onIntent: (CallIntent) -> Unit, enabled: Boolean) {
     val call = state.call ?: return
@@ -463,7 +455,6 @@ private fun MoreControl(state: CallUiState, onIntent: (CallIntent) -> Unit, enab
     }
 }
 
-/** A toggle of the video bar: its shape squares when on, its words are for TalkBack. */
 @Composable
 internal fun VideoToggle(
     icon: ImageVector,
@@ -483,7 +474,6 @@ internal fun VideoToggle(
     }
 }
 
-/** A plain button of the video bar. */
 @Composable
 internal fun VideoButton(
     icon: ImageVector,

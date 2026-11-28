@@ -46,17 +46,15 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  * incoming call's full-screen intent, and it runs in its own task: ending a call leaves the user
  * where they were, and recents show the call, not a second copy of the app. See docs/calling.md.
  *
- * **Picture-in-Picture**: an answered video call goes on in a small window when the user leaves
- * (home, another app), showing the other side's picture alone, with *Mute* and *Hang up* carried
- * out by the coordinator through [CallActionReceiver]. An audio call never does: its notification
- * is the way back. See docs/video.md.
+ * **Picture-in-Picture** (docs/video.md): an answered video call goes on in a small window when the
+ * user leaves, with *Mute* and *Hang up*. An audio call never does: its notification is the way
+ * back.
  */
 class CallActivity : ComponentActivity() {
 
     private val coordinator: CallCoordinator by inject()
     private val shell: ShellViewModel by viewModel()
 
-    /** The call Picture-in-Picture would show now, if any. */
     private var pip: PipTarget? = null
     private var inPictureInPicture by mutableStateOf(false)
 
@@ -118,7 +116,7 @@ class CallActivity : ComponentActivity() {
         answerIfAsked(intent)
     }
 
-    /** Leaving during a video call keeps it in sight; Android 12+ does it by itself. */
+    /** Android 12+ enters Picture-in-Picture by itself. */
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return
@@ -140,8 +138,7 @@ class CallActivity : ComponentActivity() {
     }
 
     /**
-     * The notification's *Answer* opens this screen, answering as it does: with the camera for a
-     * call that offered video, whose *Answer* the system draws as one.
+     * The notification's *Answer* opens this screen, with the camera for a call that offered video.
      */
     private fun answerIfAsked(intent: Intent?) {
         val call = intent?.getStringExtra(EXTRA_ANSWER) ?: return
@@ -153,10 +150,7 @@ class CallActivity : ComponentActivity() {
     private fun supportsPictureInPicture(): Boolean =
         packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
-    /**
-     * Tells Android how this screen goes to Picture-in-Picture now: in the picture's shape, with
-     * the call's actions, and by itself on leaving (Android 12+) only while there is a video call.
-     */
+    /** It enters by itself (Android 12+) only while there is a video call. */
     private fun updatePictureInPicture() {
         try {
             setPictureInPictureParams(pictureInPictureParams(pip))

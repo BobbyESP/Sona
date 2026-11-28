@@ -7,18 +7,11 @@ import com.bobbyesp.sona.sip.api.CallStatistics
 import com.bobbyesp.sona.sip.api.StreamStatistics
 
 /**
- * How well a call gets through, for the quality indicator's bars: the worst of its loss, jitter and
- * round trip, each graded on the limits below.
+ * How well a call gets through: the worst grade of its loss, jitter and round trip.
  *
- * - **Loss** counts on both streams and both ends (the share lost here, and the share the other
- *   side reports lost of what is sent): the voice breaks up, the picture smears.
- * - **Jitter** is the voice's only. A video frame leaves as a burst of packets, so the video's
- *   jitter is high on any network and says nothing about it.
- * - **Round trip** is the path's; past 300 ms people start talking over each other (ITU-T G.114
- *   puts one way at 150 ms).
- *
- * The badge shows the grade as it is; holding on to *Poor* for several seconds before saying
- * something (the weak connection banner) is the screen's.
+ * - Loss counts on both streams and both ends.
+ * - Jitter counts for the voice only: video leaves in bursts, so its jitter is high on any network.
+ * - Past a 300 ms round trip, people talk over each other (ITU-T G.114).
  */
 enum class CallQuality {
     Good,
@@ -26,22 +19,17 @@ enum class CallQuality {
     Poor;
 
     companion object {
-        /** Loss, in percent, below which a call is [Good], then [Fair]. */
+        /** In percent. */
         const val GOOD_LOSS = 2f
         const val FAIR_LOSS = 6f
 
-        /** The voice's jitter, in milliseconds, below which a call is [Good], then [Fair]. */
         const val GOOD_JITTER_MS = 30f
         const val FAIR_JITTER_MS = 60f
 
-        /** The round trip, in milliseconds, below which a call is [Good], then [Fair]. */
         const val GOOD_ROUND_TRIP_MS = 300f
         const val FAIR_ROUND_TRIP_MS = 600f
 
-        /**
-         * The grade of [statistics], or `null` while nothing was measured yet (ringing, or the
-         * first packets not counted).
-         */
+        /** The grade of [statistics], or `null` while nothing was measured yet. */
         fun of(statistics: CallStatistics): CallQuality? {
             val streams = listOfNotNull(statistics.audio, statistics.video).filter { it.flowing }
             if (streams.isEmpty()) return null

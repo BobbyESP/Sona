@@ -67,9 +67,9 @@ data class MediaInfo(val codec: String, val clockRate: Int, val encryption: Stri
  * until [SipEngine.forget]: a `StateFlow` keeps only the last value, and an ending missed would be
  * a failure the user never hears about.
  *
- * @property video The call's video stream, or `null` for a call with none (see [CallVideo]).
- * @property videoOffered The INVITE of an incoming call offered video: it rings as a video call.
- *   Always `false` for an outgoing call, and on an engine without [Capability.VideoCalls].
+ * @property video The video stream, or `null` for a call without one.
+ * @property videoOffered The incoming INVITE offered video. Always `false` for an outgoing call,
+ *   and without [Capability.VideoCalls].
  */
 data class EngineCall(
     val id: CallId,

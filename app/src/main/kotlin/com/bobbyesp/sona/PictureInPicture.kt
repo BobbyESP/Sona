@@ -9,8 +9,8 @@ import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.sip.api.VideoSize
 
 /**
- * The call Picture-in-Picture would show, and what its window needs: an answered call with video on
- * screen. `null` when there is none, and then the call screen never goes to Picture-in-Picture.
+ * What the Picture-in-Picture window needs; `null` without an answered call with video on screen,
+ * and then the call screen never enters it.
  */
 internal data class PipTarget(val call: CallId, val aspect: PipAspect, val muted: Boolean)
 
@@ -26,9 +26,8 @@ internal fun pipTarget(calls: List<Call>): PipTarget? {
 }
 
 /**
- * The window's shape for the other side's picture: its own, within what Android accepts (from
- * 1:2.39 to 2.39:1, the limits `setAspectRatio` throws beyond); upright 9:16 while the size is not
- * known yet, the way a phone sends.
+ * The picture's own ratio, clamped to what `setAspectRatio` accepts (it throws beyond 2.39:1,
+ * either way up); 9:16 while the size is unknown.
  */
 internal fun pipAspect(size: VideoSize?): PipAspect {
     if (size == null || size.width <= 0 || size.height <= 0) return PipAspect(9, 16)
@@ -40,5 +39,4 @@ internal fun pipAspect(size: VideoSize?): PipAspect {
     }
 }
 
-/** Android's widest Picture-in-Picture: 2.39:1, either way up. */
 private const val MAX_RATIO = 2.39f

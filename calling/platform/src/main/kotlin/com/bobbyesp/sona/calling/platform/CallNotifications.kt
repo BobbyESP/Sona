@@ -26,10 +26,7 @@ interface CallScreenIntents {
     /** The call screen, over the lock screen. */
     fun screen(context: Context): Intent
 
-    /**
-     * The call screen, answering [call] as it opens: the notification's *Answer*. [video] for a
-     * call that offered video, whose *Answer* the system draws as a camera: answered with it.
-     */
+    /** The call screen, answering [call] as it opens, with the camera when [video]. */
     fun answer(context: Context, call: CallId, video: Boolean = false): Intent
 
     /**

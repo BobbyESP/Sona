@@ -6,13 +6,12 @@ package com.bobbyesp.sona.messaging.domain
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.SipAddress
 
-/** A conversation, as stored: one per account and peer. */
 @JvmInline
 value class ConversationId(val value: Long) {
     override fun toString(): String = value.toString()
 }
 
-/** A message, as stored. [None] until the store gives it one. */
+/** [None] until the store gives it one. */
 @JvmInline
 value class MessageId(val value: Long) {
     override fun toString(): String = value.toString()
@@ -37,11 +36,10 @@ enum class PeerKind {
 /**
  * The messages between an account and one peer.
  *
- * @property peer The other side's address, as conversations are told apart: an extension of the
- *   account's own server always on the account's domain, without a port.
- * @property peerName The name the peer's server gave last (`From`'s display name), if any; the
- *   directory's name for it is preferred, in [ConversationSummary.name].
- * @property lastActivityAt When the last message was written or arrived, in epoch milliseconds.
+ * @property peer The other side's address, as conversations tell peers apart.
+ * @property peerName The last `From` display name; [ConversationSummary.name] prefers the
+ *   directory's.
+ * @property lastActivityAt In epoch milliseconds.
  */
 data class Conversation(
     val id: ConversationId,
@@ -55,10 +53,8 @@ data class Conversation(
 /**
  * A conversation as a list shows it.
  *
- * @property name Who the peer is: the directory's name, else the server's, else `null` (the UI then
- *   shows [Conversation.peer]'s user).
- * @property last The newest message, for the preview line.
- * @property unread The messages received and not yet read.
+ * @property name The directory's name, else the server's, else `null`.
+ * @property unread Received and not yet read.
  */
 data class ConversationSummary(
     val conversation: Conversation,
@@ -76,9 +72,8 @@ enum class MessageDirection {
 }
 
 /**
- * Where a message is. An outgoing one moves forward only: *Sending*, *Sent* (the server took it:
- * `200`/`202`), *Delivered* and *Read* (only a Sona peer says so); or *Failed*, with its
- * [Message.failure]. An incoming one is *Received*.
+ * An outgoing message only moves forward: sending, sent (the server's `200`/`202`), then delivered
+ * and read, which only a Sona peer reports; or failed. An incoming one is received.
  */
 enum class MessageStatus {
     Sending,
@@ -92,16 +87,15 @@ enum class MessageStatus {
 /**
  * A text or a file, sent or received.
  *
- * @property text What was written. For a file, empty (the [attachment] says what it is).
+ * @property text Empty for a file.
  * @property at When it was written here or arrived, in epoch milliseconds.
- * @property read For an incoming message, whether the user saw it; an outgoing one is read.
- * @property envelopeId The Sona id of a text (its receipts name it) or of a file (its transfer);
- *   `null` for a plain text.
- * @property failure Why it was not sent, or why its file did not arrive: set when [status] is
- *   [MessageStatus.Failed], or when an incoming file's transfer failed.
- * @property parts, [partsSent] An outgoing text longer than the server's limit goes in parts.
- * @property sizeLimit The limit its parts were cut for, so a text resumed after a restart is cut
- *   the same way even if the setting changed.
+ * @property read An outgoing message always is.
+ * @property envelopeId The Sona id of a text or a file; `null` for a plain text.
+ * @property failure Set when [status] is [MessageStatus.Failed], or when an incoming file's
+ *   transfer failed.
+ * @property parts A text longer than the server's limit goes in parts.
+ * @property sizeLimit The limit [parts] were cut for: a resume cuts them the same, even if the
+ *   setting changed.
  */
 data class Message(
     val id: MessageId = MessageId.None,
@@ -125,14 +119,12 @@ data class Message(
 /**
  * A file in a conversation, and its transfer.
  *
- * @property transferId Its Sona id: the offer and every chunk name it.
- * @property sha256 The SHA-256 of its bytes, in lowercase hex.
- * @property chunkSize, [chunks] How it is cut: every chunk is [chunkSize] bytes but the last.
- * @property width, [height] A picture's size in pixels.
+ * @property transferId The Sona id the offer and every chunk name.
+ * @property sha256 Lowercase hex.
+ * @property chunkSize The bytes in every chunk but the last.
  * @property done Chunks the server took (sent) or that arrived (received).
- * @property peerReceived For a file sent: the chunks the receiver said it has.
- * @property file Where it is in the app's storage (relative to `files/messages/`): the copy sent,
- *   or the file received once whole. Opened through [Messenger.uriOf].
+ * @property peerReceived For a sent file, the chunks the receiver says it has.
+ * @property file Relative to `files/messages/`: the copy sent, or the received file once whole.
  */
 data class Attachment(
     val transferId: String,
@@ -152,7 +144,7 @@ data class Attachment(
     val isPicture: Boolean
         get() = mime.startsWith("image/")
 
-    /** How far the transfer is, from 0 to 1: what arrived, as the receiver knows or says. */
+    /** From 0 to 1. */
     val progress: Float
         get() {
             if (chunks == 0) return if (state == TransferState.Done) 1f else 0f
@@ -167,13 +159,10 @@ data class Attachment(
  * [Cancelled] or [Failed].
  */
 enum class TransferState {
-    /** The offer is on its way to the server. */
     Offering,
 
     /** The server took the offer; the other phone has not accepted it yet. */
     WaitingForPeer,
-
-    /** Chunks are going out. */
     Sending,
 
     /** Every chunk went out; waiting for the receiver to say the file arrived whole. */
@@ -181,23 +170,13 @@ enum class TransferState {
 
     /** A file offered here, waiting for *Download* (it is larger than the automatic limit). */
     Offered,
-
-    /** Chunks are coming in. */
     Receiving,
-
-    /** Every chunk came; its SHA-256 is being checked. */
     Verifying,
 
     /** Arrived whole: its SHA-256 matched. */
     Done,
-
-    /** The receiver refused it (sent), or the user did (received). */
     Declined,
-
-    /** One side stopped it. */
     Cancelled,
-
-    /** It could not be sent or received; [Message.failure] says why. */
     Failed;
 
     val isFinished: Boolean

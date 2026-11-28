@@ -51,13 +51,11 @@ import kotlinx.coroutines.launch
  * Calls are scripted the same way (`fake.incomingCall(from)`, `fake.remoteAnswers(call)`,
  * `fake.remoteEnds(call, SipStatus(486, "Busy Here"))`), so a test reads as the scenario it checks.
  *
- * **Video** follows [VideoConfig] as a real engine does: a call dialed or answered with the camera
- * sends it, and video the other side adds (`fake.remoteStartsVideo(call)`) or offers to a call
- * answered without the camera is taken receive-only. Holding stops the video with the audio, and
- * resuming does not bring it back by itself: what comes back is the coordinator's to ask.
+ * **Video** follows [VideoConfig] as a real engine does. A hold stops it, and a resume does not
+ * bring it back by itself.
  *
- * **Statistics** are a deterministic random walk around [network] (or a call's own,
- * `fake.network(call, FakeNetwork.Weak)`), measured once a second, and only while collected.
+ * **Statistics** are a deterministic random walk around [network], or a call's own, measured only
+ * while collected.
  *
  * @param scope Where registrations and scripted calls take their time; a test's scope, or the
  *   app's.
@@ -93,7 +91,6 @@ class FakeSipEngine(
     override val registrations: StateFlow<Map<AccountId, RegistrationState>> =
         _registrations.asStateFlow()
 
-    /** `MESSAGE`s, sent by accounts this engine has registered. See [FakeMessaging]. */
     override val messaging: FakeMessaging =
         FakeMessaging(
             registered = { _registrations.value[it] == RegistrationState.Registered },
@@ -302,10 +299,8 @@ class FakeSipEngine(
         audioDevices[call] = device
     }
 
-    /** A request of [SipEngine.setVideo], as it was made. */
     data class VideoRequest(val call: CallId, val send: Boolean, val receive: Boolean)
 
-    /** Every [setVideo] asked, in order, for asserting. */
     val videoRequests: MutableList<VideoRequest> = mutableListOf()
 
     override suspend fun setVideo(call: CallId, send: Boolean, receive: Boolean) {
@@ -335,7 +330,6 @@ class FakeSipEngine(
             copy(video = now.copy(camera = other))
         }
 
-    /** The display's rotation as last given, for asserting. */
     var rotation: Int = 0
         private set
 
@@ -349,12 +343,11 @@ class FakeSipEngine(
 
     private val networks = mutableMapOf<CallId, FakeNetwork>()
 
-    /** [call]'s media goes over [network] from now on: [FakeNetwork.Weak] shows Poor. */
     fun network(call: CallId, network: FakeNetwork) {
         networks[call] = network
     }
 
-    /** How many times statistics were measured: none while nobody collects them. */
+    /** Stays put while nobody collects statistics. */
     var statisticsSamples: Int = 0
         private set
 
@@ -381,7 +374,6 @@ class FakeSipEngine(
         _calls.update { all -> all.filterNot { it.id == call } }
     }
 
-    /** An INVITE arrives for [account] from [from], offering video when [video]. */
     fun incomingCall(
         from: SipAddress,
         account: AccountId? = accounts.firstOrNull()?.id,
@@ -405,10 +397,7 @@ class FakeSipEngine(
 
     fun remoteRings(call: CallId) = update(call) { copy(state = EngineCallState.Ringing) }
 
-    /**
-     * The other side answers. [video] is whether it takes the video offered: by default it does
-     * when the call was dialed with video, and sends its own camera too.
-     */
+    /** By default, the video is taken when the call was dialed with it. */
     fun remoteAnswers(call: CallId, video: Boolean? = null) {
         answered(call, SipStatus(200, "OK"))
         update(call) {
@@ -440,10 +429,9 @@ class FakeSipEngine(
         }
 
     /**
-     * The other side turns its camera on: a re-INVITE adding video, or a new direction. Taken
-     * receive-only when [VideoConfig.acceptRemoteVideo] says so, declined otherwise. [withCamera]
-     * plays an engine that took it with this side's camera on, which the coordinator must not let
-     * stand.
+     * The other side adds video, taken receive-only or declined as [VideoConfig.acceptRemoteVideo]
+     * says. [withCamera] plays an engine that turned this side's camera on, which the coordinator
+     * must undo.
      */
     fun remoteStartsVideo(call: CallId, withCamera: Boolean = false) {
         if (!videoConfig.enabled || !videoConfig.acceptRemoteVideo) return
@@ -454,10 +442,7 @@ class FakeSipEngine(
         }
     }
 
-    /**
-     * The other side turns its camera off. Without this side's camera either, nothing is left to
-     * send or receive, and the call has no video anymore.
-     */
+    /** With this side's camera off too, the call is left without video. */
     fun remoteStopsVideo(call: CallId) =
         update(call) {
             val now = video ?: return@update this

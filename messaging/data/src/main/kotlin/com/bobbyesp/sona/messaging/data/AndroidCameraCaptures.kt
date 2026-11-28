@@ -13,9 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
- * The pictures the camera takes for a message, in the app's cache (`message-captures/`): the camera
- * app writes there through [MessageFileProvider] by a grant, and sending copies the picture into
- * `files/messages/sent/` as it does any other, so what stays here is only ever a cache. Captures
+ * The camera's pictures for messages, in the cache: sending copies one like any picked file. Those
  * older than a day are removed when a new one is made.
  */
 class AndroidCameraCaptures(private val context: Context, private val io: CoroutineDispatcher) :

@@ -39,10 +39,7 @@ import org.koin.core.parameter.parametersOf
 @Serializable
 internal data class MessagePicture(val conversationId: Long, val messageId: Long) : NavKey
 
-/**
- * The list is a list pane and a conversation (or *New message*) its detail, so a wide window shows
- * both side by side through the shell's list-detail strategy; a compact one shows one at a time.
- */
+/** The list and its detail (a conversation or *New message*): side by side on a wide window. */
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 internal object MessagesSection : NavSection {
     override fun EntryProviderScope<NavKey>.register(navigator: Navigator) {
@@ -96,16 +93,12 @@ internal object MessagesSection : NavSection {
     }
 }
 
-/**
- * Shows [key] as the detail of the list: whatever detail was open gives way to it, so moving from
- * one conversation to another beside the list never piles them up behind back.
- */
+/** Replaces the open detail, so moving between conversations never piles them up behind back. */
 private fun Navigator.showDetail(key: NavKey) {
     goBackWhile { it is Conversation || it is NewConversation || it is MessagePicture }
     goTo(key)
 }
 
-/** The tab, with what was received and not yet read as its badge. */
 internal class MessagesTab(messenger: Messenger) : TopLevelDestination {
     override val badge: Flow<Int> = messenger.totalUnread.distinctUntilChanged()
 

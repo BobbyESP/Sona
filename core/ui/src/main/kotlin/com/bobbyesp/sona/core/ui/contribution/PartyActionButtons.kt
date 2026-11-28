@@ -28,13 +28,11 @@ import androidx.compose.ui.unit.dp
 import com.bobbyesp.sona.core.navigation.Navigator
 
 /**
- * What the features add for [party] (*Message*, *Video call*), laid out by the screen that shows
- * the party without it knowing which features they come from. Nothing at all when none applies.
+ * The features' actions for [party]; nothing when none applies.
  *
- * @param compact Icon buttons only, labelled for TalkBack, for a row that has little room (beside a
- *   number); otherwise tonal buttons with their labels, wrapping onto a second line when they do
- *   not fit, so nothing is cut at a large font. A disabled action says why under the buttons.
- * @param onAction Called after an action is used: a sheet showing the party closes.
+ * @param compact Icon buttons only, for rows with little room; otherwise labelled buttons that
+ *   wrap. A disabled action says why below.
+ * @param onAction Called after an action is used, so a sheet can close.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable

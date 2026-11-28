@@ -29,18 +29,16 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Files over `MESSAGE`, both ways, as docs/messaging.md, Files, describes: the offer is the
- * [Messenger]'s (it goes out in order with the texts), the rest is here.
+ * Files over `MESSAGE`, both ways (docs/messaging.md, Files). The [Messenger] sends the offer, in
+ * order with the texts; the rest is here.
  *
- * - **Sending**: once accepted, chunks go out with a window of [WINDOW] in flight, the next when
- *   the server answered one; a chunk the server refuses for a while (`408`, `503`, no network) is
- *   sent again with back-off. How far it got is saved, so a restart goes on from there.
- * - **Receiving**: each chunk is written at its place in a file of its own, and which ones arrived
- *   is saved; when none come for [IDLE] the missing ones are asked for again, [MISS_TRIES] times
- *   before the transfer fails. Whole, its SHA-256 is checked before it is the conversation's.
+ * - Sending: [WINDOW] chunks in flight, each retried with back-off. Progress is saved, so a restart
+ *   goes on.
+ * - Receiving: chunks are written in place as they come. After [IDLE] without one, the missing are
+ *   asked for, [MISS_TRIES] times. The SHA-256 is checked at the end.
  *
- * Runs in memory are keyed by message ([outgoing]) and by conversation and transfer id
- * ([incoming]): a transfer id is the sender's choice, and two peers may choose the same.
+ * Incoming transfers are keyed by conversation and id: the id is the sender's choice, and two peers
+ * may choose the same.
  */
 internal class Transfers(
     private val store: MessageStore,
@@ -60,7 +58,6 @@ internal class Transfers(
     /** When each finished transfer last reminded a sender that kept sending, by key. */
     private val reminded = ConcurrentHashMap<String, Long>()
 
-    /** The description an offer gives of [attachment]. */
     fun offerOf(attachment: Attachment) =
         FileOffer(
             id = attachment.transferId,
@@ -176,8 +173,8 @@ internal class Transfers(
         }
 
     /**
-     * Sends [message]'s chunks from [from] on (with [repairs] first), unless they are going out
-     * already: then only [repairs] are added.
+     * Sends [message]'s chunks from [from] on, [repairs] first. If they are going out already, only
+     * [repairs] are added.
      */
     private suspend fun stream(
         conversation: Conversation,
@@ -210,7 +207,6 @@ internal class Transfers(
         if (created) run.start()
     }
 
-    /** A file going out: which chunks are left, which are in flight, how far it got. */
     private inner class Outgoing(
         val messageId: MessageId,
         val conversation: Conversation,
@@ -416,7 +412,6 @@ internal class Transfers(
         return limit > 0 && size <= limit
     }
 
-    /** The user tapped *Download* on a file larger than the automatic limit. */
     suspend fun download(id: MessageId) {
         val message = store.message(id) ?: return
         if (message.outgoing || message.attachment?.state != TransferState.Offered) return
@@ -433,7 +428,6 @@ internal class Transfers(
         tell(conversation, Envelope.Decline(attachment.transferId))
     }
 
-    /** Takes the file: makes room for it, says so, and waits for its chunks. */
     private suspend fun accept(conversation: Conversation, message: Message) {
         val attachment = message.attachment ?: return
         val id = attachment.transferId
@@ -486,7 +480,6 @@ internal class Transfers(
         }
     }
 
-    /** Goes on receiving [message] with the chunks saved. */
     private suspend fun resumeReceiving(conversation: Conversation, message: Message): Incoming? {
         val attachment = message.attachment ?: return null
         if (!files.openIncoming(fileKeyOf(message.id), attachment.size)) return null
@@ -521,7 +514,6 @@ internal class Transfers(
         return run
     }
 
-    /** A file coming in: which chunks are here, and the timers that ask for the rest. */
     private inner class Incoming(
         val messageId: MessageId,
         val conversation: Conversation,
@@ -564,14 +556,11 @@ internal class Transfers(
             }
         }
 
-        /** Asks for the missing chunks at once: the user tried again. */
         fun askNow() {
             scope.launch { ask() }
         }
 
-        /**
-         * Asks for as many of the missing chunks as one message can; whether the server took it.
-         */
+        /** Asks for as many missing chunks as one message can; `true` if the server took it. */
         private suspend fun ask(): Boolean {
             val ranges = synchronized(this) { missing() }
             if (ranges.isEmpty()) return false
@@ -614,7 +603,6 @@ internal class Transfers(
             lock.withLock { store.saveReceivedChunks(messageId, snapshot.first, snapshot.second) }
         }
 
-        /** The chunks still missing, as ranges, in order. */
         private fun missing(): List<IntRange> {
             val ranges = mutableListOf<IntRange>()
             var index = bits.nextClearBit(0)
@@ -652,7 +640,6 @@ internal class Transfers(
             if (complete) complete()
         }
 
-        /** Every chunk came: saved, and the file checked. */
         private suspend fun complete() {
             synchronized(this) {
                 if (whole) return
@@ -678,7 +665,6 @@ internal class Transfers(
         }
     }
 
-    /** Checks the SHA-256 of a file whose chunks all came, and keeps it, or says why not. */
     private suspend fun verify(conversation: Conversation, message: Message) {
         val attachment = message.attachment ?: return
         val id = attachment.transferId
@@ -712,7 +698,6 @@ internal class Transfers(
 
     // --- What the user does ----------------------------------------------------------------------
 
-    /** Tries a failed transfer again, sent or received. */
     suspend fun retry(message: Message) {
         val attachment = message.attachment ?: return
         if (attachment.state != TransferState.Failed) return
@@ -746,7 +731,6 @@ internal class Transfers(
         val attachment = message.attachment ?: return
         val id = attachment.transferId
         if (message.failure?.reason != FailureReason.TimedOut) {
-            // What was received cannot be trusted, or kept: from the start.
             files.discard(fileKeyOf(message.id))
             lock.withLock { store.saveReceivedChunks(message.id, ByteArray(0), 0) }
         }
@@ -755,7 +739,6 @@ internal class Transfers(
         run.askNow()
     }
 
-    /** Stops a transfer this side does not want any more; the other side is told. */
     suspend fun cancel(id: MessageId) {
         val message = store.message(id) ?: return
         val attachment = message.attachment ?: return
@@ -779,7 +762,6 @@ internal class Transfers(
         if (!offerUnsent) tell(conversation, Envelope.Cancel(attachment.transferId))
     }
 
-    /** A message is being deleted: its transfer stops, and its files go. */
     suspend fun forget(message: Message) {
         val attachment = message.attachment ?: return
         val conversation = store.conversation(message.conversation)
@@ -882,7 +864,6 @@ internal class Transfers(
         const val SAVE_EVERY_MS = 1_000L
         const val REMIND_EVERY_MS = 5_000L
 
-        /** The name an incoming file has in storage while it is not whole. */
         fun fileKeyOf(message: MessageId) = "in-${message.value}"
     }
 }

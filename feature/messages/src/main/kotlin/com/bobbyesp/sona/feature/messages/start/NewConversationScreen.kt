@@ -71,11 +71,6 @@ internal fun NewConversationRoute(
     NewConversationScreen(state = state, onIntent = viewModel::onSendIntent, onBack = onBack)
 }
 
-/**
- * *New message*: a field that takes a name, an extension or an address; under it, what was typed as
- * an address to write to, and the contacts that match, each number a row. The account to write from
- * is a row of chips when there are several.
- */
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,

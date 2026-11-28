@@ -8,8 +8,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <!-- Video calls: the camera, asked for when the user turns it on; the call service holds it
-         while it is on. A phone without a camera still installs Sona and receives video. -->
+    <!-- The camera, for video calls. A phone without one still installs Sona and receives
+         video. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-feature

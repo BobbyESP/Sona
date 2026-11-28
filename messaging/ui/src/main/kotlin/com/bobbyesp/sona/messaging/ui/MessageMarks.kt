@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bobbyesp.sona.messaging.domain.MessageStatus
 
-/** What kind of file a MIME type names, for its icon. */
 enum class FileKind {
     Picture,
     Video,
@@ -43,7 +42,6 @@ enum class FileKind {
     Other;
 
     companion object {
-        /** The kind of [mime] (`image/jpeg`, `application/pdf`); [Other] for what is not known. */
         fun of(mime: String): FileKind {
             val type = mime.lowercase().substringBefore(';').trim()
             return when {
@@ -82,7 +80,6 @@ enum class FileKind {
     }
 }
 
-/** The icon a file of this kind is shown with. */
 val FileKind.icon: ImageVector
     get() =
         when (this) {
@@ -99,9 +96,8 @@ val FileKind.icon: ImageVector
         }
 
 /**
- * The mark of an outgoing message's status: a clock while it is sending, one tick once the server
- * took it, two once the other phone has it, two in the primary color once it was read, and the
- * error mark when it failed. Its word is its content description, so it is never only a shape.
+ * The mark of an outgoing message's status, with its word as content description, so it is never
+ * only a shape.
  */
 @Composable
 fun MessageStatusMark(status: MessageStatus, modifier: Modifier = Modifier, size: Dp = 16.dp) {

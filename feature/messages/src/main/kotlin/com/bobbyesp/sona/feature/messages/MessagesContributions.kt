@@ -31,9 +31,8 @@ import com.bobbyesp.sona.core.ui.contribution.SettingsContributor
 internal const val MESSAGE_ACTION_ID = "messages.write"
 
 /**
- * *Message*, wherever a party is shown (a contact, a history entry): opens the conversation with
- * them, on the entry's account when it has one, through *New message* (which asks for the account
- * only when there is a choice to make).
+ * *Message* on any party: opens the conversation through *New message*, which asks for the account
+ * only when there is a choice.
  */
 internal object MessagePartyAction : PartyActionProvider {
     override val order: Int = 100
@@ -57,7 +56,6 @@ internal object MessagePartyAction : PartyActionProvider {
     }
 }
 
-/** *Messages* in the settings: what other Sona phones are told, files, and the server's size. */
 internal object MessagesSettingsContributor : SettingsContributor {
     override val area = SettingsAreas.Messages
 
@@ -125,7 +123,6 @@ internal object MessagesSettingsContributor : SettingsContributor {
         )
 }
 
-/** How a message size limit is named in the settings. */
 internal val MessageSizeLimit.label: Int
     get() =
         when (this) {

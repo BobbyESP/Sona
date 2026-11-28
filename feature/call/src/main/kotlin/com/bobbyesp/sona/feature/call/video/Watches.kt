@@ -13,9 +13,8 @@ import com.bobbyesp.sona.calling.domain.CallState
  */
 
 /**
- * Whether a video call has been on a *Poor* connection long enough to say so ("Weak connection:
- * video lowered"): [samples] in a row, a second each. One better sample starts the count again, so
- * a blip says nothing.
+ * Whether a video call has been *Poor* for [samples] seconds in a row. A better sample starts over,
+ * so a blip says nothing.
  */
 internal class WeakConnectionWatch(private val samples: Int = WEAK_AFTER_SAMPLES) {
     private var poorInARow = 0
@@ -27,36 +26,29 @@ internal class WeakConnectionWatch(private val samples: Int = WEAK_AFTER_SAMPLES
     }
 
     companion object {
-        /** About five seconds of Poor. */
         const val WEAK_AFTER_SAMPLES = 5
     }
 }
 
 /**
- * Whether the other side's picture froze: it should arrive (the other side says it sends, and this
- * side takes it) but no frame came for [samples] seconds in a row. The screen dims the last frame
- * under "Video paused"; the first frame back lifts it.
+ * Whether the other side's picture froze: expected, but no frame for [samples] seconds in a row.
  */
 internal class FrozenVideoWatch(private val samples: Int = FROZEN_AFTER_SAMPLES) {
     private var stillInARow = 0
 
-    /** Feeds one sample: whether a picture is expected, and the frames a second received. */
     fun update(expected: Boolean, receivedFps: Float?): Boolean {
         stillInARow = if (expected && (receivedFps ?: 0f) <= 0f) stillInARow + 1 else 0
         return stillInARow >= samples
     }
 
     companion object {
-        /** Three seconds without a frame. */
         const val FROZEN_AFTER_SAMPLES = 3
     }
 }
 
 /**
- * Whether the other side just turned its camera on, between two looks at the same answered call:
- * its picture now arrives, it did not before, and this side's camera is off (so the screen offers
- * *Turn on camera*). A call answered with the caller's video shown is not this: it was never active
- * without it.
+ * Whether the other side just turned its camera on during an answered call, while this side's is
+ * off: the screen then offers *Turn on camera*. Answering a video offer does not count.
  */
 internal fun remoteTurnedOnVideo(before: Call?, now: Call): Boolean =
     before != null &&
@@ -66,10 +58,7 @@ internal fun remoteTurnedOnVideo(before: Call?, now: Call): Boolean =
         now.showsRemoteVideo &&
         !now.cameraOn
 
-/**
- * The last [capacity] values, oldest first, in a fixed array: a sparkline's minute of history at a
- * sample a second, with nothing allocated per sample.
- */
+/** The last [capacity] values, oldest first, with nothing allocated per sample. */
 internal class RingBuffer(val capacity: Int) {
     private val values = FloatArray(capacity)
     private var start = 0
@@ -87,13 +76,12 @@ internal class RingBuffer(val capacity: Int) {
         }
     }
 
-    /** The [index]th oldest value. */
     operator fun get(index: Int): Float {
         require(index in 0 until size) { "$index outside 0 until $size" }
         return values[(start + index) % capacity]
     }
 
-    /** A copy, oldest first: what a frame draws, while the buffer goes on filling. */
+    /** A copy to draw, while the buffer goes on filling. */
     fun toFloatArray(): FloatArray = FloatArray(size) { get(it) }
 
     fun clear() {

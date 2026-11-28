@@ -19,21 +19,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Takes bodies to the engine, and tries again what deserves it: a server that did not answer, or
- * said it was busy (`408`, `503`), is asked again after a while, each time longer; a refusal for
- * what the message is (`404`, `415`) is final. What the domain decides about a failure (fail a
- * text, keep a transfer waiting) is the caller's.
+ * Sends bodies through the engine, retrying with back-off the failures that may pass. What a
+ * failure means for a message is the caller's to decide.
  */
 internal class Courier(private val engine: SipEngine, private val scope: CoroutineScope) {
 
-    /** How many times to try again, and whether an account that is not registered is waited for. */
     data class Policy(val retries: Int, val waitForAccount: Boolean)
 
-    /** Sends once. */
     suspend fun send(account: AccountId, to: SipAddress, body: String): MessageSendResult =
         engine.messaging.send(account, to, body)
 
-    /** Sends, and tries again after a back-off while the failure is one that may pass. */
     suspend fun send(
         account: AccountId,
         to: SipAddress,
@@ -57,14 +52,14 @@ internal class Courier(private val engine: SipEngine, private val scope: Corouti
         }
     }
 
-    /** Sends [envelope] without waiting for the answer: what is lost is lost after [policy]. */
+    /** Sends [envelope] without waiting for the answer. */
     fun later(account: AccountId, to: SipAddress, envelope: Envelope, policy: Policy) {
         scope.launch { send(account, to, EnvelopeCodec.encode(envelope), policy) }
     }
 
     /**
-     * Waits, at most [timeout], for [account] to be registered. Right after the app starts, or
-     * after the network changed, it registers within seconds; a message sent before would fail.
+     * After a start or a network change the account registers within seconds; a message sent before
+     * would fail.
      */
     suspend fun awaitRegistered(account: AccountId, timeout: Duration): Boolean =
         withTimeoutOrNull(timeout) {

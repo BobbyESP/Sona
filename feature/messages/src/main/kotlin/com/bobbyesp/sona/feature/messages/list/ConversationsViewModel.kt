@@ -17,9 +17,8 @@ import kotlinx.coroutines.flow.combine
 /**
  * A conversation as the list shows it.
  *
- * @property title The peer's name, or its user (`102`) when it has none.
- * @property address The whole address, for search and for the details.
- * @property account The account it is on, when there are several, to tell them apart by color.
+ * @property address For search and for the details.
+ * @property account Set only with several accounts, to tell them apart.
  */
 @Immutable
 internal data class ConversationRow(
@@ -36,11 +35,9 @@ internal data class ConversationsState(
     /** False until the store was read: the screen shows nothing rather than "no messages". */
     val loaded: Boolean = false,
     val query: String = "",
-    /** What the query leaves, the most recent first. */
     val rows: List<ConversationRow> = emptyList(),
     /** Every conversation there is, so *none yet* can be told from *no one matches*. */
     val total: Int = 0,
-    /** The conversation waiting for the user to confirm deleting it. */
     val confirmDelete: ConversationRow? = null,
 )
 
@@ -105,7 +102,6 @@ internal fun ConversationSummary.toRow(account: Account?, several: Boolean): Con
     )
 }
 
-/** Whether [query] is in the name, the address or the last message. */
 internal fun ConversationRow.matches(query: String): Boolean {
     val text = query.trim()
     if (text.isEmpty()) return true

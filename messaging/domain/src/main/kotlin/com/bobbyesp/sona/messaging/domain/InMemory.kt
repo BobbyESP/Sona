@@ -29,7 +29,6 @@ class InMemoryMessageStore : MessageStore {
     private val nextConversation = AtomicLong()
     private val nextMessage = AtomicLong()
 
-    /** Every message, by id, for asserting. */
     val all: Map<MessageId, Message>
         get() = state.value.messages
 
@@ -208,7 +207,6 @@ class InMemoryMessageStore : MessageStore {
         return added
     }
 
-    /** What may be left in the parts kept, for asserting that nothing is. */
     val partsKept: Int
         get() = state.value.parts.size
 
@@ -225,12 +223,8 @@ class InMemoryMessageStore : MessageStore {
     }
 }
 
-/**
- * Files in memory, written and read as the app's storage does: for tests and previews. [preparer]
- * makes a file "picked" with [pick] ready, as the content resolver would.
- */
+/** Files in memory, for tests and previews; [pick] stands in for the user picking one. */
 class InMemoryAttachmentFiles : AttachmentFiles {
-    /** Every file in storage, by its path. */
     val stored = ConcurrentHashMap<String, ByteArray>()
     private val incoming = ConcurrentHashMap<String, ByteArray>()
     private val picked = ConcurrentHashMap<String, Pair<String, ByteArray>>()
@@ -239,7 +233,6 @@ class InMemoryAttachmentFiles : AttachmentFiles {
     /** Whether writing fails, as a full disk would. */
     @Volatile var full = false
 
-    /** The incoming files not yet whole, by key, for asserting. */
     val partial: Map<String, ByteArray>
         get() = incoming
 
@@ -284,12 +277,10 @@ class InMemoryAttachmentFiles : AttachmentFiles {
 
     override fun uriOf(file: String): String = "memory://messages/$file"
 
-    /** A file the user may pick, at [source]. */
     fun pick(source: String, name: String, bytes: ByteArray) {
         picked[source] = name to bytes
     }
 
-    /** Prepares what [pick] offered: copied into storage, as it is. */
     val preparer = AttachmentPreparer { source, _, limit ->
         val (name, bytes) =
             picked[source] ?: return@AttachmentPreparer PreparedAttachment.Unreadable("No $source")

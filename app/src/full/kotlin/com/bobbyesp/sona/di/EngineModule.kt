@@ -11,10 +11,7 @@ import com.bobbyesp.sona.sip.linphone.linphoneVideoSurfaces
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
-/**
- * The full flavor: Linphone, registering to the user's own server. It draws the video itself, on
- * the views the call screen gives it.
- */
+/** The full flavor: Linphone, registering to the user's own server. */
 val engineModule = module {
     single { androidContext().createLinphoneEngine(appVersion = BuildConfig.VERSION_NAME) }
     single<VideoSurfaces> { get<SipEngine>().linphoneVideoSurfaces() }
