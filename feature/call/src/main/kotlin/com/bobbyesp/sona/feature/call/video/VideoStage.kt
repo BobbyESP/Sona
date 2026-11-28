@@ -241,8 +241,8 @@ internal fun VideoStage(
             val localBig = swapped
             Box((if (localBig) big else tile).clipToBounds()) {
                 if (sending) {
-                    val mirrored = video?.camera == CameraFacing.Front
-                    AspectVideo(video?.sentSize, fill = fill || !localBig) {
+                    val mirrored = video.camera == CameraFacing.Front
+                    AspectVideo(video.sentSize, fill = fill || !localBig) {
                         AndroidView(
                             factory = { context -> TextureView(context).also { previewView = it } },
                             onRelease = { if (previewView === it) previewView = null },

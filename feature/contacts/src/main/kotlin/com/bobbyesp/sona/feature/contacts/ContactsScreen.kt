@@ -173,7 +173,7 @@ internal fun ContactsScreen(
                     description = stringResource(R.string.contacts_empty_description),
                     icon = Icons.Rounded.Contacts,
                     padding = padding,
-                    contentModifier = contentModifier,
+                    modifier = contentModifier,
                 )
             else ->
                 Box(contentModifier, contentAlignment = Alignment.TopCenter) {

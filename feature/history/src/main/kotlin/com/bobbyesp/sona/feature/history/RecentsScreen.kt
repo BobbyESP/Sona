@@ -200,7 +200,7 @@ internal fun RecentsScreen(
                     description = stringResource(R.string.history_empty_description),
                     icon = Icons.Rounded.History,
                     padding = padding,
-                    contentModifier = contentModifier,
+                    modifier = contentModifier,
                 )
             else -> {
                 val days = remember(state.groups) { state.groups.byDay() }

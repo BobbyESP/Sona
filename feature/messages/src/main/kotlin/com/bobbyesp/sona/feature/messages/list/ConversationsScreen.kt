@@ -125,7 +125,7 @@ internal fun ConversationsScreen(
                     description = stringResource(R.string.messages_empty_description),
                     icon = Icons.AutoMirrored.Rounded.Chat,
                     padding = padding,
-                    contentModifier = contentModifier,
+                    modifier = contentModifier,
                 )
             else ->
                 Box(contentModifier, contentAlignment = Alignment.TopCenter) {

@@ -54,6 +54,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.CallEnd
@@ -68,7 +69,6 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PhoneInTalk
 import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material.icons.rounded.VideocamOff
-import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -918,7 +918,7 @@ internal fun RouteControl(
 
 private fun AudioRouteKind?.icon(): ImageVector =
     when (this) {
-        AudioRouteKind.Speaker -> Icons.Rounded.VolumeUp
+        AudioRouteKind.Speaker -> Icons.AutoMirrored.Rounded.VolumeUp
         AudioRouteKind.Bluetooth -> Icons.Rounded.Bluetooth
         AudioRouteKind.WiredHeadset -> Icons.Rounded.Headphones
         else -> Icons.Rounded.PhoneInTalk
