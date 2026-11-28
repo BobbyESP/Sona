@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2026  Gabriel Fontán (BobbyESP)
  */
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.bobbyesp.sona.feature.messages
 
 import com.bobbyesp.sona.accounts.domain.Account
@@ -26,6 +28,7 @@ import com.bobbyesp.sona.sip.api.Transport
 import com.bobbyesp.sona.sip.fake.FakeSipEngine
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 
 /**

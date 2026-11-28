@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2026  Gabriel Fontán (BobbyESP)
  */
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.bobbyesp.sona.feature.messages
 
 import com.bobbyesp.sona.core.model.SipAddress
@@ -20,6 +22,7 @@ import com.bobbyesp.sona.messaging.domain.ConversationId
 import com.bobbyesp.sona.messaging.domain.MessageStatus
 import com.bobbyesp.sona.messaging.ui.R as WordsR
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy

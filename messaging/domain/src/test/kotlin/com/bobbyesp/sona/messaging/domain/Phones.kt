@@ -5,7 +5,6 @@
 
 package com.bobbyesp.sona.messaging.domain
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.bobbyesp.sona.accounts.domain.Account
 import com.bobbyesp.sona.accounts.domain.InMemoryAccountsRepository
 import com.bobbyesp.sona.core.model.AccountId
@@ -24,6 +23,7 @@ import com.bobbyesp.sona.sip.fake.FakeSipEngine
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
