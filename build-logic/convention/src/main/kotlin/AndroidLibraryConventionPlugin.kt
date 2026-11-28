@@ -19,7 +19,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             // A module without device tests builds no test APK. Otherwise, every module would build
             // and dex one, most of them empty, and a full build ran out of memory doing it.
-            val hasDeviceTests = file("src/androidTest").exists()
+            val hasDeviceTests = hasDeviceTests()
             extensions.configure<LibraryAndroidComponentsExtension> {
                 beforeVariants { variant ->
                     if (!hasDeviceTests) {
@@ -30,7 +30,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 }
             }
 
-            dependencies { add("androidTestImplementation", libs.library("androidx-test-runner")) }
+            if (hasDeviceTests) {
+                dependencies { add("androidTestImplementation", libs.library("androidx-test-runner")) }
+            }
         }
     }
 }

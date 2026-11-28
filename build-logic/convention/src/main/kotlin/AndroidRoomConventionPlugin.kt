@@ -35,7 +35,7 @@ class AndroidRoomConventionPlugin : Plugin<Project> {
             dependencies {
                 add("implementation", libs.library("room-runtime"))
                 add("ksp", libs.library("room-compiler"))
-                add("androidTestImplementation", libs.library("room-testing"))
+                if (hasDeviceTests()) add("androidTestImplementation", libs.library("room-testing"))
             }
         }
     }

@@ -18,7 +18,7 @@ class AndroidComposeConventionPlugin : Plugin<Project> {
             dependencies {
                 val bom = platform(libs.library("androidx-compose-bom"))
                 add("implementation", bom)
-                add("androidTestImplementation", bom)
+                if (hasDeviceTests()) add("androidTestImplementation", bom)
             }
         }
     }

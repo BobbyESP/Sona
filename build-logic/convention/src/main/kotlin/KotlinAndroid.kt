@@ -22,6 +22,11 @@ internal fun VersionCatalog.bundle(alias: String) = findBundle(alias).get()
  * on it, and `java.time` on API 26 is the first to need it.
  */
 @Suppress("UnstableApiUsage")
+/** Whether any `src/androidTest*` source set exists, so its dependencies are not ignored. */
+internal fun Project.hasDeviceTests(): Boolean =
+    file("src").listFiles { it.isDirectory && it.name.startsWith("androidTest") }?.isNotEmpty() ==
+        true
+
 internal fun Project.configureKotlinAndroid(extension: CommonExtension) {
     extension.apply {
         compileSdk = ProjectConfig.compileSdk
