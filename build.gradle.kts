@@ -37,6 +37,11 @@ allprojects {
     }
 }
 
+// The convention plugins are formatted with the rest.
+listOf("spotlessCheck", "spotlessApply").forEach { name ->
+    tasks.named(name) { dependsOn(gradle.includedBuild("build-logic").task(":convention:$name")) }
+}
+
 /**
  * The app's version. The code packs the stage in, so an alpha, a beta, a release candidate and the
  * release of one version are ordered: MmmPPsBB (major, minor, patch, stage 0-3, build).

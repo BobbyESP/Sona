@@ -7,9 +7,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
-/**
- * An Android library, without UI. A library that draws applies `sona.android.compose` as well.
- */
+/** An Android library, without UI. A library that draws applies `sona.android.compose` as well. */
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -31,7 +29,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
 
             if (hasDeviceTests) {
-                dependencies { add("androidTestImplementation", libs.library("androidx-test-runner")) }
+                dependencies {
+                    add("androidTestImplementation", libs.library("androidx-test-runner"))
+                }
             }
         }
     }

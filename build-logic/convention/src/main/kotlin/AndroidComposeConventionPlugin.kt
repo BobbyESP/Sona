@@ -5,8 +5,7 @@ import org.gradle.kotlin.dsl.dependencies
 
 /**
  * Compose, for an Android module that already applies `sona.android.application` or
- * `sona.android.library`: the compiler plugin, and the BOM every Compose artifact is versioned
- * by.
+ * `sona.android.library`: the compiler plugin, and the BOM every Compose artifact is versioned by.
  */
 class AndroidComposeConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {

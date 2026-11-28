@@ -3,7 +3,6 @@
 androidGradlePlugin = "9.5.2"
 kotlin = "2.4.21"
 ksp = "2.3.13"
-ktfmt = "0.28.0"
 spotless = "8.12.0"
 stabilityCompiler = "0.15.0"
 
@@ -144,7 +143,6 @@ kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidxBaselineProfile" }
 stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version.ref = "stabilityCompiler" }
-ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [bundles]

@@ -77,7 +77,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                     "(never their :data or :platform) and the engines' contracts (*:api). It " +
                     "opens another feature by " +
                     "a key of :core:navigation, adds to its screens through a contribution, and " +
-                    "implementations are bound in :app."
+                    "implementations are bound in :app.",
             )
         }
     }
