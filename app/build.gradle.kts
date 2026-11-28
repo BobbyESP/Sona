@@ -143,4 +143,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+
+    // The screenshot tour: the demo app driven on a device (docs/releasing.md).
+    "androidTestDemoImplementation"(libs.androidx.test.runner)
+    "androidTestDemoImplementation"(libs.androidx.test.ext.junit)
+    "androidTestDemoImplementation"(libs.androidx.test.rules)
+    "androidTestDemoImplementation"(libs.androidx.test.uiautomator)
 }

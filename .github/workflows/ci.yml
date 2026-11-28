@@ -68,9 +68,9 @@ jobs:
       - uses: ./.github/actions/setup-build
         with:
           cache-read-only: ${{ env.GRADLE_CACHE_READ_ONLY }}
-      # Both engines: the demo APK is the one kept, the full one proves Linphone still builds.
+      # Both engines (the demo APK is kept), and the screenshot tour must keep compiling.
       - name: Build the demo and full APKs
-        run: ./gradlew :app:assembleDemoDebug :app:assembleFullDebug
+        run: ./gradlew :app:assembleDemoDebug :app:assembleFullDebug :app:assembleDemoDebugAndroidTest
       - name: Upload the demo APK
         uses: actions/upload-artifact@v7
         with:
