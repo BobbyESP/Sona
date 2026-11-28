@@ -76,8 +76,8 @@ takes (`ANDROID_SERIAL` chooses one when several are connected). Per variant (`e
 `es-dark`: Spanish, light and dark theme) the script clears the demo app's data, sets its language
 and the system theme, runs the tour with `am instrument`, and replaces
 `assets/screenshots/<variant>/` with the full-screen `NN-name.png` files, status bar and blur
-included. The status bar is in the system's demo mode (12:00, full battery and signal, no
-notifications), and the app is exempt from battery optimization, so the readiness checklist is green. The
+included. The status bar is in the system's demo mode (the device's time, full battery,
+Wi-Fi only, no notifications), and the app is exempt from battery optimization, so the readiness checklist is green. The
 theme, demo mode, that exemption and the app's language are put back at the end, even if the run
 fails; when the tour fails, the pictures taken so far and `failure.png` (the screen it stopped at)
 stay in `build/screenshots/<variant>/` and `assets/` is left as it was.

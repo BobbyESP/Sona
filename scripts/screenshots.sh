@@ -57,6 +57,7 @@ if locked; then
 fi
 
 ORIGINAL_NIGHT=$(sh_ cmd uimode night | sed 's/.*: *//')
+ORIGINAL_24H=$(sh_ settings get system time_12_24)
 ORIGINAL_LOCALES=$(sh_ cmd locale get-app-locales "$PACKAGE" | sed -n 's/.*\[\(.*\)\].*/\1/p')
 ORIGINAL_DEMO_ALLOWED=$(sh_ settings get global sysui_demo_allowed)
 
@@ -70,6 +71,11 @@ restore() {
     adb shell settings put global sysui_demo_allowed "$ORIGINAL_DEMO_ALLOWED"
   fi
   adb shell cmd uimode night "${ORIGINAL_NIGHT:-auto}" > /dev/null
+  if [ "$ORIGINAL_24H" = "null" ]; then
+    adb shell settings delete system time_12_24 > /dev/null
+  else
+    adb shell settings put system time_12_24 "$ORIGINAL_24H"
+  fi
   adb shell cmd locale set-app-locales "$PACKAGE" --locales "$ORIGINAL_LOCALES" > /dev/null
   adb shell dumpsys deviceidle whitelist "-$PACKAGE" > /dev/null
   adb shell am force-stop "$PACKAGE"
@@ -83,10 +89,11 @@ echo "screenshots: building and installing the demo app and its tour"
 adb shell dumpsys deviceidle whitelist "+$PACKAGE" > /dev/null
 adb shell settings put global sysui_demo_allowed 1
 demo enter
-demo clock -e hhmm 1200
+adb shell settings put system time_12_24 24
+demo clock -e hhmm "$(sh_ date +%H%M)"
 demo battery -e level 100 -e plugged false
 demo network -e wifi show -e level 4 -e fully true
-demo network -e mobile show -e datatype hide -e level 4 -e fully true
+demo network -e mobile hide
 demo notifications -e visible false
 
 run_variant() {

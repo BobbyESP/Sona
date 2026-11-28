@@ -105,11 +105,11 @@ internal class DemoVideoSurfaces(private val engine: SipEngine, scope: Coroutine
         canvas.drawCircle(x, y, radius, paint)
 
         val seconds = frame / FPS
-        text.textSize = height / 14f
+        text.textSize = height / 24f
         canvas.drawText(
             String.format(Locale.ROOT, "%02d:%02d.%02d", seconds / 60, seconds % 60, frame % FPS),
             width / 2f,
-            height * 0.9f,
+            height * 0.8f,
             text,
         )
     }

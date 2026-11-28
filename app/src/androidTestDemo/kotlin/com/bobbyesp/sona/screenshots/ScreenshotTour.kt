@@ -149,9 +149,8 @@ class ScreenshotTour {
 
     private fun videoCall() {
         tab("history_title")
-        clickUntil(label("call_video_call")) { click(textContaining(CONTACT_NAME)) }
         clickUntil(label("call_end"), CALL_OPENS_WITHIN) {
-            find(label("call_video_call"))?.click()
+            find(label("call_video_call"))?.click() ?: click(textContaining(CONTACT_NAME))
         }
         awaitAnswered()
         settle(RINGING_TO_TIMER)
