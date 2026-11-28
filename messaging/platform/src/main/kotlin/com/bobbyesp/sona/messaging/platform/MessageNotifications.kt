@@ -197,7 +197,6 @@ class MessageNotifications(
     }
 
     private fun ensureChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val system = context.getSystemService(NotificationManager::class.java) ?: return
         system.createNotificationChannel(
             NotificationChannel(

@@ -1,8 +1,11 @@
 /*
  * Copyright (C) 2026  Gabriel Fontán (BobbyESP)
  */
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.bobbyesp.sona.messaging.domain
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.bobbyesp.sona.accounts.domain.Account
 import com.bobbyesp.sona.accounts.domain.InMemoryAccountsRepository
 import com.bobbyesp.sona.core.model.AccountId

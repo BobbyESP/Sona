@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import com.bobbyesp.sona.calling.domain.Call
@@ -49,7 +48,6 @@ class CallNotifications(private val context: Context, private val intents: CallS
     private val manager = context.getSystemService(NotificationManager::class.java)
 
     fun ensureChannels() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val incoming =
             NotificationChannel(
                     INCOMING,
@@ -157,7 +155,12 @@ class CallNotifications(private val context: Context, private val intents: CallS
             .setContentTitle(
                 if (labels.size == 1)
                     context.getString(R.string.notification_reachable, labels.single())
-                else context.getString(R.string.notification_reachable_many, labels.size),
+                else
+                    context.resources.getQuantityString(
+                        R.plurals.notification_reachable_many,
+                        labels.size,
+                        labels.size,
+                    ),
             )
             .setContentText(context.getString(R.string.notification_reachable_text))
             .setContentIntent(activity(intents.screen(context).appLaunch(context), REQUEST_APP))

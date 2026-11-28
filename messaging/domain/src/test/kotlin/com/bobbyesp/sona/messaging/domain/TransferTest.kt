@@ -71,7 +71,7 @@ class TransferTest {
 
         val there = world.there()
         assertEquals(TransferState.Done, there.attachment!!.state)
-        assertArrayEquals(picture, world.b.files.stored.getValue(there.attachment!!.file!!))
+        assertArrayEquals(picture, world.b.files.stored.getValue(there.attachment.file!!))
         assertEquals(TransferState.Done, world.sent().state)
         assertEquals(MessageStatus.Delivered, world.a.only(world.conversation).status)
         assertTrue(world.b.files.partial.isEmpty())
@@ -300,7 +300,7 @@ class TransferTest {
 
         val there = world.there()
         assertEquals(TransferState.Done, there.attachment!!.state)
-        assertArrayEquals(picture, world.b.files.stored.getValue(there.attachment!!.file!!))
+        assertArrayEquals(picture, world.b.files.stored.getValue(there.attachment.file!!))
         // Only what was missing was asked for again.
         val asked = world.b.sentTo(world.a).filterIsInstance<Envelope.Miss>().flatMap { it.ranges }
         assertTrue(asked.all { it.first >= 20 })

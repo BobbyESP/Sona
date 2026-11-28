@@ -285,5 +285,7 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
  * `phoneCall` service from `BOOT_COMPLETED`.
  */
 class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) = Unit
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+    }
 }

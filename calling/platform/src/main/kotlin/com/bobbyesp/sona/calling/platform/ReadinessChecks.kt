@@ -4,6 +4,7 @@
 package com.bobbyesp.sona.calling.platform
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -111,6 +112,8 @@ private class IncomingChannelCheck(
     override val title = R.string.readiness_channel
     override val problem = R.string.readiness_channel_problem
     override val fixLabel = R.string.readiness_open_settings
+    // A VoIP app that must ring while idle is an accepted use of the exemption.
+    @SuppressLint("BatteryLife")
     override val fix =
         ReadinessFix.SystemSettings(
             Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
@@ -172,6 +175,8 @@ private class BatteryCheck(
     override val title = R.string.readiness_battery
     override val problem = R.string.readiness_battery_problem
     override val fixLabel = R.string.readiness_allow
+    // A VoIP app that must ring while idle is an accepted use of the exemption.
+    @SuppressLint("BatteryLife")
     override val fix =
         ReadinessFix.SystemSettings(
             Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, context.packageUri()),
