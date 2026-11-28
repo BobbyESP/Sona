@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bobbyesp.sona.core.designsystem.components.ListHeadline
+import com.bobbyesp.sona.core.designsystem.components.rememberSyncedTextFieldState
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.ui.events.CollectEventsEffect
@@ -154,15 +156,17 @@ internal fun ContactEditorScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 OutlinedTextField(
-                    value = state.name,
-                    onValueChange = { onIntent(ContactEditorIntent.Name(it)) },
+                    state =
+                        rememberSyncedTextFieldState(state.name) {
+                            onIntent(ContactEditorIntent.Name(it))
+                        },
                     label = { Text(stringResource(R.string.contact_editor_name)) },
                     isError = state.showProblems && state.nameMissing,
                     supportingText =
                         if (state.showProblems && state.nameMissing) {
                             { Text(stringResource(R.string.contact_editor_need_name)) }
                         } else null,
-                    singleLine = true,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     shape = MaterialTheme.shapes.large,
                     keyboardOptions =
                         KeyboardOptions(
@@ -264,15 +268,17 @@ private fun NumberCard(
                 verticalAlignment = Alignment.Top,
             ) {
                 OutlinedTextField(
-                    value = field.value,
-                    onValueChange = { onIntent(ContactEditorIntent.Value(index, it)) },
+                    state =
+                        rememberSyncedTextFieldState(field.value) {
+                            onIntent(ContactEditorIntent.Value(index, it))
+                        },
                     label = { Text(stringResource(R.string.contact_editor_number)) },
                     isError = problem,
                     supportingText =
                         if (problem) {
                             { Text(stringResource(R.string.contact_editor_need_number)) }
                         } else null,
-                    singleLine = true,
+                    lineLimits = TextFieldLineLimits.SingleLine,
                     shape = MaterialTheme.shapes.large,
                     keyboardOptions =
                         KeyboardOptions(

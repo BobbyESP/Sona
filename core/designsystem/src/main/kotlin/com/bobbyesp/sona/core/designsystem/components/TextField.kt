@@ -30,9 +30,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldDecorator
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Dns
@@ -68,7 +76,6 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.Density
@@ -89,6 +96,8 @@ import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
  * Everything that moves (the container's color and corners, the label's place and size) is read in
  * the draw phase: typing and focusing never measure the field again.
  *
+ * @param state The text and its selection. A ViewModel that owns the text as a string gives it
+ *   through [rememberSyncedTextFieldState].
  * @param label What the field is: always shown, in the field when it is empty and above the text
  *   otherwise, and read by TalkBack with the text.
  * @param placeholder An example, shown only while the field is focused and empty.
@@ -99,13 +108,14 @@ import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
  *   clear button while it is focused and holds text, when [clearable].
  * @param shapes Its shape at rest and focused. [SonaTextFieldDefaults.segmentedShapes] joins fields
  *   into one group, as a segmented list joins its items.
+ * @param obfuscation How the text is hidden (a password), or `null` to show it as typed. A hidden
+ *   text is always one line.
  * @param supportingOnFocus Whether [supportingText] shows only while the field is focused: in a
  *   group, so the group stays one piece at rest. An [error] always shows.
  */
 @Composable
 fun SonaTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
+    state: TextFieldState,
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -115,10 +125,11 @@ fun SonaTextField(
     leadingIcon: ImageVector? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     clearable: Boolean = true,
-    singleLine: Boolean = true,
+    lineLimits: TextFieldLineLimits = TextFieldLineLimits.SingleLine,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: KeyboardActions = KeyboardActions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
+    onKeyboardAction: KeyboardActionHandler? = null,
+    inputTransformation: InputTransformation? = null,
+    obfuscation: TextObfuscationMode? = null,
     colors: SonaTextFieldColors = SonaTextFieldDefaults.colors(),
     shapes: SonaTextFieldShapes = SonaTextFieldDefaults.shapes(),
     supportingOnFocus: Boolean = false,
@@ -158,101 +169,120 @@ fun SonaTextField(
 
     val raised =
         animateFloatAsState(
-            targetValue = if (focused || value.isNotEmpty()) 1f else 0f,
+            targetValue = if (focused || state.text.isNotEmpty()) 1f else 0f,
             animationSpec = motion.fastEffectsSpec(),
             label = "FieldLabel",
         )
 
     val textStyle = MaterialTheme.typography.bodyLarge
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth().semantics { if (error != null) error(error) },
-        enabled = enabled,
-        textStyle = textStyle.copy(color = content),
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        visualTransformation = visualTransformation,
-        interactionSource = interactions,
-        cursorBrush = SolidColor(colors.cursor(isError)),
-        decorationBox = { innerTextField ->
-            Column {
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .graphicsLayer {
-                                shape = shapes.at(focus.value, size, this)
-                                clip = true
-                            }
-                            .drawBehind { drawRect(container.value) }
-                            .heightIn(min = FieldMinHeight)
-                            .padding(
-                                start = if (leadingIcon != null) 16.dp else 20.dp,
-                                end = 8.dp,
-                            ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (leadingIcon != null) {
-                        Icon(
-                            imageVector = leadingIcon,
-                            contentDescription = null,
-                            tint = accent,
-                            modifier = Modifier.size(LeadingIconSize),
-                        )
-                        Spacer(Modifier.width(14.dp))
-                    }
-                    Box(Modifier.weight(1f).padding(vertical = 10.dp)) {
-                        Text(
-                            text = label,
-                            style = textStyle,
-                            color = accent,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier =
-                                Modifier.graphicsLayer {
-                                    val progress = raised.value
-                                    val scale = lerp(1f, RaisedLabelScale, progress)
-                                    scaleX = scale
-                                    scaleY = scale
-                                    transformOrigin = TransformOrigin(if (rtl) 1f else 0f, 0f)
-                                    translationY = lerp(RestingLabelOffset.toPx(), 0f, progress)
-                                },
-                        )
-                        Box(Modifier.padding(top = TextTop)) {
-                            if (value.isEmpty() && focused && placeholder != null) {
-                                Text(
-                                    text = placeholder,
-                                    style = textStyle,
-                                    color = content.copy(alpha = PlaceholderAlpha),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            innerTextField()
+    val fieldModifier = modifier.fillMaxWidth().semantics { if (error != null) error(error) }
+    val fieldStyle = textStyle.copy(color = content)
+    val cursor = SolidColor(colors.cursor(isError))
+    val decorator = TextFieldDecorator { innerTextField ->
+        Column {
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .graphicsLayer {
+                            shape = shapes.at(focus.value, size, this)
+                            clip = true
                         }
-                    }
-                    CompositionLocalProvider(LocalContentColor provides accent) {
-                        when {
-                            trailingContent != null -> trailingContent()
-                            clearable ->
-                                ClearButton(
-                                    visible = focused && value.isNotEmpty() && enabled,
-                                    onClear = { onValueChange("") },
-                                )
-                            else -> Spacer(Modifier.width(12.dp))
+                        .drawBehind { drawRect(container.value) }
+                        .heightIn(min = FieldMinHeight)
+                        .padding(
+                            start = if (leadingIcon != null) 16.dp else 20.dp,
+                            end = 8.dp,
+                        ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (leadingIcon != null) {
+                    Icon(
+                        imageVector = leadingIcon,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(LeadingIconSize),
+                    )
+                    Spacer(Modifier.width(14.dp))
+                }
+                Box(Modifier.weight(1f).padding(vertical = 10.dp)) {
+                    Text(
+                        text = label,
+                        style = textStyle,
+                        color = accent,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier =
+                            Modifier.graphicsLayer {
+                                val progress = raised.value
+                                val scale = lerp(1f, RaisedLabelScale, progress)
+                                scaleX = scale
+                                scaleY = scale
+                                transformOrigin = TransformOrigin(if (rtl) 1f else 0f, 0f)
+                                translationY = lerp(RestingLabelOffset.toPx(), 0f, progress)
+                            },
+                    )
+                    Box(Modifier.padding(top = TextTop)) {
+                        if (state.text.isEmpty() && focused && placeholder != null) {
+                            Text(
+                                text = placeholder,
+                                style = textStyle,
+                                color = content.copy(alpha = PlaceholderAlpha),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
+                        innerTextField()
                     }
                 }
-                SupportingLine(
-                    supportingText = supportingText?.takeIf { focused || !supportingOnFocus },
-                    error = error,
-                    colors = colors,
-                )
+                CompositionLocalProvider(LocalContentColor provides accent) {
+                    when {
+                        trailingContent != null -> trailingContent()
+                        clearable ->
+                            ClearButton(
+                                visible = focused && state.text.isNotEmpty() && enabled,
+                                onClear = { state.clearText() },
+                            )
+                        else -> Spacer(Modifier.width(12.dp))
+                    }
+                }
             }
-        },
-    )
+            SupportingLine(
+                supportingText = supportingText?.takeIf { focused || !supportingOnFocus },
+                error = error,
+                colors = colors,
+            )
+        }
+    }
+    if (obfuscation != null) {
+        BasicSecureTextField(
+            state = state,
+            modifier = fieldModifier,
+            enabled = enabled,
+            inputTransformation = inputTransformation,
+            textStyle = fieldStyle,
+            keyboardOptions = keyboardOptions,
+            onKeyboardAction = onKeyboardAction,
+            interactionSource = interactions,
+            cursorBrush = cursor,
+            decorator = decorator,
+            textObfuscationMode = obfuscation,
+        )
+    } else {
+        BasicTextField(
+            state = state,
+            modifier = fieldModifier,
+            enabled = enabled,
+            inputTransformation = inputTransformation,
+            textStyle = fieldStyle,
+            keyboardOptions = keyboardOptions,
+            onKeyboardAction = onKeyboardAction,
+            lineLimits = lineLimits,
+            interactionSource = interactions,
+            cursorBrush = cursor,
+            decorator = decorator,
+        )
+    }
 }
 
 /** The clear button: it keeps its room while hidden, so the text does not move as it comes. */
@@ -490,28 +520,24 @@ private fun SonaTextFieldPreview() {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 SonaTextField(
-                    value = "",
-                    onValueChange = {},
+                    state = rememberTextFieldState(),
                     label = "Server",
                     leadingIcon = Icons.Rounded.Dns,
                 )
                 SonaTextField(
-                    value = "192.168.1.10",
-                    onValueChange = {},
+                    state = rememberTextFieldState("192.168.1.10"),
                     label = "Server",
                     leadingIcon = Icons.Rounded.Dns,
                     supportingText = "Your Asterisk's address",
                 )
                 SonaTextField(
-                    value = "lab example",
-                    onValueChange = {},
+                    state = rememberTextFieldState("lab example"),
                     label = "Server",
                     leadingIcon = Icons.Rounded.Dns,
                     error = "Not a server address",
                 )
                 SonaTextField(
-                    value = "secret",
-                    onValueChange = {},
+                    state = rememberTextFieldState("secret"),
                     label = "Password",
                     trailingContent = {
                         IconButton(onClick = {}) { Icon(Icons.Rounded.Visibility, null) }

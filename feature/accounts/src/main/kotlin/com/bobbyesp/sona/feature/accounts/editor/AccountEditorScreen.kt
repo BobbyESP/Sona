@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -104,8 +106,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -123,6 +123,7 @@ import com.bobbyesp.sona.core.designsystem.components.SegmentedChoiceList
 import com.bobbyesp.sona.core.designsystem.components.SonaTextField
 import com.bobbyesp.sona.core.designsystem.components.SonaTextFieldDefaults
 import com.bobbyesp.sona.core.designsystem.components.SonaTextFieldShapes
+import com.bobbyesp.sona.core.designsystem.components.rememberSyncedTextFieldState
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.core.model.settings.AudioCodec
@@ -393,13 +394,14 @@ private fun MoreOptions(state: EditorState, edit: (AccountDraft.() -> AccountDra
             EditorField(
                 shapes = SonaTextFieldDefaults.segmentedShapes(0, 4),
                 value = draft.port,
-                onValueChange = { edit { copy(port = it.filter(Char::isDigit)) } },
+                onValueChange = { edit { copy(port = it) } },
                 label = R.string.field_port,
                 icon = Icons.Rounded.Tag,
                 placeholder = if (draft.transport == Transport.Tls) "5061" else "5060",
                 supporting = R.string.field_port_supporting,
                 problem = state.problems[DraftField.Port],
                 keyboardType = KeyboardType.Number,
+                inputTransformation = DigitsOnly,
             )
             EditorField(
                 shapes = SonaTextFieldDefaults.segmentedShapes(1, 4),
@@ -423,13 +425,14 @@ private fun MoreOptions(state: EditorState, edit: (AccountDraft.() -> AccountDra
             EditorField(
                 shapes = SonaTextFieldDefaults.segmentedShapes(3, 4),
                 value = draft.expirySeconds,
-                onValueChange = { edit { copy(expirySeconds = it.filter(Char::isDigit)) } },
+                onValueChange = { edit { copy(expirySeconds = it) } },
                 label = R.string.field_expiry,
                 icon = Icons.Rounded.Timer,
                 placeholder = "600",
                 supporting = R.string.field_expiry_supporting,
                 problem = state.problems[DraftField.Expiry],
                 keyboardType = KeyboardType.Number,
+                inputTransformation = DigitsOnly,
             )
         }
 
@@ -632,10 +635,10 @@ private fun EditorField(
     keyboardType: KeyboardType = KeyboardType.Text,
     capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     imeAction: ImeAction = ImeAction.Next,
+    inputTransformation: InputTransformation? = null,
 ) {
     SonaTextField(
-        value = value,
-        onValueChange = onValueChange,
+        state = rememberSyncedTextFieldState(value, onValueChange),
         label = stringResource(label),
         leadingIcon = icon,
         placeholder = placeholder,
@@ -650,6 +653,7 @@ private fun EditorField(
                 keyboardType = keyboardType,
                 imeAction = imeAction,
             ),
+        inputTransformation = inputTransformation,
     )
 }
 
@@ -662,8 +666,8 @@ private fun PasswordField(
 ) {
     val visible = state.passwordVisible
     SonaTextField(
-        value = state.password,
-        onValueChange = { onIntent(EditorIntent.Password(it)) },
+        state =
+            rememberSyncedTextFieldState(state.password) { onIntent(EditorIntent.Password(it)) },
         label =
             stringResource(
                 if (state.isNew && state.draft.id == null) R.string.field_password
@@ -673,8 +677,7 @@ private fun PasswordField(
         shapes = shapes,
         error =
             if (state.passwordMissing) stringResource(R.string.problem_password_required) else null,
-        visualTransformation =
-            if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        obfuscation = if (visible) TextObfuscationMode.Visible else TextObfuscationMode.Hidden,
         keyboardOptions =
             KeyboardOptions(
                 autoCorrectEnabled = false,
@@ -697,6 +700,12 @@ private fun PasswordField(
             }
         },
     )
+}
+
+/** Whatever is typed or pasted, only its digits are kept. */
+private val DigitsOnly = InputTransformation {
+    val digits = asCharSequence().filter(Char::isDigit)
+    if (digits.length != length) replace(0, length, digits)
 }
 
 private val DraftProblem.text: Int

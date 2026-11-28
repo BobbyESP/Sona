@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.Add
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.bobbyesp.sona.core.designsystem.components.ListHeadline
+import com.bobbyesp.sona.core.designsystem.components.rememberSyncedTextFieldState
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
 import com.bobbyesp.sona.feature.messages.R
@@ -97,11 +99,10 @@ internal fun Composer(
                 )
             }
             TextField(
-                value = draft,
-                onValueChange = onDraft,
+                state = rememberSyncedTextFieldState(draft, onDraft),
                 modifier = Modifier.weight(1f),
                 placeholder = { Text(stringResource(R.string.conversation_placeholder)) },
-                maxLines = 6,
+                lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 6),
                 shape = MaterialTheme.shapes.extraLarge,
                 keyboardOptions =
                     KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),

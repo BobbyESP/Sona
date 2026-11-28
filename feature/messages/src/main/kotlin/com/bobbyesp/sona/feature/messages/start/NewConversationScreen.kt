@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -50,6 +49,7 @@ import com.bobbyesp.sona.accounts.ui.accent
 import com.bobbyesp.sona.core.designsystem.components.ListHeadline
 import com.bobbyesp.sona.core.designsystem.components.SectionHeader
 import com.bobbyesp.sona.core.designsystem.components.SonaTextField
+import com.bobbyesp.sona.core.designsystem.components.rememberSyncedTextFieldState
 import com.bobbyesp.sona.core.designsystem.components.segmentedItems
 import com.bobbyesp.sona.core.designsystem.components.segmentedListColors
 import com.bobbyesp.sona.core.designsystem.theme.SonaTheme
@@ -116,8 +116,10 @@ internal fun NewConversationScreen(
             ) {
                 item(key = "field", contentType = "field") {
                     SonaTextField(
-                        value = state.query,
-                        onValueChange = { onIntent(NewConversationIntent.Query(it)) },
+                        state =
+                            rememberSyncedTextFieldState(state.query) {
+                                onIntent(NewConversationIntent.Query(it))
+                            },
                         label = stringResource(R.string.new_to),
                         placeholder = stringResource(R.string.new_to_placeholder),
                         leadingIcon = Icons.Rounded.Search,
@@ -129,10 +131,7 @@ internal fun NewConversationScreen(
                                 keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Send,
                             ),
-                        keyboardActions =
-                            KeyboardActions(
-                                onSend = { onIntent(NewConversationIntent.WriteTyped) },
-                            ),
+                        onKeyboardAction = { onIntent(NewConversationIntent.WriteTyped) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
                 }

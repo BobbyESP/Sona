@@ -219,7 +219,6 @@ internal class ConversationViewModel(
 
     override fun onCleared() {
         if (visible) messenger.setVisibleConversation(null)
-        super.onCleared()
     }
 }
 
