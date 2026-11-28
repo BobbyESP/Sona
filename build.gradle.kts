@@ -80,8 +80,8 @@ sealed class Version(val major: Int, val minor: Int, val patch: Int, val build: 
     }
 }
 
-// The one place the version is set. 1.0.0-beta.2 is code 10000102, below 1.0.0's 10000300.
-val currentVersion: Version = Version.Beta(major = 1, minor = 0, patch = 0, build = 2)
+// The one place the version is set. 1.0.0-beta.3 is code 10000103, below 1.0.0's 10000300.
+val currentVersion: Version = Version.Beta(major = 1, minor = 0, patch = 0, build = 3)
 
 extra.set("versionCode", currentVersion.toVersionCode())
 
