@@ -9,6 +9,7 @@ dependencies {
     api(project(":messaging:domain"))
     implementation(project(":core:database"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.exifinterface)
     implementation(libs.room.runtime)
     implementation(libs.bundles.coroutines)
     testImplementation(libs.junit)

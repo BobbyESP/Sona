@@ -4,6 +4,7 @@
 package com.bobbyesp.sona.messaging.data
 
 import android.content.Context
+import android.os.storage.StorageManager
 import android.util.Log
 import androidx.core.content.FileProvider
 import com.bobbyesp.sona.messaging.domain.AttachmentFiles
@@ -31,7 +32,7 @@ class AndroidAttachmentFiles(
             val file = incoming(key) ?: return@io false
             if (file.exists() && file.length() == size) return@io true
             file.parentFile?.mkdirs()
-            if (file.parentFile!!.usableSpace < size - file.length().coerceAtLeast(0))
+            if (allocatable(file.parentFile!!) < size - file.length().coerceAtLeast(0))
                 return@io false
             RandomAccessFile(file, "rw").use { it.setLength(size) }
             true
@@ -95,6 +96,16 @@ class AndroidAttachmentFiles(
     override fun uriOf(file: String): String {
         val target = stored(file) ?: return ""
         return FileProvider.getUriForFile(context, authority(context), target).toString()
+    }
+
+    /** What the system would free for this file's storage, cached data included. */
+    private fun allocatable(folder: File): Long {
+        val storage = context.getSystemService(StorageManager::class.java)
+        return try {
+            storage.getAllocatableBytes(storage.getUuidForPath(folder))
+        } catch (error: IOException) {
+            folder.usableSpace
+        }
     }
 
     private fun incoming(key: String): File? =

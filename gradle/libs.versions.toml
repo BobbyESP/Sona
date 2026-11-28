@@ -12,6 +12,7 @@ androidxActivity = "1.13.0"
 androidxCore = "1.19.1"
 androidxCoreSplashscreen = "1.2.0"
 androidxCoreTelecom = "1.1.0"
+androidxExifinterface = "1.4.2"
 androidxLifecycle = "2.11.1"
 androidxNavigation3 = "1.2.2"
 androidxProfileInstaller = "1.4.1"
@@ -63,6 +64,7 @@ compose-compiler-gradle-plugin = { group = "org.jetbrains.kotlin", name = "compo
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
 androidx-core-telecom = { group = "androidx.core", name = "core-telecom", version.ref = "androidxCoreTelecom" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "androidxExifinterface" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "androidxLifecycle" }

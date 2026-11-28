@@ -7,10 +7,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.media.ExifInterface
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
+import androidx.core.graphics.scale
+import androidx.core.net.toUri
+import androidx.exifinterface.media.ExifInterface
 import com.bobbyesp.sona.messaging.data.AndroidAttachmentFiles.Companion.toHex
 import com.bobbyesp.sona.messaging.domain.AttachmentPreparer
 import com.bobbyesp.sona.messaging.domain.PreparedAttachment
@@ -48,7 +50,7 @@ class AndroidAttachmentPreparer(
         limit: Long,
     ): PreparedAttachment =
         withContext(io) {
-            val uri = Uri.parse(source)
+            val uri = source.toUri()
             val folder = File(sent, UUID.randomUUID().toString())
             try {
                 val (name, declared) = describe(uri)
@@ -152,11 +154,9 @@ class AndroidAttachmentPreparer(
             if (longest <= MAX_SIDE) upright
             else {
                 val scale = MAX_SIDE.toFloat() / longest
-                Bitmap.createScaledBitmap(
-                    upright,
+                upright.scale(
                     (upright.width * scale).roundToInt().coerceAtLeast(1),
                     (upright.height * scale).roundToInt().coerceAtLeast(1),
-                    true,
                 )
             }
         val target = File(folder, name.substringBeforeLast('.').ifBlank { "picture" } + ".jpg")
