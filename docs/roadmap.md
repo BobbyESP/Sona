@@ -428,7 +428,8 @@ other readiness fixes, *Use mobile data* off.
 - [ ] A signing configuration, and the release APK run on a device: R8 passes, but Linphone's
       native bindings under it were never started. `proguard-rules.pro` is one comment.
 - [ ] Device tests: the Room migration from 1 to 2, the device contacts query, Core-Telecom.
-- [ ] Screens on the fake engine, with screenshots in light, dark and large font.
+- [x] Screens on the fake engine, with screenshots in light and dark (`scripts/screenshots.sh`).
+- [ ] The same screenshots in large font.
 - [ ] Previews in large font and right-to-left for the components.
 - [ ] A translation, if the course wants one: every string is English.
 

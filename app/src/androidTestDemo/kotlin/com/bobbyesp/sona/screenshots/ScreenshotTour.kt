@@ -13,9 +13,9 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
-import androidx.test.uiautomator.Until
 import java.io.File
 import java.util.regex.Pattern
 import org.junit.Assert.assertTrue
@@ -83,6 +83,7 @@ class ScreenshotTour {
             diagnostics()
         } catch (error: Throwable) {
             capture("failure")
+            device.dumpWindowHierarchy(File(out, "failure.xml"))
             throw error
         }
     }
@@ -106,16 +107,15 @@ class ScreenshotTour {
         settle()
         capture("03-registered")
         click(label("done"))
-        // The checklist a first account leads to: everything is granted, so it only says so.
+        // The checklist a first account leads to; "Listo" is also what its ticks are called.
         await(text("readiness_title"))
         settle()
-        capture("04-readiness")
-        click(label("readiness_done"), label("readiness_later"))
+        click(text("readiness_later"), text("readiness_done"))
     }
 
     private fun contact() {
         tab("contacts_title")
-        click(label("contacts_new"))
+        clickUntil(label("contact_editor_name")) { clickActionButton() }
         type("contact_editor_name", CONTACT_NAME)
         type("contact_editor_number", CONTACT_NUMBER)
         hideKeyboard()
@@ -128,33 +128,34 @@ class ScreenshotTour {
         tab("dialer_title")
         dial(CONTACT_NUMBER)
         settle()
-        capture("05-keypad")
+        capture("04-keypad")
     }
 
     private fun audioCall() {
-        click(label("dialer_call"))
+        callWhenReady(label("call_end"))
         awaitAnswered()
         settle(RINGING_TO_TIMER)
-        capture("06-call")
+        capture("05-call")
         hangUp()
     }
 
     private fun failedCall() {
         dial(BUSY_NUMBER)
-        click(label("dialer_call"))
-        await(pattern("end_busy"), REGISTERS_WITHIN)
+        callWhenReady(pattern("end_busy"))
         settle()
-        capture("07-call-failed")
+        capture("06-call-failed")
         await(label("dialer_call"), ENDED_LINGERS)
     }
 
     private fun videoCall() {
         tab("history_title")
-        click(textContaining(CONTACT_NAME))
-        click(label("call_video_call"))
+        clickUntil(label("call_video_call")) { click(textContaining(CONTACT_NAME)) }
+        clickUntil(label("call_end"), CALL_OPENS_WITHIN) {
+            find(label("call_video_call"))?.click()
+        }
         awaitAnswered()
         settle(RINGING_TO_TIMER)
-        capture("08-video-call")
+        capture("07-video-call")
         hangUp()
     }
 
@@ -162,57 +163,79 @@ class ScreenshotTour {
         tab("history_title")
         await(textContaining(CONTACT_NAME))
         settle()
-        capture("09-history")
+        capture("08-history")
     }
 
     private fun contacts() {
         tab("contacts_title")
         await(textContaining(CONTACT_NAME))
         settle()
-        capture("10-contacts")
+        capture("09-contacts")
     }
 
     private fun messages() {
         tab("messages_title")
-        click(label("messages_new"))
+        clickUntil(label("new_to")) { clickActionButton() }
         type("new_to", CONTACT_NUMBER)
         hideKeyboard()
-        click(pattern("new_write_to"))
+        clickUntil(label("conversation_placeholder")) { click(pattern("new_write_to")) }
         type("conversation_placeholder", MESSAGE)
         click(label("conversation_send"))
         await(pattern("demo_sona_reply"), REPLIES_WITHIN)
-        settle()
-        capture("12-conversation")
         hideKeyboard()
-        device.pressBack()
-        await(text("messages_title"))
         settle()
-        capture("11-messages")
+        capture("11-conversation")
+        device.pressBack()
+        waitUntilGone(listOf(label("conversation_placeholder")), WAIT)
+        settle()
+        capture("10-messages")
     }
 
     private fun settings() {
-        click(label("settings_open"))
-        await(text("settings_area_about"))
+        clickUntil(text("settings_area_about")) { click(label("settings_open")) }
         settle()
-        capture("13-settings")
+        capture("12-settings")
     }
 
     private fun diagnostics() {
-        click(label("settings_area_diagnostics"))
-        click(label("settings_diagnostics_open"))
-        await(text("diagnostics_engine_running"), REGISTERS_WITHIN)
+        clickUntil(label("settings_diagnostics_open")) { click(label("settings_area_diagnostics")) }
+        clickUntil(text("diagnostics_engine_running")) { click(label("settings_diagnostics_open")) }
         settle()
-        capture("14-diagnostics")
+        capture("13-diagnostics")
     }
+
+    /** Presses *Call* again if the screen was moving, never once the call screen is up. */
+    private fun callWhenReady(expected: List<BySelector>) =
+        clickUntil(expected, CALL_OPENS_WITHIN) { find(label("dialer_call"))?.click() }
+
+    /** Taps again while the tap does not bring [expected]: the screen may have been moving. */
+    private fun clickUntil(
+        expected: List<BySelector>,
+        within: Long = TAP_LANDS,
+        action: () -> Unit,
+    ) {
+        repeat(TAPS) {
+            action()
+            if (appears(expected, within)) return
+        }
+        throw AssertionError("Not on screen in time: $expected")
+    }
+
+    private fun appears(selectors: List<BySelector>, timeout: Long): Boolean =
+        try {
+            poll("$selectors", timeout) { find(selectors) }
+            true
+        } catch (_: AssertionError) {
+            false
+        }
 
     /** Clears what a call left in the keypad, then types [number] on the keys. */
     private fun dial(number: String) {
         await(label("dialer_call"))
         find(label("dialer_delete"))?.longClick()
         number.forEach { digit ->
-            val key = Pattern.compile("^$digit(, .+)?$")
             // The number is described by its digits too: the key is the lower of the two.
-            awaitAll(By.desc(key)).maxBy { it.visibleBounds.top }.click()
+            tapLowest(By.desc(Pattern.compile("^$digit(, .+)?$")))
         }
     }
 
@@ -229,18 +252,30 @@ class ScreenshotTour {
         click(label("call_end"))
     }
 
-    /** The tab's label is the lowest text that says its name: the bar is at the bottom. */
-    private fun tab(title: String) {
-        awaitAll(By.text(str(title))).maxBy { it.visibleBounds.top }.click()
+    /**
+     * The floating action button: accessibility gives its label to no node, so it is the one wide
+     * button in the lower half of the screen.
+     */
+    private fun clickActionButton() {
+        tap("the floating action button") {
+            device.findObjects(By.clazz("android.widget.Button")).firstOrNull {
+                it.visibleBounds.width() > device.displayWidth / 3 &&
+                    it.visibleBounds.top > device.displayHeight / 2
+            }
+        }
     }
+
+    /** The tab's label is the lowest text that says its name: the bar is at the bottom. */
+    private fun tab(title: String) = tapLowest(By.text(str(title)))
 
     /** Taps a field by its label and types into it. */
     private fun type(field: String, value: String) {
         click(label(field))
-        val focused =
-            device.wait(Until.findObject(By.clazz("android.widget.EditText").focused(true)), WAIT)
-                ?: fail("a field to type ${str(field)} into")
-        focused.text = value
+        poll("a field to type ${str(field)} into") {
+            device.findObject(By.clazz("android.widget.EditText").focused(true))?.also {
+                it.text = value
+            }
+        }
     }
 
     private fun hideKeyboard() {
@@ -287,53 +322,48 @@ class ScreenshotTour {
         device.findObject(it)
     }
 
-    private fun await(selectors: List<BySelector>, timeout: Long = WAIT): UiObject2 {
+    /**
+     * Tries [attempt] until it gives something, for [timeout]. The screen changes under the tour,
+     * so a node found a moment ago may be gone: that is another try, not a failure.
+     */
+    private fun <T : Any> poll(what: String, timeout: Long = WAIT, attempt: () -> T?): T {
         val deadline = System.currentTimeMillis() + timeout
         do {
-            find(selectors)?.let {
-                return it
-            }
-            Thread.sleep(POLL)
-        } while (System.currentTimeMillis() < deadline)
-        fail("$selectors")
-    }
-
-    private fun awaitAll(selector: BySelector): List<UiObject2> {
-        val deadline = System.currentTimeMillis() + WAIT
-        do {
-            device
-                .findObjects(selector)
-                .takeIf { it.isNotEmpty() }
-                ?.let {
+            try {
+                attempt()?.let {
                     return it
                 }
+            } catch (_: StaleObjectException) {}
             Thread.sleep(POLL)
         } while (System.currentTimeMillis() < deadline)
-        fail("$selector")
+        throw AssertionError("Not on screen in time: $what")
     }
+
+    private fun await(selectors: List<BySelector>, timeout: Long = WAIT) =
+        poll("$selectors", timeout) { find(selectors) }
 
     private fun waitUntilGone(selectors: List<List<BySelector>>, timeout: Long) {
         val deadline = System.currentTimeMillis() + timeout
         while (selectors.any { find(it) != null }) {
-            if (System.currentTimeMillis() > deadline) fail("the call to be answered")
+            if (System.currentTimeMillis() > deadline) {
+                throw AssertionError("Still on screen: $selectors")
+            }
             Thread.sleep(POLL)
         }
     }
 
+    /** Taps the first of [alternatives] that is on screen. */
     private fun click(vararg alternatives: List<BySelector>) {
-        val deadline = System.currentTimeMillis() + WAIT
-        do {
-            alternatives.forEach { selectors ->
-                find(selectors)?.let {
-                    return it.click()
-                }
-            }
-            Thread.sleep(POLL)
-        } while (System.currentTimeMillis() < deadline)
-        fail("${alternatives.toList()}")
+        tap("${alternatives.toList()}") { alternatives.firstNotNullOfOrNull { find(it) } }
     }
 
-    private fun fail(what: String): Nothing = throw AssertionError("Not on screen in time: $what")
+    private fun tapLowest(selector: BySelector) {
+        tap("$selector") { device.findObjects(selector).maxByOrNull { it.visibleBounds.top } }
+    }
+
+    private fun tap(what: String, find: () -> UiObject2?) {
+        poll(what) { find()?.also { it.click() } }
+    }
 
     private companion object {
         const val SCREENSHOTS = "screenshots"
@@ -344,6 +374,9 @@ class ScreenshotTour {
 
         const val WAIT = 10_000L
         const val POLL = 150L
+        const val TAPS = 4
+        const val CALL_OPENS_WITHIN = 6_000L
+        const val TAP_LANDS = 2_500L
         const val SETTLE = 700L
         const val RINGING_TO_TIMER = 1_800L
         const val WELCOME_WITHIN = 30_000L

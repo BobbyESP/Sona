@@ -71,6 +71,7 @@ restore() {
   fi
   adb shell cmd uimode night "${ORIGINAL_NIGHT:-auto}" > /dev/null
   adb shell cmd locale set-app-locales "$PACKAGE" --locales "$ORIGINAL_LOCALES" > /dev/null
+  adb shell dumpsys deviceidle whitelist "-$PACKAGE" > /dev/null
   adb shell am force-stop "$PACKAGE"
 }
 trap restore EXIT
@@ -78,12 +79,14 @@ trap restore EXIT
 echo "screenshots: building and installing the demo app and its tour"
 ./gradlew :app:installDemoDebug :app:installDemoDebugAndroidTest
 
+# The battery exemption is the one thing the readiness checklist cannot get from a test.
+adb shell dumpsys deviceidle whitelist "+$PACKAGE" > /dev/null
 adb shell settings put global sysui_demo_allowed 1
 demo enter
 demo clock -e hhmm 1200
 demo battery -e level 100 -e plugged false
 demo network -e wifi show -e level 4 -e fully true
-demo network -e mobile show -e datatype none -e level 4 -e fully true
+demo network -e mobile show -e datatype hide -e level 4 -e fully true
 demo notifications -e visible false
 
 run_variant() {

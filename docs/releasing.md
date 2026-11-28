@@ -71,13 +71,14 @@ scripts/screenshots.sh            # every variant
 scripts/screenshots.sh es-dark    # only one
 ```
 
-It needs a phone with USB or wireless debugging, **unlocked and awake** for the few minutes the run
+It needs a phone or an emulator with debugging on, **unlocked and awake** for the few minutes the run
 takes (`ANDROID_SERIAL` chooses one when several are connected). Per variant (`es-light`,
 `es-dark`: Spanish, light and dark theme) the script clears the demo app's data, sets its language
 and the system theme, runs the tour with `am instrument`, and replaces
 `assets/screenshots/<variant>/` with the full-screen `NN-name.png` files, status bar and blur
 included. The status bar is in the system's demo mode (12:00, full battery and signal, no
-notifications). The theme, demo mode and the app's language are put back at the end, even if the run
+notifications), and the app is exempt from battery optimization, so the readiness checklist is green. The
+theme, demo mode, that exemption and the app's language are put back at the end, even if the run
 fails; when the tour fails, the pictures taken so far and `failure.png` (the screen it stopped at)
 stay in `build/screenshots/<variant>/` and `assets/` is left as it was.
 

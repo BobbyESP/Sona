@@ -155,7 +155,9 @@ From phases 1 and 2.
 - [ ] A signing configuration; the release APK run on a device; `proguard-rules.pro` for Linphone.
 - [ ] Device tests: the Room migrations (1 to 2, 2 to 3, 3 to 4), the device contacts query,
       Core-Telecom.
-- [ ] Screenshots of the screens on the fake engine: light, dark, large font.
+- [x] Screenshots of the screens on the fake engine, in Spanish, light and dark: `scripts/screenshots.sh`
+      ([releasing.md](releasing.md#screenshots)).
+- [ ] The same screenshots in large font.
 - [ ] Previews in large font and right-to-left.
 - [ ] A translation, if the course wants one.
 - [ ] Before Google Play only: the battery exemption request against Play's policy.
