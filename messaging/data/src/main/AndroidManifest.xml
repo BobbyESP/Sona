@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Opens a message's picture or file in another app; nothing is readable without a grant. -->
+        <provider
+            android:name=".MessageFileProvider"
+            android:authorities="${applicationId}.messages"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/message_files" />
+        </provider>
+    </application>
+
+</manifest>

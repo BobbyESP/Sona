@@ -173,7 +173,8 @@ private class DeviceBlurSignals(private val context: Context) {
         } ?: 0L
 
     private var isPowerSaveMode by mutableStateOf(powerManager?.isPowerSaveMode ?: false)
-    private var thermalStatus by mutableIntStateOf(PowerManager.THERMAL_STATUS_NONE)
+    // THERMAL_STATUS_NONE: the constant needs API 29, the listener below needs 31.
+    private var thermalStatus by mutableIntStateOf(0)
     private var isWindowBlurEnabled by mutableStateOf(true)
 
     val level: BlurLevel

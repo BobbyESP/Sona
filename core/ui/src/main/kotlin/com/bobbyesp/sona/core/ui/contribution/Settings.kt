@@ -5,12 +5,14 @@ package com.bobbyesp.sona.core.ui.contribution
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.rounded.Call
 import androidx.compose.material.icons.rounded.Contacts
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Troubleshoot
+import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material.icons.rounded.Wifi
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
@@ -48,6 +50,14 @@ object SettingsAreas {
             R.string.settings_area_audio_summary,
             Icons.Rounded.GraphicEq,
         )
+    val Video =
+        SettingsArea(
+            "video",
+            13,
+            R.string.settings_area_video,
+            R.string.settings_area_video_summary,
+            Icons.Rounded.Videocam,
+        )
     val Network =
         SettingsArea(
             "network",
@@ -55,6 +65,14 @@ object SettingsAreas {
             R.string.settings_area_network,
             R.string.settings_area_network_summary,
             Icons.Rounded.Wifi,
+        )
+    val Messages =
+        SettingsArea(
+            "messages",
+            16,
+            R.string.settings_area_messages,
+            R.string.settings_area_messages_summary,
+            Icons.AutoMirrored.Rounded.Chat,
         )
     val Directory =
         SettingsArea(

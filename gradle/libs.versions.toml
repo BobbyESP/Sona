@@ -3,7 +3,6 @@
 androidGradlePlugin = "9.5.2"
 kotlin = "2.4.21"
 ksp = "2.3.13"
-ktfmt = "0.28.0"
 spotless = "8.12.0"
 stabilityCompiler = "0.15.0"
 
@@ -12,6 +11,7 @@ androidxActivity = "1.13.0"
 androidxCore = "1.19.1"
 androidxCoreSplashscreen = "1.2.0"
 androidxCoreTelecom = "1.1.0"
+androidxExifinterface = "1.4.2"
 androidxLifecycle = "2.11.1"
 androidxNavigation3 = "1.2.2"
 androidxProfileInstaller = "1.4.1"
@@ -51,6 +51,8 @@ junit = "4.13.2"
 turbine = "1.2.1"
 androidxTestExtJunit = "1.3.0"
 androidxTestRunner = "1.7.0"
+androidxTestRules = "1.7.0"
+uiautomator = "2.4.1"
 
 [libraries]
 # Build logic
@@ -63,6 +65,7 @@ compose-compiler-gradle-plugin = { group = "org.jetbrains.kotlin", name = "compo
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
 androidx-core-telecom = { group = "androidx.core", name = "core-telecom", version.ref = "androidxCoreTelecom" }
+androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "androidxExifinterface" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "androidxLifecycle" }
@@ -108,8 +111,9 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
-# SIP: only :sip:linphone may depend on this
-linphone-sdk = { group = "org.linphone.no-video", name = "linphone-sdk-android", version.ref = "linphone" }
+# SIP: only :sip:linphone may depend on this. The `org.linphone` group is the SDK with video (the
+# camera, the video codecs); `org.linphone.no-video` is the same API without them.
+linphone-sdk = { group = "org.linphone", name = "linphone-sdk-android", version.ref = "linphone" }
 
 # UI
 material-kolor = { group = "com.materialkolor", name = "material-kolor", version.ref = "materialKolor" }
@@ -127,6 +131,8 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
 androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
+androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
@@ -137,7 +143,6 @@ kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "androidxBaselineProfile" }
 stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version.ref = "stabilityCompiler" }
-ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 
 [bundles]

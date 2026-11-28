@@ -4,6 +4,7 @@
 package com.bobbyesp.sona.calling.platform
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -39,9 +40,9 @@ private const val TAG = "SonaServices"
  * call begins, with its `CallStyle` notification, and stopped when none is left. It shows the call
  * that matters most: one ringing, else one active, else the latest.
  *
- * Its type is `phoneCall`, plus `microphone` once a call was dialed or answered. Android only lets
- * a service use the microphone when it starts from a user action or a visible activity; if it
- * refuses, the call goes on as `phoneCall` alone and the refusal is logged (docs/calling.md).
+ * Its type is `phoneCall`, plus `microphone` once a call was dialed or answered, plus `camera`
+ * while one is in use. Android may refuse the last two: the call goes on without them
+ * (docs/calling.md).
  */
 class CallService : LifecycleService(), KoinComponent {
     private val coordinator: CallCoordinator by inject()
@@ -66,7 +67,8 @@ class CallService : LifecycleService(), KoinComponent {
                         stop()
                     } else {
                         val label = all.firstOrNull { it.id == call.account }?.label
-                        show(call, label, (foreground as? CallForeground.Calls)?.microphone == true)
+                        val uses = foreground as? CallForeground.Calls
+                        show(call, label, uses?.microphone == true, uses?.camera == true)
                     }
                 }
         }
@@ -75,25 +77,33 @@ class CallService : LifecycleService(), KoinComponent {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         val call = coordinator.calls.value.mostImportant()
-        if (call == null) stop() else show(call, null, microphone = false)
+        if (call == null) stop() else show(call, null, microphone = false, camera = false)
         return START_NOT_STICKY
     }
 
-    private fun show(call: Call, accountLabel: String?, microphone: Boolean) {
+    private fun show(call: Call, accountLabel: String?, microphone: Boolean, camera: Boolean) {
         val (id, notification) = notifications.forCall(call, accountLabel)
-        val withMicrophone =
-            microphone &&
-                ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
-                    PackageManager.PERMISSION_GRANTED
-        try {
-            ServiceCompat.startForeground(this, id, notification, types(withMicrophone))
-        } catch (error: Exception) {
-            Log.w(TAG, "Foreground with the microphone refused; continuing as a phone call", error)
-            ServiceCompat.startForeground(this, id, notification, types(microphone = false))
+        val withMicrophone = microphone && granted(Manifest.permission.RECORD_AUDIO)
+        val withCamera = camera && granted(Manifest.permission.CAMERA)
+        // What Android refuses is dropped, the camera first: the voice matters more.
+        val attempts =
+            listOf(withMicrophone to withCamera, withMicrophone to false, false to false).distinct()
+        for ((index, attempt) in attempts.withIndex()) {
+            val (mic, cam) = attempt
+            try {
+                ServiceCompat.startForeground(this, id, notification, types(mic, cam))
+                break
+            } catch (error: Exception) {
+                if (index == attempts.lastIndex) throw error
+                Log.w(TAG, "Foreground with microphone $mic, camera $cam refused", error)
+            }
         }
         shownId?.takeIf { it != id }?.let(notifications::cancel)
         shownId = id
     }
+
+    private fun granted(permission: String): Boolean =
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
     private fun stop() {
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
@@ -102,10 +112,11 @@ class CallService : LifecycleService(), KoinComponent {
         stopSelf()
     }
 
-    private fun types(microphone: Boolean): Int {
+    private fun types(microphone: Boolean, camera: Boolean): Int {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return 0
         var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
         if (microphone) types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+        if (camera) types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
         return types
     }
 
@@ -222,7 +233,10 @@ class ServiceController(
     }
 }
 
-/** The notification's *Decline* and *Hang up*, carried out by the coordinator. */
+/**
+ * The notification's *Decline* and *Hang up*, and Picture-in-Picture's *Mute* and *Hang up*,
+ * carried out by the coordinator.
+ */
 class CallActionReceiver : BroadcastReceiver(), KoinComponent {
     private val coordinator: CallCoordinator by inject()
 
@@ -231,13 +245,37 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
         when (intent.action) {
             ACTION_DECLINE -> coordinator.decline(call)
             ACTION_HANG_UP -> coordinator.hangUp(call)
+            ACTION_TOGGLE_MUTE -> {
+                val muted = coordinator.calls.value.firstOrNull { it.id == call }?.muted ?: return
+                coordinator.setMuted(call, !muted)
+            }
         }
     }
 
     companion object {
         const val ACTION_DECLINE = "com.bobbyesp.sona.call.DECLINE"
         const val ACTION_HANG_UP = "com.bobbyesp.sona.call.HANG_UP"
+        const val ACTION_TOGGLE_MUTE = "com.bobbyesp.sona.call.TOGGLE_MUTE"
         const val EXTRA_CALL = "call"
+
+        /**
+         * A broadcast of [action] on [call], for surfaces outside the notification; [request] tells
+         * their pending intents apart.
+         */
+        fun pendingIntent(
+            context: Context,
+            action: String,
+            call: CallId,
+            request: Int,
+        ): PendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                request,
+                Intent(context, CallActionReceiver::class.java)
+                    .setAction(action)
+                    .putExtra(EXTRA_CALL, call.value),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
     }
 }
 
@@ -247,5 +285,7 @@ class CallActionReceiver : BroadcastReceiver(), KoinComponent {
  * `phoneCall` service from `BOOT_COMPLETED`.
  */
 class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) = Unit
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+    }
 }

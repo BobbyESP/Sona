@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import com.bobbyesp.sona.calling.domain.Call
@@ -26,8 +25,8 @@ interface CallScreenIntents {
     /** The call screen, over the lock screen. */
     fun screen(context: Context): Intent
 
-    /** The call screen, answering [call] as it opens: the notification's *Answer*. */
-    fun answer(context: Context, call: CallId): Intent
+    /** The call screen, answering [call] as it opens, with the camera when [video]. */
+    fun answer(context: Context, call: CallId, video: Boolean = false): Intent
 
     /**
      * The call screen, calling [address] back as it opens: a missed call notification's *Call
@@ -49,7 +48,6 @@ class CallNotifications(private val context: Context, private val intents: CallS
     private val manager = context.getSystemService(NotificationManager::class.java)
 
     fun ensureChannels() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val incoming =
             NotificationChannel(
                     INCOMING,
@@ -95,18 +93,27 @@ class CallNotifications(private val context: Context, private val intents: CallS
         val person = Person.Builder().setName(call.title).setImportant(true).build()
         val screen = activity(intents.screen(context), REQUEST_SCREEN)
         return if (call.state == CallState.Incoming) {
-            val answer = activity(intents.answer(context, call.id), REQUEST_ANSWER)
+            val video = call.videoOffered
+            val answer = activity(intents.answer(context, call.id, video), REQUEST_ANSWER)
             val decline = broadcast(CallActionReceiver.ACTION_DECLINE, call.id, REQUEST_DECLINE)
+            val text =
+                when {
+                    video && accountLabel != null ->
+                        context.getString(R.string.notification_incoming_video_on, accountLabel)
+                    video -> context.getString(R.string.notification_incoming_video)
+                    accountLabel != null ->
+                        context.getString(R.string.notification_incoming_on, accountLabel)
+                    else -> context.getString(R.string.notification_incoming)
+                }
             val notification =
                 NotificationCompat.Builder(context, INCOMING)
                     .setSmallIcon(R.drawable.ic_sona_call)
                     .setContentTitle(call.title)
-                    .setContentText(
-                        accountLabel?.let {
-                            context.getString(R.string.notification_incoming_on, it)
-                        } ?: context.getString(R.string.notification_incoming),
+                    .setContentText(text)
+                    .setStyle(
+                        NotificationCompat.CallStyle.forIncomingCall(person, decline, answer)
+                            .setIsVideo(video),
                     )
-                    .setStyle(NotificationCompat.CallStyle.forIncomingCall(person, decline, answer))
                     .setFullScreenIntent(screen, true)
                     .setContentIntent(screen)
                     .setCategory(NotificationCompat.CATEGORY_CALL)
@@ -122,8 +129,17 @@ class CallNotifications(private val context: Context, private val intents: CallS
                 NotificationCompat.Builder(context, ONGOING)
                     .setSmallIcon(R.drawable.ic_sona_call)
                     .setContentTitle(call.title)
-                    .setContentText(context.getString(call.state.textRes))
-                    .setStyle(NotificationCompat.CallStyle.forOngoingCall(person, hangUp))
+                    .setContentText(
+                        context.getString(
+                            if (call.isVideo && call.state == CallState.Active)
+                                R.string.notification_active_video
+                            else call.state.textRes,
+                        ),
+                    )
+                    .setStyle(
+                        NotificationCompat.CallStyle.forOngoingCall(person, hangUp)
+                            .setIsVideo(call.isVideo),
+                    )
                     .setContentIntent(screen)
                     .setCategory(NotificationCompat.CATEGORY_CALL)
                     .setOngoing(true)
@@ -139,7 +155,12 @@ class CallNotifications(private val context: Context, private val intents: CallS
             .setContentTitle(
                 if (labels.size == 1)
                     context.getString(R.string.notification_reachable, labels.single())
-                else context.getString(R.string.notification_reachable_many, labels.size),
+                else
+                    context.resources.getQuantityString(
+                        R.plurals.notification_reachable_many,
+                        labels.size,
+                        labels.size,
+                    ),
             )
             .setContentText(context.getString(R.string.notification_reachable_text))
             .setContentIntent(activity(intents.screen(context).appLaunch(context), REQUEST_APP))

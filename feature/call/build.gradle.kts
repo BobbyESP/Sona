@@ -8,6 +8,7 @@ android { namespace = "com.bobbyesp.sona.feature.call" }
 dependencies {
     api(project(":calling:domain"))
     implementation(project(":accounts:ui"))
+    implementation(project(":calling:ui"))
     implementation(libs.androidx.activity.compose)
     testImplementation(project(":sip:fake"))
 }

@@ -5,8 +5,8 @@ matrix in [docs/roadmap.md](../docs/roadmap.md#the-call-matrix).
 
 | File | What it holds |
 |---|---|
-| [`asterisk/pjsip.conf`](asterisk/pjsip.conf) | Transports (UDP and TCP on 5060) and extensions 101, 102, 103 |
-| [`asterisk/extensions.conf`](asterisk/extensions.conf) | The dial plan: extensions, echo test (600), always busy (486), voicemail (`*97`) |
+| [`asterisk/pjsip.conf`](asterisk/pjsip.conf) | Transports (UDP and TCP on 5060) and extensions 101, 102, 103, with VP8 and H.264 video and a context for messages |
+| [`asterisk/extensions.conf`](asterisk/extensions.conf) | The dial plan: extensions, echo test (600), always busy (486), voicemail (`*97`); messages between extensions, and a message echo (600) |
 | [`asterisk/voicemail.conf`](asterisk/voicemail.conf) | A voicemail box per extension |
 | [`asterisk/modules.conf`](asterisk/modules.conf) | Loads the file-based voicemail, not Ubuntu's IMAP one (without it `*97` hangs up) |
 
@@ -48,5 +48,7 @@ and its password. Until then the `demo` flavor shows a fake *Lab Asterisk · 102
 | `pjsip set logger on` | Every SIP message, as Sona's trace will show it |
 | `rtp set debug on` | Whether audio flows, and to where |
 | `core show channels` | Calls in progress |
+| `core show channel <name>` | A call's codecs, the video one included |
+| `core set verbose 3`, then the console | Each message routed by `[messages]`, with its `MESSAGE_SEND_STATUS` |
 
 Registration of 102 from the emulator was checked against them in phase 1.

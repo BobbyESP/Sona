@@ -5,6 +5,7 @@ package com.bobbyesp.sona.di
 
 import com.bobbyesp.sona.BuildConfig
 import com.bobbyesp.sona.CallActivity
+import com.bobbyesp.sona.MainActivity
 import com.bobbyesp.sona.accounts.data.accountsRepository
 import com.bobbyesp.sona.accounts.domain.AccountEngineSync
 import com.bobbyesp.sona.accounts.domain.AccountsRepository
@@ -14,11 +15,14 @@ import com.bobbyesp.sona.accounts.domain.SetAccountEnabled
 import com.bobbyesp.sona.calling.domain.CallCoordinator
 import com.bobbyesp.sona.calling.domain.CallerNames
 import com.bobbyesp.sona.calling.domain.EngineConfigBuilder
+import com.bobbyesp.sona.calling.domain.NetworkMonitor
+import com.bobbyesp.sona.calling.platform.AndroidNetworkMonitor
 import com.bobbyesp.sona.calling.platform.CallNotifications
 import com.bobbyesp.sona.calling.platform.CallScreenIntents
 import com.bobbyesp.sona.calling.platform.MissedCallNotifications
 import com.bobbyesp.sona.calling.platform.ServiceController
 import com.bobbyesp.sona.calling.platform.callReadinessChecks
+import com.bobbyesp.sona.calling.platform.cameraPermission
 import com.bobbyesp.sona.core.common.AppInfo
 import com.bobbyesp.sona.core.common.DefaultDispatchers
 import com.bobbyesp.sona.core.common.DispatcherProvider
@@ -27,6 +31,7 @@ import com.bobbyesp.sona.core.data.settings.createSettingsStore
 import com.bobbyesp.sona.core.database.SonaDatabase
 import com.bobbyesp.sona.core.database.createSonaDatabase
 import com.bobbyesp.sona.core.model.AccountId
+import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.core.model.settings.HistorySettings
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.core.ui.AndroidStringProvider
@@ -41,9 +46,24 @@ import com.bobbyesp.sona.directory.domain.CallRecorder
 import com.bobbyesp.sona.directory.domain.DeviceContacts
 import com.bobbyesp.sona.directory.domain.Directory
 import com.bobbyesp.sona.directory.domain.LocalContacts
+import com.bobbyesp.sona.directory.domain.find
 import com.bobbyesp.sona.directory.domain.prune
+import com.bobbyesp.sona.messaging.data.AndroidAttachmentFiles
+import com.bobbyesp.sona.messaging.data.AndroidAttachmentPreparer
+import com.bobbyesp.sona.messaging.data.AndroidCameraCaptures
+import com.bobbyesp.sona.messaging.data.messageStore
+import com.bobbyesp.sona.messaging.data.offerCaption
+import com.bobbyesp.sona.messaging.domain.AttachmentFiles
+import com.bobbyesp.sona.messaging.domain.AttachmentPreparer
+import com.bobbyesp.sona.messaging.domain.CameraCaptures
+import com.bobbyesp.sona.messaging.domain.MessageStore
+import com.bobbyesp.sona.messaging.domain.Messenger
+import com.bobbyesp.sona.messaging.domain.PeerNames
+import com.bobbyesp.sona.messaging.platform.ConversationIntents
+import com.bobbyesp.sona.messaging.platform.MessageNotifications
 import com.bobbyesp.sona.shell.ShellViewModel
 import com.bobbyesp.sona.sip.api.SipEngine
+import com.bobbyesp.sona.sip.api.SipMessaging
 import com.bobbyesp.sona.telecom.api.SystemCalls
 import com.bobbyesp.sona.telecom.jetpack.createSystemCalls
 import java.util.UUID
@@ -51,6 +71,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModelOf
@@ -62,9 +83,13 @@ import org.koin.dsl.module
  */
 class ApplicationScope : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-/** Starts the SIP engine, and keeps its accounts equal to the stored ones from then on. */
+/**
+ * Starts the SIP engine, and keeps its accounts equal to the stored ones from then on. The
+ * messenger starts first, so that no message the engine receives waits unread.
+ */
 class EngineBootstrap(
     private val scope: ApplicationScope,
+    private val messenger: Messenger,
     private val engine: SipEngine,
     private val sync: AccountEngineSync,
     private val calls: CallCoordinator,
@@ -76,6 +101,7 @@ class EngineBootstrap(
     private val config: EngineConfigBuilder,
 ) {
     fun start() {
+        messenger.start()
         calls.start()
         services.start()
         recorder.start()
@@ -125,9 +151,44 @@ val appModule = module {
             refused = get<CallCoordinator>().refused,
         )
     }
-    factory { EngineConfigBuilder(get()) }
+    single<NetworkMonitor> { AndroidNetworkMonitor(androidContext(), get<ApplicationScope>()) }
+    factory { EngineConfigBuilder(get(), get()) }
     single {
-        EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
+        EngineBootstrap(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
+    }
+
+    single<SipMessaging> { get<SipEngine>().messaging }
+    single<MessageStore> { get<SonaDatabase>().messageStore() }
+    single<AttachmentFiles> {
+        AndroidAttachmentFiles(androidContext(), get<DispatcherProvider>().io)
+    }
+    single<AttachmentPreparer> {
+        AndroidAttachmentPreparer(androidContext(), get<DispatcherProvider>().io)
+    }
+    single {
+        Messenger(
+            engine = get(),
+            store = get(),
+            files = get(),
+            preparer = get(),
+            accounts = get(),
+            settings = get(),
+            scope = get<ApplicationScope>(),
+            names =
+                PeerNames {
+                    get<Directory>().contacts.map { known ->
+                        { address: SipAddress -> known.find(address)?.name }
+                    }
+                },
+            captions = androidContext().offerCaption(),
+        )
+    }
+    single<CameraCaptures> {
+        AndroidCameraCaptures(androidContext(), get<DispatcherProvider>().io)
+    }
+    single<ConversationIntents> { ConversationIntents(MainActivity::conversationIntent) }
+    single {
+        MessageNotifications(androidContext(), get(), get(), get<ApplicationScope>())
     }
 
     // Calls: the coordinator, Android's Telecom, and the services and notifications that go with.
@@ -140,6 +201,7 @@ val appModule = module {
             get(),
             get<ApplicationScope>(),
             names = CallerNames { address -> get<Directory>().nameFor(address) },
+            camera = androidContext().cameraPermission(),
         )
     }
     single<CallScreenIntents> { CallActivity.Intents }

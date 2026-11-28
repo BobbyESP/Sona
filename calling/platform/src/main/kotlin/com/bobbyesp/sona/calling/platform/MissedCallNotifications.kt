@@ -7,7 +7,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.bobbyesp.sona.directory.domain.CallHistory
 import com.bobbyesp.sona.directory.domain.CallRecord
@@ -41,7 +40,6 @@ class MissedCallNotifications(
     }
 
     private fun ensureChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         manager.createNotificationChannel(
             NotificationChannel(
                     CHANNEL,
@@ -90,7 +88,13 @@ class MissedCallNotifications(
             val inbox = NotificationCompat.InboxStyle()
             missed.take(MAX_LINES).forEach { inbox.addLine(it.title) }
             builder
-                .setContentTitle(context.getString(R.string.notification_missed_many, missed.size))
+                .setContentTitle(
+                    context.resources.getQuantityString(
+                        R.plurals.notification_missed_many,
+                        missed.size,
+                        missed.size,
+                    ),
+                )
                 .setContentText(missed.take(MAX_LINES).joinToString { it.title })
                 .setStyle(inbox)
         }

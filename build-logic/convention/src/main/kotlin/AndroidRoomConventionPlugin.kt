@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.CommonExtension
 import com.google.devtools.ksp.gradle.KspExtension
+import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.InputDirectory
@@ -8,7 +9,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.process.CommandLineArgumentProvider
-import java.io.File
 
 /**
  * Room, for the module that holds a database.
@@ -35,14 +35,14 @@ class AndroidRoomConventionPlugin : Plugin<Project> {
             dependencies {
                 add("implementation", libs.library("room-runtime"))
                 add("ksp", libs.library("room-compiler"))
-                add("androidTestImplementation", libs.library("room-testing"))
+                if (hasDeviceTests()) add("androidTestImplementation", libs.library("room-testing"))
             }
         }
     }
 }
 
 private class RoomSchemaArgProvider(
-    @get:InputDirectory @get:PathSensitive(PathSensitivity.RELATIVE) val schemaDir: File
+    @get:InputDirectory @get:PathSensitive(PathSensitivity.RELATIVE) val schemaDir: File,
 ) : CommandLineArgumentProvider {
     override fun asArguments(): Iterable<String> {
         if (!schemaDir.exists()) schemaDir.mkdirs()

@@ -14,6 +14,7 @@
     <application
         android:name=".App"
         android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
@@ -30,12 +31,18 @@
             </intent-filter>
         </activity>
 
-        <!-- The call screen: over the lock screen, in a task of its own. -->
+        <!-- The call screen: over the lock screen, in a task of its own, with
+             Picture-in-Picture. Turning or resizing keeps the activity, so the video views
+             survive mid-call. -->
         <activity
             android:name=".CallActivity"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:exported="false"
             android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
             android:showWhenLocked="true"
+            tools:targetApi="27"
             android:theme="@style/Theme.Sona"
             android:taskAffinity="${applicationId}.call"
             android:turnScreenOn="true" />

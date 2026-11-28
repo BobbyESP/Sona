@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_video">Videollamadas</string>
+    <string name="settings_video_summary">Desactivadas, las llamadas son solo de audio: Sona ni ofrece ni acepta vídeo</string>
+    <string name="settings_video_keywords">vídeo video cámara llamadas webcam imagen camera</string>
+    <string name="settings_video_accept">Mostrar el vídeo que active el otro lado</string>
+    <string name="settings_video_accept_summary">Lo ves, y tu cámara sigue apagada hasta que la enciendas. Desactivado, la llamada sigue siendo solo de audio</string>
+    <string name="settings_video_accept_keywords">vídeo remoto recibir privacidad cámara remote upgrade privacy</string>
+    <string name="settings_video_codecs">Códecs de vídeo</string>
+    <string name="settings_video_codecs_summary">Sona ofrece los códecs marcados en este orden, y la llamada usa el primero que el otro lado también tenga. Se aplica desde la próxima llamada.</string>
+    <string name="settings_video_codecs_keywords">códec codec orden vp8 h264 h265 hevc avc vídeo video</string>
+    <string name="settings_video_wifi_quality">Calidad por Wi-Fi</string>
+    <string name="settings_video_quality_summary">La imagen más grande que se envía; menos mientras la red está ocupada</string>
+    <string name="settings_video_quality_keywords">calidad resolución definición 1080p 720p hd vga quality resolution</string>
+    <string name="settings_video_wifi_bitrate">Máximo enviado por Wi-Fi</string>
+    <string name="settings_video_wifi_bitrate_summary">Voz incluida</string>
+    <string name="settings_video_bitrate_keywords">tasa de bits ancho de banda subida kbps mbps límite bitrate bandwidth</string>
+    <string name="settings_video_mobile_quality">Calidad con datos móviles</string>
+    <string name="settings_video_mobile_quality_summary">También en la zona Wi-Fi de un teléfono, o cualquier Wi-Fi que cuente los datos</string>
+    <string name="settings_video_mobile_bitrate">Máximo enviado con datos móviles</string>
+    <string name="settings_video_mobile_bitrate_summary">También se pide al otro lado que no envíe más, para ahorrar tus datos</string>
+    <string name="settings_video_frame_rate">Fotogramas por segundo</string>
+    <string name="settings_video_frame_rate_summary">Cuántas imágenes por segundo, como mucho, se envían de tu cámara</string>
+    <string name="settings_video_frame_rate_keywords">fotogramas fps fluidez frame rate</string>
+    <string name="settings_video_adaptive">Adaptarse a la red</string>
+    <string name="settings_video_adaptive_summary">Baja la tasa de bits, luego los fotogramas y luego la calidad mientras la red está congestionada, y los sube cuando se despeja. También ajusta la voz</string>
+    <string name="settings_video_adaptive_keywords">tasa adaptativa control congestión ancho de banda adaptive rate</string>
+    <string name="settings_video_retransmission">Reenviar paquetes perdidos</string>
+    <string name="settings_video_retransmission_summary">Cuando el otro lado los da por perdidos (NACK), para que la imagen se emborrone menos</string>
+    <string name="settings_video_retransmission_keywords">retransmisión nack rtcp pérdida retransmission loss</string>
+    <string name="settings_video_fec">Corrección de errores</string>
+    <string name="settings_video_fec_summary">Envía un poco más (FEC) para reconstruir un paquete perdido en vez de congelar la imagen</string>
+    <string name="settings_video_fec_keywords">fec corrección de errores pérdida congelada forward error correction</string>
+
+    <string name="settings_video_quality_1080">1080p (Full HD)</string>
+    <string name="settings_video_quality_720">720p (HD)</string>
+    <string name="settings_video_quality_vga">VGA (640×480)</string>
+    <string name="settings_video_quality_qvga">QVGA (320×240)</string>
+    <string name="settings_video_bitrate_256">256 kbit/s</string>
+    <string name="settings_video_bitrate_512">512 kbit/s</string>
+    <string name="settings_video_bitrate_1000">1 Mbit/s</string>
+    <string name="settings_video_bitrate_1500">1,5 Mbit/s</string>
+    <string name="settings_video_bitrate_2500">2,5 Mbit/s</string>
+    <string name="settings_video_bitrate_unlimited">Sin límite</string>
+    <string name="settings_video_fps_15">15 fps</string>
+    <string name="settings_video_fps_24">24 fps</string>
+    <string name="settings_video_fps_30">30 fps</string>
+</resources>

@@ -7,9 +7,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 
-/**
- * An Android library, without UI. A library that draws applies `sona.android.compose` as well.
- */
+/** An Android library, without UI. A library that draws applies `sona.android.compose` as well. */
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
@@ -19,7 +17,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
             // A module without device tests builds no test APK. Otherwise, every module would build
             // and dex one, most of them empty, and a full build ran out of memory doing it.
-            val hasDeviceTests = file("src/androidTest").exists()
+            val hasDeviceTests = hasDeviceTests()
             extensions.configure<LibraryAndroidComponentsExtension> {
                 beforeVariants { variant ->
                     if (!hasDeviceTests) {
@@ -30,7 +28,11 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 }
             }
 
-            dependencies { add("androidTestImplementation", libs.library("androidx-test-runner")) }
+            if (hasDeviceTests) {
+                dependencies {
+                    add("androidTestImplementation", libs.library("androidx-test-runner"))
+                }
+            }
         }
     }
 }

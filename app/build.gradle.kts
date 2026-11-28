@@ -97,6 +97,7 @@ dependencies {
     implementation(project(":feature:call"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:diagnostics"))
+    implementation(project(":feature:messages"))
 
     implementation(project(":calling:domain"))
     implementation(project(":calling:platform"))
@@ -107,6 +108,9 @@ dependencies {
     implementation(project(":accounts:ui"))
     implementation(project(":directory:domain"))
     implementation(project(":directory:data"))
+    implementation(project(":messaging:domain"))
+    implementation(project(":messaging:data"))
+    implementation(project(":messaging:platform"))
     implementation(project(":credentials:keystore"))
     implementation(project(":core:database"))
 
@@ -139,4 +143,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+
+    // The screenshot tour: the demo app driven on a device (docs/releasing.md).
+    "androidTestDemoImplementation"(libs.androidx.test.runner)
+    "androidTestDemoImplementation"(libs.androidx.test.ext.junit)
+    "androidTestDemoImplementation"(libs.androidx.test.rules)
+    "androidTestDemoImplementation"(libs.androidx.test.uiautomator)
 }

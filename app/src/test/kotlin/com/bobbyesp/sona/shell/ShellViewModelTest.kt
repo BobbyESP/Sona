@@ -16,6 +16,7 @@ import com.bobbyesp.sona.core.model.settings.AppSettings
 import com.bobbyesp.sona.core.model.settings.AppearanceSettings
 import com.bobbyesp.sona.core.model.settings.BlurPreference
 import com.bobbyesp.sona.core.model.settings.ThemeMode
+import com.bobbyesp.sona.core.navigation.keys.Conversation
 import com.bobbyesp.sona.core.testing.InMemorySettingsStore
 import com.bobbyesp.sona.core.testing.MainDispatcherRule
 import com.bobbyesp.sona.credentials.api.InMemoryCredentialVault
@@ -55,6 +56,22 @@ class ShellViewModelTest {
                 SonaThemeConfig(themeMode = ThemeMode.Dark),
                 viewModel.startup.value?.theme,
             )
+        }
+
+    @Test
+    fun `a request from outside stands until the shell has shown it`() =
+        runTest(main.dispatcher) {
+            val viewModel = ShellViewModel(settings, FakeSipEngine(this), accounts)
+            viewModel.request(Conversation(7))
+            assertEquals(Conversation(7), viewModel.request.value)
+
+            // A request made while the first was being shown is not lost.
+            viewModel.request(Conversation(8))
+            viewModel.requestShown(Conversation(7))
+            assertEquals(Conversation(8), viewModel.request.value)
+
+            viewModel.requestShown(Conversation(8))
+            assertNull(viewModel.request.value)
         }
 
     @Test

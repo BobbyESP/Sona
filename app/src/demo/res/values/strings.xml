@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The demo's other phones (extension 100 is a Sona phone, 101 a plain SIP phone). -->
+    <string name="demo_sona_name">Sona demo</string>
+    <string name="demo_plain_name">Plain phone</string>
+    <string name="demo_sona_reply">Got it: “%1$s”. I am 100, another Sona phone of the demo: send me a picture.</string>
+    <string name="demo_plain_echo">Echo: %1$s</string>
+</resources>

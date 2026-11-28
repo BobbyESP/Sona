@@ -66,6 +66,10 @@ data class MediaInfo(val codec: String, val clockRate: Int, val encryption: Stri
  * A call the engine has. Calls that ended stay in [SipEngine.calls] as [EngineCallState.Ended]
  * until [SipEngine.forget]: a `StateFlow` keeps only the last value, and an ending missed would be
  * a failure the user never hears about.
+ *
+ * @property video The video stream, or `null` for a call without one.
+ * @property videoOffered The incoming INVITE offered video. Always `false` for an outgoing call,
+ *   and without [Capability.VideoCalls].
  */
 data class EngineCall(
     val id: CallId,
@@ -76,6 +80,8 @@ data class EngineCall(
     val state: EngineCallState,
     val muted: Boolean = false,
     val media: MediaInfo? = null,
+    val video: CallVideo? = null,
+    val videoOffered: Boolean = false,
 )
 
 sealed interface DialResult {

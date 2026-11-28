@@ -71,6 +71,8 @@ internal class AndroidDeviceContacts(
                     Data.DATA3,
                 )
             val selection = "${Data.MIMETYPE} IN (?, ?)"
+            // API 37 deprecates the SIP data kind with no successor; contacts still store it
+            @Suppress("DEPRECATION")
             val args = arrayOf(Phone.CONTENT_ITEM_TYPE, SipAddressKind.CONTENT_ITEM_TYPE)
             runCatching {
                 context.contentResolver

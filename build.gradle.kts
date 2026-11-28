@@ -37,6 +37,11 @@ allprojects {
     }
 }
 
+// The convention plugins are formatted with the rest.
+listOf("spotlessCheck", "spotlessApply").forEach { name ->
+    tasks.named(name) { dependsOn(gradle.includedBuild("build-logic").task(":convention:$name")) }
+}
+
 /**
  * The app's version. The code packs the stage in, so an alpha, a beta, a release candidate and the
  * release of one version are ordered: MmmPPsBB (major, minor, patch, stage 0-3, build).
@@ -75,8 +80,8 @@ sealed class Version(val major: Int, val minor: Int, val patch: Int, val build: 
     }
 }
 
-// The one place the version is set. 1.0.0-beta.2 is code 10000102, below 1.0.0's 10000300.
-val currentVersion: Version = Version.Beta(major = 1, minor = 0, patch = 0, build = 2)
+// The one place the version is set. 1.0.0-beta.3 is code 10000103, below 1.0.0's 10000300.
+val currentVersion: Version = Version.Beta(major = 1, minor = 0, patch = 0, build = 3)
 
 extra.set("versionCode", currentVersion.toVersionCode())
 

@@ -23,7 +23,7 @@ import com.bobbyesp.sona.core.designsystem.components.ScreenPlaceholderCard
  * What a top-level destination shows when it has nothing yet: the placeholder card, centered where
  * it fits and scrollable where it does not (a phone in landscape), never cut off.
  *
- * @param padding and [contentModifier] are what [TopLevelScaffold] gives its content.
+ * @param padding and [modifier] are what [TopLevelScaffold] gives its content.
  */
 @Composable
 fun TopLevelEmptyState(
@@ -31,9 +31,9 @@ fun TopLevelEmptyState(
     description: String,
     icon: ImageVector,
     padding: PaddingValues,
-    contentModifier: Modifier,
+    modifier: Modifier,
 ) {
-    BoxWithConstraints(contentModifier.padding(padding)) {
+    BoxWithConstraints(modifier.padding(padding)) {
         Box(
             modifier =
                 Modifier.verticalScroll(rememberScrollState())

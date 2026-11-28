@@ -35,6 +35,7 @@ internal object RecentsSection : NavSection {
                         ),
                     )
                 },
+                navigator = navigator,
             )
         }
     }

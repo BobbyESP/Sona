@@ -1,6 +1,6 @@
 plugins {
     `kotlin-dsl`
-    alias(libs.plugins.ktfmt)
+    alias(libs.plugins.spotless)
 }
 
 // compileOnly: the root build puts these plugins on the classpath (`apply false`), so the
@@ -12,7 +12,16 @@ dependencies {
     compileOnly(libs.compose.compiler.gradle.plugin)
 }
 
-ktfmt { kotlinLangStyle() }
+spotless {
+    kotlin {
+        ktfmt().kotlinlangStyle()
+        target("src/**/*.kt")
+    }
+    kotlinGradle {
+        ktfmt().kotlinlangStyle()
+        target("*.kts")
+    }
+}
 
 gradlePlugin {
     plugins {

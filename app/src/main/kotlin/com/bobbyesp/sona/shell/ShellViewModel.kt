@@ -5,6 +5,7 @@ package com.bobbyesp.sona.shell
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation3.runtime.NavKey
 import com.bobbyesp.sona.accounts.domain.Account
 import com.bobbyesp.sona.accounts.domain.AccountsRepository
 import com.bobbyesp.sona.accounts.domain.defaultAccount
@@ -16,8 +17,10 @@ import com.bobbyesp.sona.core.model.settings.AppearanceSettings
 import com.bobbyesp.sona.core.model.settings.SettingsStore
 import com.bobbyesp.sona.sip.api.RegistrationState
 import com.bobbyesp.sona.sip.api.SipEngine
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -74,6 +77,23 @@ class ShellViewModel(
                 account?.let { chipFor(it, registrations[it.id]) }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val _request = MutableStateFlow<NavKey?>(null)
+
+    /**
+     * A destination asked for from outside (a notification), kept until shown: it may arrive before
+     * the shell is drawn.
+     */
+    val request: StateFlow<NavKey?> = _request.asStateFlow()
+
+    fun request(key: NavKey) {
+        _request.value = key
+    }
+
+    /** The shell showed [key]; a request made since stands. */
+    fun requestShown(key: NavKey) {
+        _request.compareAndSet(key, null)
+    }
 
     init {
         // Once an account exists, the welcome has done its work, however the account was added.

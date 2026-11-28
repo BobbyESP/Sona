@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_sona_name">Sona de demostración</string>
+    <string name="demo_plain_name">Teléfono sencillo</string>
+    <string name="demo_sona_reply">Recibido: «%1$s». Soy el 100, otro teléfono Sona de la demo: mándame una foto.</string>
+    <string name="demo_plain_echo">Eco: %1$s</string>
+</resources>

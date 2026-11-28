@@ -6,6 +6,7 @@ package com.bobbyesp.sona.sip.api
 import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -51,11 +52,16 @@ interface SipEngine {
     val calls: StateFlow<List<EngineCall>>
 
     /**
-     * Calls [to] from [account]. Only the calling coordinator calls this, and the functions below.
+     * Calls [to] from [account], with this side's camera on when [video]. Only the calling
+     * coordinator calls this, and the functions below.
      */
-    suspend fun dial(account: AccountId, to: SipAddress): DialResult
+    suspend fun dial(account: AccountId, to: SipAddress, video: Boolean = false): DialResult
 
-    suspend fun answer(call: CallId)
+    /**
+     * Answers an incoming call, with this side's camera on when [video]. Without it, offered video
+     * is still received if [VideoConfig.acceptRemoteVideo].
+     */
+    suspend fun answer(call: CallId, video: Boolean = false)
 
     /** Declines an incoming call: `486 Busy Here` when [busy], `603 Decline` otherwise. */
     suspend fun decline(call: CallId, busy: Boolean = false)
@@ -76,6 +82,27 @@ interface SipEngine {
      */
     suspend fun setAudioDevice(call: CallId, device: AudioDeviceKind)
 
+    /**
+     * Re-INVITEs for new video directions. Both `false` drops the stream and keeps the voice.
+     * Ignored without [Capability.VideoCalls].
+     */
+    suspend fun setVideo(call: CallId, send: Boolean, receive: Boolean)
+
+    /** Switches to the other camera, without renegotiating. */
+    suspend fun switchCamera(call: CallId)
+
+    /**
+     * How the display is turned (0, 90, 180 or 270 degrees), so the picture sent stays upright. One
+     * for the whole engine.
+     */
+    suspend fun setDeviceRotation(degrees: Int)
+
+    /**
+     * [call]'s numbers once a second, the first at once, until it ends; measured only while
+     * collected. Empty for an unknown call, and without [Capability.CallStats].
+     */
+    fun statistics(call: CallId): Flow<CallStatistics>
+
     /** Drops an ended call from [calls], once its ending was taken into account. */
     suspend fun forget(call: CallId)
 
@@ -87,6 +114,8 @@ interface SipEngine {
     val trace: StateFlow<List<SipTraceEntry>>
 
     suspend fun clearTrace()
+
+    val messaging: SipMessaging
 }
 
 /** Whether the engine is running. */
@@ -116,6 +145,9 @@ enum class Capability {
     Zrtp,
     CallStats,
     SipTrace,
+
+    /** Calls with video: a camera sent, a picture received (docs/video.md). */
+    VideoCalls,
 }
 
 /**
@@ -137,6 +169,7 @@ data class EngineConfig(
     val wifiOnly: Boolean = false,
     /** Keep the SIP messages in [SipEngine.trace] as they go by. */
     val captureTrace: Boolean = false,
+    val video: VideoConfig = VideoConfig(),
 )
 
 enum class EngineLogLevel {

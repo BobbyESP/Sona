@@ -24,18 +24,29 @@
 
     <string name="notification_incoming">Llamada entrante</string>
     <string name="notification_incoming_on">Llamada entrante en %1$s</string>
+    <string name="notification_incoming_video">Videollamada entrante</string>
+    <string name="notification_incoming_video_on">Videollamada entrante en %1$s</string>
     <string name="notification_calling">Llamando…</string>
     <string name="notification_ringing">Sonando…</string>
     <string name="notification_active">En llamada</string>
+    <string name="notification_active_video">En videollamada</string>
     <string name="notification_on_hold">En espera</string>
     <string name="notification_ended">Llamada finalizada</string>
     <string name="notification_reachable">Localizable en %1$s</string>
-    <string name="notification_reachable_many">Localizable en %1$d cuentas</string>
+    <plurals name="notification_reachable_many">
+        <item quantity="one">Localizable en %1$d cuenta</item>
+        <item quantity="many">Localizable en %1$d de cuentas</item>
+        <item quantity="other">Localizable en %1$d cuentas</item>
+    </plurals>
     <string name="notification_reachable_text">Las llamadas a tu extensión suenan aquí</string>
 
     <string name="channel_missed">Llamadas perdidas</string>
     <string name="channel_missed_description">Llamadas que sonaron aquí y nadie contestó</string>
     <string name="notification_missed">Llamada perdida</string>
-    <string name="notification_missed_many">%1$d llamadas perdidas</string>
+    <plurals name="notification_missed_many">
+        <item quantity="one">%1$d llamada perdida</item>
+        <item quantity="many">%1$d de llamadas perdidas</item>
+        <item quantity="other">%1$d llamadas perdidas</item>
+    </plurals>
     <string name="notification_missed_call_back">Devolver llamada</string>
 </resources>

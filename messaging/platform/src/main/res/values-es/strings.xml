@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="channel_messages">Mensajes</string>
+    <string name="channel_messages_description">Textos, fotos y archivos de otras extensiones</string>
+    <string name="notification_you">Tú</string>
+    <string name="notification_reply">Responder</string>
+    <string name="notification_reply_hint">Mensaje</string>
+    <string name="notification_mark_read">Marcar como leído</string>
+    <string name="notification_picture">Foto</string>
+    <string name="notification_file">Archivo: %1$s</string>
+</resources>

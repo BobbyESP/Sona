@@ -6,6 +6,7 @@ package com.bobbyesp.sona.sip.linphone
 import com.bobbyesp.sona.sip.api.DtmfMode
 import com.bobbyesp.sona.sip.api.EngineConfig
 import com.bobbyesp.sona.sip.api.EngineLogLevel
+import com.bobbyesp.sona.sip.api.VideoConfig
 import org.linphone.core.Core
 import org.linphone.core.Factory
 import org.linphone.core.LogLevel
@@ -21,7 +22,8 @@ internal class LinphoneConfigurer(private val appVersion: String) {
     /** The part that needs no Core, so the Core's own first lines are logged at the right level. */
     fun logging(config: EngineConfig) {
         val factory = Factory.instance()
-        factory.setDebugMode(config.logLevel >= EngineLogLevel.Messages, LOG_TAG)
+        factory.setLoggerDomain(LOG_TAG)
+        factory.enableLogcatLogs(config.logLevel >= EngineLogLevel.Messages)
         // The trace is read from the log, where SIP messages are written at the Message level:
         // capturing it needs that much logged, whatever the user asked to see.
         val level =
@@ -38,6 +40,49 @@ internal class LinphoneConfigurer(private val appVersion: String) {
         core.isWifiOnlyEnabled = config.wifiOnly
         dtmf(core, config.dtmf)
         config.codecs?.let { codecs(core, it) }
+        video(core, config.video)
+    }
+
+    /**
+     * Video and the media's network settings (docs/video.md, The network). Bandwidth caps and DSCP
+     * marks apply from the next stream started, the rest from the next call or re-INVITE.
+     *
+     * - Linphone neither initiates nor accepts video: the engine takes added video receive-only, so
+     *   a re-INVITE never turns the camera on.
+     * - The video preset stays `default` for the `advanced` adaptive rate algorithm to step the
+     *   definition: `custom` would pin it.
+     */
+    fun video(core: Core, video: VideoConfig) {
+        core.isVideoCaptureEnabled = video.enabled
+        core.isVideoDisplayEnabled = video.enabled
+        val policy = Factory.instance().createVideoActivationPolicy()
+        policy.automaticallyInitiate = false
+        policy.automaticallyAccept = false
+        core.videoActivationPolicy = policy
+
+        core.isAdaptiveRateControlEnabled = video.adaptiveRate
+        core.adaptiveRateAlgorithm = ADAPTIVE_RATE_ALGORITHM
+        core.isRetransmissionOnNackEnabled = video.retransmission
+        core.isFecEnabled = video.fec
+        core.isAudioAdaptiveJittcompEnabled = video.adaptiveJitter
+        core.isVideoAdaptiveJittcompEnabled = video.adaptiveJitter
+
+        core.preferredVideoDefinition =
+            Factory.instance()
+                .createVideoDefinition(video.definition.width, video.definition.height)
+        core.preferredFramerate = video.maxFrameRate.toFloat()
+        core.uploadBandwidth = video.uploadKbps
+        core.downloadBandwidth = video.downloadKbps
+
+        core.audioDscp = video.audioDscp
+        core.videoDscp = video.videoDscp
+        video.codecs?.let { videoCodecs(core, it) }
+    }
+
+    private fun videoCodecs(core: Core, wanted: List<String>) {
+        val plan = codecPlan(core.videoPayloadTypes.toList(), wanted) { it.mimeType }
+        plan.forEach { (payload, enabled) -> payload.enable(enabled) }
+        core.setVideoPayloadTypes(plan.map { it.first }.toTypedArray())
     }
 
     /**
@@ -72,5 +117,6 @@ internal class LinphoneConfigurer(private val appVersion: String) {
 
     private companion object {
         const val LOG_TAG = "SonaSip"
+        const val ADAPTIVE_RATE_ALGORITHM = "advanced"
     }
 }

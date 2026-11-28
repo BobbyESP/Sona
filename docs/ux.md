@@ -24,6 +24,7 @@ are in [architecture.md](architecture.md); this document is about what they are 
 MainActivity
 ├── Recents (top level)         list ─> CallDetail ─> (call, add to contacts, copy address)
 ├── Contacts (top level)        list ─> ContactDetail ─> ContactEditor
+├── Messages (top level)        list ─> Conversation ─> Picture ; list ─> New message ─> Conversation
 ├── Keypad (top level)          keypad + suggestions ─> AccountPicker (overlay)
 ├── AccountSwitcher (overlay, from the account chip in every top bar)
 │     └── Accounts ─> AccountEditor ─> AccountDiagnostics
@@ -32,9 +33,10 @@ MainActivity
 ├── Diagnostics ─> SIP trace, Logs, Network test
 └── Onboarding (first start): Welcome ─> Add account ─> Call readiness ─> Done
 
-CallActivity (own task, over the lock screen)
-├── IncomingCall
-└── OngoingCall ─> Keypad (DTMF), AudioRoutes (overlay), CallInfo (overlay), ended summary
+CallActivity (own task, over the lock screen; Picture-in-Picture for a video call)
+├── IncomingCall (audio, or video: answer with video or audio only)
+├── OngoingCall ─> Keypad (DTMF), AudioRoutes (menu), Statistics (panel), ended summary
+└── VideoCall ─> the same, over the pictures; More (statistics, keypad, hold)
 ```
 
 - **Navigation bar on compact windows, navigation rail from medium width**, built from the
@@ -45,7 +47,10 @@ CallActivity (own task, over the lock screen)
   the account switcher. With a readiness problem, the chip turns to a warning and the switcher
   starts with it.
 - **On expanded windows** Recents and Contacts are list-detail, and the keypad becomes a supporting
-  pane beside them, so a tablet on a desk is a desk phone.
+  pane beside them, so a tablet on a desk is a desk phone. Messages is list-detail already: the
+  conversations beside the one open (or *New message*), through the shell's list-detail strategy.
+- **Requests from outside** (a message's notification) are standing requests: `MainActivity` hands
+  the key to `ShellViewModel.request`, and the shell opens it once it is drawn.
 
 ## Screens
 
@@ -75,15 +80,61 @@ details*). Filter chips above: All, Missed, Incoming, Outgoing, and one per acco
 back or delete (both directions configurable), long press to select several.
 
 **CallDetail**: every attempt with that party, each with its duration and how it ended (both texts),
-codec and quality summary, and the actions contributed by features (`PartyActionProvider`): call,
-copy address, add to contacts, and later message.
+codec and quality summary, and the actions contributed by features (`PartyActionProvider`, as tonal
+buttons that wrap): *Video call* (from the calls feature, when video calls are on) and *Message*
+(from the messages feature), beside call back, copy address and add to contacts.
 
 ### Contacts
 
 Two sources, shown together and marked: the device's contacts (with a SIP address or phone number,
 read with permission, never written) and Sona's own contacts (for extensions nobody puts in a phone
 book: "Lab 103 · Printer room"). Favorites on top as a row of large avatars. Fast scroller with
-letters. ContactDetail lists each address with its call action and the account it would use.
+letters. ContactDetail lists each address with its call action and the account it would use, and
+beside it the actions features contribute (`PartyActionProvider`, as icon buttons): *Message*.
+
+### Messages
+
+Texts, pictures and files with other extensions, over SIP `MESSAGE` ([messaging.md](messaging.md)).
+The tab's badge is what was received and not read (`Messenger.totalUnread`); it sits after
+Contacts, before the keypad.
+
+- **The list**: each conversation as a segmented row, most recent first: avatar, name (or the
+  extension), the account's dot when there are several, the last message on one line (its status
+  mark when it went out from here, a file's icon and *Photo* or its name), when, and an unread
+  badge. The last message and the time are emphasized while it is unread. Search grows from a pill
+  (name, address, last message); a swipe deletes a conversation after a confirmation; the empty
+  state says messages go through the user's server and nowhere else. *New message* is the floating
+  action, collapsing to its icon as the list scrolls.
+- **New message**: one field (*Name, extension or address*), *Write to 102* with the address it
+  resolves to (`sip:102@lab.local`, as the keypad resolves it), and the contacts that match, each
+  number a row. With several accounts, a row of chips says which one writes (the default first). A
+  party's *Message* opens it with the address: with one account, or the history entry's account,
+  it goes straight to the conversation.
+- **A conversation**: a frosted top bar with the name, the address in monospace (or *typing…* in
+  the primary color, a live region), the account's dot when there are several, and the actions
+  other features contribute for this party (*Call*, *Video call*; `PartyActionProvider`, never
+  named). The messages, newest at the bottom, each day under a centered heading, each side's run in
+  one block: bubbles in the theme's extra-large corners, those towards the rest of the run tightened
+  to extra-small; sent ones in the primary container. Under the last of a run, its time and, for
+  one sent, its status: a clock while sending, ✓ when the server took it, ✓✓ once delivered, ✓✓ in
+  the primary color once read (each mark has its word for TalkBack). A failed one says why, with
+  its SIP line and *Retry*. A long press offers *Copy*, *Retry*, *Details* (status, time, file,
+  failure and SIP line, the Sona id) and *Delete*.
+- **Files**: a picture inline, decoded at the size shown, with a progress ring while it travels
+  (an offer not taken yet is a placeholder with *Download (184 KB)* and *Decline*); tapping it
+  opens it on the whole screen (pinch to zoom, drag, double tap back; *Share*, *Save a copy*
+  through the system's file picker). Any other file is a card with its kind's icon, name, size and
+  where it is (*Waiting for 102 to download*, *Sending · 40 %*, a wavy bar), *Cancel* while it
+  travels; tapping one that is here opens it in another app by a read grant.
+- **The composer**, frosted over the messages and above the keyboard: *Attach* (a sheet: *Photos
+  and videos*, *Camera* after asking for the camera, *File*), a field growing to six lines, and
+  *Send*. Why something was not sent (too long for the server, a file over the limit, unreadable)
+  appears above it with its technical line, and what was written stays in the field.
+- **Plain phones**: at the start of a conversation with a phone not known to be Sona, a note says
+  receipts, typing and files work when it uses Sona too.
+- **Notifications**: one per conversation, in Android's messaging style with the sender's name,
+  *Reply* typed in the notification and *Mark as read*; none while the conversation is on screen,
+  and it goes once the conversation is read anywhere. A tap opens the conversation.
 
 ### Keypad
 
@@ -129,6 +180,11 @@ swipe for those who answer with the phone in a pocket.
 
 With a call already active: *Hold and answer*, *End and answer*, *Decline*.
 
+**A call that offers video** says *Incoming video call* and has three: *Decline*, *Answer audio
+only* (the caller is still seen, this side's camera stays off) and *Answer with video*, which asks
+for the camera first if it must. With the camera already allowed, this side's camera is behind the
+screen under a veil.
+
 ### Ongoing call
 
 ```
@@ -155,14 +211,51 @@ With a call already active: *Hold and answer*, *End and answer*, *Decline*.
   Alice*, *Reconnecting…* (with the timer still running), each a live region for TalkBack.
 - **When it ends**, the screen stays a moment with how it ended, in both texts, then closes.
 - **Landscape and tabletop**: avatar and name on one side or half, controls on the other.
+  Whatever does not fit scrolls, so a large font cuts nothing.
+- **The quality indicator** sits beside the account: three bars and a word for TalkBack (never
+  only a color); a tap opens the statistics, a frosted panel from the bottom (beside the call on
+  a wide window).
+- **Video**, when the engine and the settings allow it: a *Video* control turns the camera on and
+  the screen becomes the video call.
+
+### Video call
+
+```
+┌──────────────────────────────┐
+│ ( Alice  03:42 🔒 Lab   ▂▄▆ )│  frosted top line
+│                       ┌────┐ │
+│                       │you │ │  the preview: drag to a corner, tap to swap
+│     the other side    └────┘ │
+│                              │  double tap: fit or fill
+│ ( 🎤  📷  ⟲  🔊  ⋮ )          │  frosted bar (a rail when lying down)
+│        ( ☎ hang up )         │
+└──────────────────────────────┘
+```
+
+- **The picture is the screen.** The other side's fills it, this side's camera floats on a tile
+  that snaps to the nearest corner on a spring and swaps with a tap. The front camera shows as in
+  a mirror. When a picture is missing, their mark on its shape says why ("Alice is not sending
+  video", "Your camera is off").
+- **Controls fade** four seconds after the last touch and come back with a tap; they stay while a
+  menu or a panel is open. Mute, camera, switch camera, the audio route, *More* (statistics,
+  keypad, hold), hang up.
+- **One banner at a time**, each with what to do: the camera is not allowed (*Settings*); "Weak
+  connection: video lowered" (*Turn off video*); "Alice turned on video" (*Turn on camera*).
+  A picture that stops arriving dims under "Video paused".
+- **Statistics**: codecs, sizes and frame rates, bitrates, loss, jitter, round trip, buffers, FEC,
+  bandwidth, transport, ICE, encryption; sparklines of the last minute. A side panel on a wide
+  window, from the bottom on a phone.
+- **Leaving keeps it in sight**: Picture-in-Picture with the other side's picture and *Mute*,
+  *Hang up*. The proximity sensor never turns the screen off during video.
 
 ### Accounts
 
 The list shows every account with its color, state and actions (enable, set default, diagnostics).
-The editor groups fields as the add flow does, plus the per-account overrides: each overridable
-option shows *Uses app default (Opus, G.722, PCMU)* with an *Override* action, and an overridden one
-shows *Reset to default*. Changes that need a new registration say so, and saving re-registers and
-shows the result like onboarding does.
+The editor groups fields as the add flow does, plus the per-account overrides (*Calls with this
+account*: codecs and DTMF; *Messages with this account*: the largest message the server relays):
+each overridable option shows *Uses app default (Opus, G.722, PCMU)* with an *Override* action, and
+an overridden one shows *Reset to default*. Changes that need a new registration say so, and saving
+re-registers and shows the result like onboarding does.
 
 ### Settings
 
@@ -208,7 +301,8 @@ New for Sona:
 | `SwipeToDeleteRow` | Swipe to delete, with a custom TalkBack action; Recents pairs it with a message to undo |
 | `readableWidth()` | At most 840 dp wide and centered, so a tablet gets margins, not long lines |
 | `RegistrationChip` | The account chip: color, name, animated state dot and word |
-| `CallQualityBadge` | Three bars with Good / Fair / Poor, details on long press |
+| `QualityIndicator` | Three bars lit by Good / Fair / Poor, its word for TalkBack; a tap opens the statistics (`:feature:call`) |
+| `StatisticsPanel`, `Sparkline` | The call's numbers in monospace, and a minute of two series drawn on a `Canvas` (`:feature:call`) |
 | `StatusText` | A failure's sentence with its technical line under it when *Show SIP details* is on |
 | `OngoingCallBanner` | The banner over the app while a call exists |
 | `LadderDiagram` | The SIP trace's lanes and arrows |
@@ -269,6 +363,8 @@ for fades, navigation transitions from `NavigationMotion` only. Moments that get
 - Connecting to active: the avatar shrinks to its place, the timer slides in.
 - Toggling a control: the button's shape changes on the spring.
 - Registration changing: the chip's dot morphs between states.
+- A video call's preview tile: follows the finger, then springs to its corner; controls and
+  panels fade and slide on the effects springs.
 
 Haptics: a tick per key (optional), a confirmation when a call connects, a double pulse when it
 ends, the system's reject pattern when a call fails. Reduced motion (the system's animation scale
@@ -345,6 +441,19 @@ an option an account can override.
 | Start calls on speaker | off | ✓ |
 | Dialpad tones, dialpad haptics | on, on | ✓ |
 
+### Video
+
+| Option | Default | MVP |
+|---|---|---|
+| Video calls | on | ✓ |
+| Show video the other side turns on (receive-only, camera stays off) | on | ✓ |
+| Video codecs: order and enabled (VP8, H.264, H.265) | all, in that order | ✓ |
+| Quality and most sent on Wi-Fi | 720p, 1.5 Mbit/s | ✓ |
+| Quality and most sent on mobile data (or a metered Wi-Fi) | VGA, 512 kbit/s | ✓ |
+| Frame rate | 30 fps | ✓ |
+| Adapt to the network (adaptive rate control) | on | ✓ |
+| Send lost packets again (NACK), error correction (FEC) | on, on | ✓ |
+
 ### Network
 
 | Option | Default | MVP |
@@ -380,6 +489,21 @@ an option an account can override.
 | Keep history for (forever, a year, 90 days, 30 days) | forever | ✓ |
 | Show Sona's calls in the phone app's history | on | ✓ |
 | Clear history | — | ✓ |
+
+### Messages
+
+Declared in `MessageSettings` (`messages.*`); see [messaging.md](messaging.md).
+In *Settings › Messages* (`MessagesSettingsContributor`, `SettingsAreas.Messages`); the last is
+also in each account's editor, under *Messages with this account*.
+
+| Option | Default | MVP |
+|---|---|---|
+| Send read receipts (to other Sona phones) | on | ✓ |
+| Send typing indicators (to other Sona phones) | on | ✓ |
+| Download automatically up to (never, 500 KB, 2 MB, 10 MB) | 2 MB | ✓ |
+| Send pictures in original quality | off | ✓ |
+| Largest attachment (2, 5, 10, 20 MB) | 10 MB | ✓ |
+| Largest message the server relays (700 B, 1 KB, 4 KB, 16 KB, 60 KB) **A** | 700 B | ✓ |
 
 ### Appearance
 

@@ -26,6 +26,11 @@ data class SystemCallRequest(
     /** The remote address, as the system shows it and logs it: `sip:101@lab.local`. */
     val address: String,
     val incoming: Boolean,
+    /**
+     * Dialed with the camera, or ringing with video offered: the system shows it as a video call
+     * and prefers the speaker.
+     */
+    val video: Boolean = false,
 )
 
 /**
@@ -33,6 +38,7 @@ data class SystemCallRequest(
  * call taking over). Each must be carried out within 5 seconds, or the system may end the call.
  */
 interface SystemCallEvents {
+    /** An answer from another device: the call is answered without the camera, whatever it asks. */
     suspend fun onAnswer()
 
     suspend fun onDisconnect()
@@ -50,7 +56,8 @@ interface SystemCall {
     /** Where it could go. */
     val routes: StateFlow<List<AudioRoute>>
 
-    suspend fun answer()
+    /** Tells the system the call was answered, as a video call when [video]. */
+    suspend fun answer(video: Boolean = false)
 
     suspend fun setActive()
 
@@ -59,6 +66,9 @@ interface SystemCall {
     suspend fun disconnect(cause: DisconnectCause)
 
     suspend fun requestRoute(route: AudioRoute)
+
+    /** Keeps the system's call type in step with whether the call shows video, from either side. */
+    suspend fun setVideo(video: Boolean)
 }
 
 enum class DisconnectCause {
@@ -83,31 +93,40 @@ data class AudioRoute(val id: String, val kind: AudioRouteKind, val name: String
 
 /**
  * A system that accepts every call and records what was asked of it; [events] are the calls'
- * listeners, to play a headset's part in a test.
+ * listeners, to play a headset's part in a test. Each call starts on [route], with [routes] to
+ * choose from: a headset plugged in is `route = FakeSystemCall.Headset`.
  */
-class FakeSystemCalls(private val refuse: Boolean = false) : SystemCalls {
+class FakeSystemCalls(
+    private val refuse: Boolean = false,
+    private val route: AudioRoute = FakeSystemCall.Earpiece,
+    private val routes: List<AudioRoute> = listOf(FakeSystemCall.Earpiece, FakeSystemCall.Speaker),
+) : SystemCalls {
     val calls = mutableMapOf<CallId, FakeSystemCall>()
     val events = mutableMapOf<CallId, SystemCallEvents>()
 
     override suspend fun add(request: SystemCallRequest, events: SystemCallEvents): SystemCall? {
         if (refuse) return null
         this.events[request.id] = events
-        return FakeSystemCall(request).also { calls[request.id] = it }
+        return FakeSystemCall(request, route, routes).also { calls[request.id] = it }
     }
 }
 
-class FakeSystemCall(val request: SystemCallRequest) : SystemCall {
+class FakeSystemCall(
+    val request: SystemCallRequest,
+    route: AudioRoute = Earpiece,
+    routes: List<AudioRoute> = listOf(Earpiece, Speaker),
+) : SystemCall {
     /**
-     * Every request made of the system, in order: `answer`, `active`, `inactive`,
-     * `disconnect:Busy`…
+     * Every request made of the system, in order: `answer`, `answer:video`, `active`, `inactive`,
+     * `disconnect:Busy`, `route:Speaker`, `video:true`…
      */
     val log = mutableListOf<String>()
 
-    override val route = MutableStateFlow<AudioRoute?>(Earpiece)
-    override val routes = MutableStateFlow(listOf(Earpiece, Speaker))
+    override val route = MutableStateFlow<AudioRoute?>(route)
+    override val routes = MutableStateFlow(routes)
 
-    override suspend fun answer() {
-        log += "answer"
+    override suspend fun answer(video: Boolean) {
+        log += if (video) "answer:video" else "answer"
     }
 
     override suspend fun setActive() {
@@ -127,8 +146,13 @@ class FakeSystemCall(val request: SystemCallRequest) : SystemCall {
         this.route.value = route
     }
 
+    override suspend fun setVideo(video: Boolean) {
+        log += "video:$video"
+    }
+
     companion object {
         val Earpiece = AudioRoute("earpiece", AudioRouteKind.Earpiece, "Phone")
         val Speaker = AudioRoute("speaker", AudioRouteKind.Speaker, "Speaker")
+        val Headset = AudioRoute("wired", AudioRouteKind.WiredHeadset, "Headset")
     }
 }

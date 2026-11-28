@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_video">Video calls</string>
+    <string name="settings_video_summary">Off, calls are audio only: Sona neither offers nor accepts video</string>
+    <string name="settings_video_keywords">video camera calls webcam picture</string>
+    <string name="settings_video_accept">Show video the other side turns on</string>
+    <string name="settings_video_accept_summary">You see them, and your camera stays off until you turn it on. Off, the call stays audio only</string>
+    <string name="settings_video_accept_keywords">remote video upgrade receive privacy camera</string>
+    <string name="settings_video_codecs">Video codecs</string>
+    <string name="settings_video_codecs_summary">Sona offers the checked codecs in this order, and the call uses the first one the other side has too. It applies from the next call.</string>
+    <string name="settings_video_codecs_keywords">codec order vp8 h264 h265 hevc avc video</string>
+    <string name="settings_video_wifi_quality">Quality on Wi-Fi</string>
+    <string name="settings_video_quality_summary">The largest picture sent; less while the network is busy</string>
+    <string name="settings_video_quality_keywords">quality resolution definition 1080p 720p hd vga</string>
+    <string name="settings_video_wifi_bitrate">Most sent on Wi-Fi</string>
+    <string name="settings_video_wifi_bitrate_summary">Voice included</string>
+    <string name="settings_video_bitrate_keywords">bitrate bandwidth upload kbps mbps limit</string>
+    <string name="settings_video_mobile_quality">Quality on mobile data</string>
+    <string name="settings_video_mobile_quality_summary">Also on a phone\'s hotspot, or any Wi-Fi that counts the data</string>
+    <string name="settings_video_mobile_bitrate">Most sent on mobile data</string>
+    <string name="settings_video_mobile_bitrate_summary">The other side is asked to send no more either, to save your data</string>
+    <string name="settings_video_frame_rate">Frame rate</string>
+    <string name="settings_video_frame_rate_summary">The most pictures a second your camera is sent at</string>
+    <string name="settings_video_frame_rate_keywords">frame rate fps smooth</string>
+    <string name="settings_video_adaptive">Adapt to the network</string>
+    <string name="settings_video_adaptive_summary">Lowers the bitrate, then the frame rate, then the quality while the network is congested, and raises them when it clears. It steers the voice too</string>
+    <string name="settings_video_adaptive_keywords">adaptive rate control congestion bandwidth</string>
+    <string name="settings_video_retransmission">Send lost packets again</string>
+    <string name="settings_video_retransmission_summary">When the other side reports them lost (NACK), for fewer smeared pictures</string>
+    <string name="settings_video_retransmission_keywords">retransmission nack rtcp loss</string>
+    <string name="settings_video_fec">Error correction</string>
+    <string name="settings_video_fec_summary">Sends a little extra (FEC) so a lost packet is rebuilt instead of freezing the picture</string>
+    <string name="settings_video_fec_keywords">fec forward error correction loss freeze</string>
+
+    <string name="settings_video_quality_1080">1080p (Full HD)</string>
+    <string name="settings_video_quality_720">720p (HD)</string>
+    <string name="settings_video_quality_vga">VGA (640×480)</string>
+    <string name="settings_video_quality_qvga">QVGA (320×240)</string>
+    <string name="settings_video_bitrate_256">256 kbit/s</string>
+    <string name="settings_video_bitrate_512">512 kbit/s</string>
+    <string name="settings_video_bitrate_1000">1 Mbit/s</string>
+    <string name="settings_video_bitrate_1500">1.5 Mbit/s</string>
+    <string name="settings_video_bitrate_2500">2.5 Mbit/s</string>
+    <string name="settings_video_bitrate_unlimited">No limit</string>
+    <string name="settings_video_fps_15">15 fps</string>
+    <string name="settings_video_fps_24">24 fps</string>
+    <string name="settings_video_fps_30">30 fps</string>
+</resources>

@@ -7,12 +7,21 @@ import com.bobbyesp.sona.core.model.AccountId
 import com.bobbyesp.sona.core.model.CallId
 import com.bobbyesp.sona.core.model.SipAddress
 import com.bobbyesp.sona.sip.api.CallDirection
+import com.bobbyesp.sona.sip.api.CallVideo
 import com.bobbyesp.sona.sip.api.EngineCallState
 import com.bobbyesp.sona.sip.api.MediaInfo
 import com.bobbyesp.sona.sip.api.SipStatus
 import com.bobbyesp.sona.telecom.api.AudioRoute
 
-/** A call as the user sees it: the engine's SIP and the system's audio together. */
+/**
+ * A call as the user sees it: the engine's SIP and the system's audio together.
+ *
+ * @property video The video as negotiated, or `null` for a call with none (docs/video.md).
+ * @property videoOffered The caller offered video.
+ * @property cameraOn The user wants this side's camera sent; during a hold, what resuming brings
+ *   back.
+ * @property cameraBlocked Why the camera is off although the user asked for it.
+ */
 data class Call(
     val id: CallId,
     val account: AccountId?,
@@ -26,6 +35,10 @@ data class Call(
     val connectedAt: Long? = null,
     val route: AudioRoute? = null,
     val routes: List<AudioRoute> = emptyList(),
+    val video: CallVideo? = null,
+    val videoOffered: Boolean = false,
+    val cameraOn: Boolean = false,
+    val cameraBlocked: CameraBlocked? = null,
 ) {
     /** What to call the other side: their name when they gave one, their user part otherwise. */
     val title: String
@@ -33,6 +46,23 @@ data class Call(
 
     val isOver: Boolean
         get() = state is CallState.Ended
+
+    /** The call shows video now, from either side, and is neither held nor over. */
+    val isVideo: Boolean
+        get() =
+            video?.isActive == true &&
+                !isOver &&
+                state != CallState.OnHold &&
+                state != CallState.HeldByRemote
+
+    val showsRemoteVideo: Boolean
+        get() = isVideo && video?.showsRemote == true
+}
+
+/** Why the camera is off although the user asked for it: the call goes on without it. */
+enum class CameraBlocked {
+    /** Sona may not use the camera. */
+    NoPermission,
 }
 
 sealed interface CallState {

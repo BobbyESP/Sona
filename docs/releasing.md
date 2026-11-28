@@ -56,3 +56,33 @@ SIGNING_KEY_ALIAS=sona SIGNING_KEY_PASSWORD=… ./gradlew :app:assembleFullRelea
 4. Publish the APKs and the SHA-256 of the signing certificate, so people can verify it:
    `apksigner verify --print-certs <apk>` (all four share one key). Say in the release notes which
    file to pick: when unsure, the universal one.
+
+## Screenshots
+
+The pictures of the app (for the course, the README, the release notes) are made by the app itself,
+on a phone, with no server: the `demo` flavor runs on the fake engine, and
+`app/src/androidTestDemo/.../ScreenshotTour.kt` drives it through the welcome, adding an account, the
+keypad, a call, a call that fails and says why, a video call, Recents, Contacts, Messages with a
+conversation, Settings and Diagnostics. It finds every node by the app's own strings, so it follows
+the language.
+
+```bash
+scripts/screenshots.sh            # every variant
+scripts/screenshots.sh es-dark    # only one
+```
+
+It needs a phone or an emulator with debugging on, **unlocked and awake** for the few minutes the run
+takes (`ANDROID_SERIAL` chooses one when several are connected). Per variant (`es-light`,
+`es-dark`: Spanish, light and dark theme) the script clears the demo app's data, sets its language
+and the system theme, runs the tour with `am instrument`, and replaces
+`assets/screenshots/<variant>/` with the full-screen `NN-name.png` files, status bar and blur
+included. The status bar is in the system's demo mode (the device's time, full battery,
+Wi-Fi only, no notifications), and the app is exempt from battery optimization, so the readiness checklist is green. The
+theme, demo mode, that exemption and the app's language are put back at the end, even if the run
+fails; when the tour fails, the pictures taken so far and `failure.png` (the screen it stopped at)
+stay in `build/screenshots/<variant>/` and `assets/` is left as it was.
+
+The tour is an instrumented test (`./gradlew :app:connectedDemoDebugAndroidTest` also runs it,
+leaving the pictures in the app's external files); CI only builds it
+(`:app:assembleDemoDebugAndroidTest`) so it keeps compiling. When a screen's strings or flow change,
+the tour is what fails: fix it there. Large font is not covered yet.
