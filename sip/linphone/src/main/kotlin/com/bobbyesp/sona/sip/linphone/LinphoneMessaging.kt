@@ -131,7 +131,6 @@ internal class LinphoneMessaging(
         val chat = params.chatParams ?: return null
         chat.backend = ChatRoom.Backend.Basic
         chat.encryptionBackend = ChatRoom.EncryptionBackend.None
-        chat.ephemeralLifetime = 0
         val participants = arrayOf(peer)
         return core.searchChatRoom(params, account.params.identityAddress, null, participants)
             ?: core.createChatRoom(params, participants)
@@ -156,7 +155,7 @@ internal class LinphoneMessaging(
                     bound.mapValues { (_, line) ->
                         "${line.spec.identity.user.orEmpty()}@${line.spec.identity.host}"
                     },
-                to = message.toAddress?.let { "${it.username.orEmpty()}@${it.domain}" },
+                to = message.toAddress.let { "${it.username.orEmpty()}@${it.domain}" },
             )
         inbox.trySend(
             ReceivedMessage(
@@ -169,7 +168,7 @@ internal class LinphoneMessaging(
                     ),
                 fromName = from.displayName?.takeIf { it.isNotBlank() },
                 to =
-                    message.toAddress?.let { to ->
+                    message.toAddress.let { to ->
                         to.domain
                             ?.takeIf { it.isNotBlank() }
                             ?.let {
@@ -179,8 +178,9 @@ internal class LinphoneMessaging(
                                 )
                             }
                     },
-                body = message.utf8Text ?: message.textContent.orEmpty(),
-                contentType = message.contentType?.substringBefore(';')?.trim() ?: TEXT_PLAIN,
+                body = message.utf8Text.orEmpty(),
+                contentType =
+                    message.contentType.substringBefore(';').trim().ifEmpty { TEXT_PLAIN },
                 atMillis = System.currentTimeMillis(),
             ),
         )

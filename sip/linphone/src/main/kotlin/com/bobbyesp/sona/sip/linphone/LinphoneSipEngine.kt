@@ -537,7 +537,7 @@ internal class LinphoneSipEngine(private val context: Context, appVersion: Strin
         return callVideoOf(
             local = if (negotiated) currentParams else params,
             remote = if (negotiated) remoteParams else null,
-            camera = cameraFacingOf(core?.videoDevice) ?: CameraFacing.Front,
+            camera = cameraFacingOf(core.videoDevice) ?: CameraFacing.Front,
         )
     }
 

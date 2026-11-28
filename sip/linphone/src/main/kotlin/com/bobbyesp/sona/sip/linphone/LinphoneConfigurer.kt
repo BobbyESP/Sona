@@ -22,7 +22,8 @@ internal class LinphoneConfigurer(private val appVersion: String) {
     /** The part that needs no Core, so the Core's own first lines are logged at the right level. */
     fun logging(config: EngineConfig) {
         val factory = Factory.instance()
-        factory.setDebugMode(config.logLevel >= EngineLogLevel.Messages, LOG_TAG)
+        factory.setLoggerDomain(LOG_TAG)
+        factory.enableLogcatLogs(config.logLevel >= EngineLogLevel.Messages)
         // The trace is read from the log, where SIP messages are written at the Message level:
         // capturing it needs that much logged, whatever the user asked to see.
         val level =
