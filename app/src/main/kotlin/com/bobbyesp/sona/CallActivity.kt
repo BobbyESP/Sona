@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
@@ -166,12 +167,31 @@ class CallActivity : ComponentActivity() {
         if (target != null) {
             builder.setAspectRatio(Rational(target.aspect.width, target.aspect.height))
             builder.setActions(pictureInPictureActions(target))
+            pictureInPictureSource(target.aspect)?.let { builder.setSourceRectHint(it) }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             builder.setAutoEnterEnabled(target != null)
             builder.setSeamlessResizeEnabled(false)
         }
         return builder.build()
+    }
+
+    /**
+     * Where the picture is on screen, centered in the window at its own ratio, for the animation.
+     */
+    private fun pictureInPictureSource(aspect: PipAspect): Rect? {
+        val view = window.decorView
+        if (view.width <= 0 || view.height <= 0) return null
+        val ratio = aspect.width.toFloat() / aspect.height
+        var width = view.width
+        var height = (width / ratio).toInt()
+        if (height > view.height) {
+            height = view.height
+            width = (height * ratio).toInt()
+        }
+        val left = (view.width - width) / 2
+        val top = (view.height - height) / 2
+        return Rect(left, top, left + width, top + height)
     }
 
     private fun pictureInPictureActions(target: PipTarget): List<RemoteAction> {

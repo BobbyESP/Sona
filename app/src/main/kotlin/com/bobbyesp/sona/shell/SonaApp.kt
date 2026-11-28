@@ -11,7 +11,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -76,10 +76,10 @@ import org.koin.compose.getKoin
 fun SonaApp(
     accountChip: AccountChipState?,
     needsOnboarding: Boolean,
+    modifier: Modifier = Modifier,
     readinessWarning: Boolean = false,
     request: NavKey? = null,
     onRequestShown: (NavKey) -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     val koin = getKoin()
     val destinations = remember { koin.getAll<TopLevelDestination>().sortedBy { it.order } }
@@ -126,7 +126,7 @@ fun SonaApp(
             OverlaySceneStrategy.isShownAsOverlay(entries(top), backStack.size)
     val suiteType =
         if (showsBar)
-            NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
+            NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfoV2())
         else NavigationSuiteType.None
     val openSettings: () -> Unit = remember(navigator) { { navigator.goTo(Settings) } }
     val chip: @Composable () -> Unit =
